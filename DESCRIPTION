@@ -11,5 +11,10 @@ RoxygenNote: 7.2.1
 Imports: 
   data.table
 Suggests:
-  ggplot2,
-  scales
+    ggplot2,
+    knitr,
+    rmarkdown,
+    scales
+VignetteBuilder: knitr
+URL: https://github.com/setzler/DiDforBigData
+BugReports: https://github.com/setzler/DiDforBigData/issues
