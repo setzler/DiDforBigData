@@ -8,15 +8,15 @@ DiDge(
   inputdata,
   varname_options,
   cohort_time,
-  event_baseperiod,
   event_postperiod,
+  event_baseperiod = -1,
   control_group = "all"
 )
 }
 \arguments{
 \item{inputdata}{A data.table.}
 
-\item{varname_options}{A list of the form varname_options = list(id_var, time_var, outcome_var, cohort_var), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.}
+\item{varname_options}{A list of the form varname_options = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.}
 
 \item{event_baseperiod}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is event_baseperiod=-1.}
 
@@ -31,8 +31,4 @@ A list with two components: results_cohort is a data.table with the DiDge estima
 }
 \description{
 Estimate DiD estimation for a single cohort (g) and a single event time (e).
-}
-\examples{
-varname_options = list(id_var = "id", time_var = "year", outcome_var = "price", cohort_var = "cohort")
-DiD(inputdata=simdata, varname_options=varname_options, control_group = "future-treated", event_baseperiod=-2, min_event=-3, max_event=5)
 }
