@@ -1,5 +1,5 @@
 ---
-title: "DiDforBigData"
+title: "Get Started"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{DiDforBigData}
@@ -49,7 +49,7 @@ print(simdata)
 
 Your real data needs to have this same format, i.e., there need to be variables for the individual identifier (e.g. `id`), the time variable (e.g. `year`), the cohort at which treatment begins (e.g. `cohort`), and the outcome variable (e.g. `Y`). 
 
-## 2. Estimate DiD for a Single Cohort and Event Time
+## 2. Estimate DiD for a Single Cohort 
 
 We need to define the list of variable names:
 
@@ -73,7 +73,7 @@ print(did_2010)
 Note that it used -1 as the base year (``Preevent") and it estimated an ATT of about 1 (which is the default true TT in the simulation).
 
 
-## 3. Estimate DiD for All Cohorts and Event Times
+## 3. Estimate DiD for All Cohorts
 
 Suppose we want to estimate the ATT at each event time from -3 to +5. We can do so as follows:
 

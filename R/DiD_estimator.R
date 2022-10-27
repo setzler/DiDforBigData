@@ -1,5 +1,5 @@
 
-#' Estimate DiD estimation for a single cohort (g) and a single event time (e).
+#' Estimate DiD for a single cohort (g) and a single event time (e).
 #'
 #' @param inputdata A data.table.
 #' @param varname_options A list of the form varname_options = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
@@ -8,6 +8,28 @@
 #' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
+#' @examples
+#' # simulate some data
+#' simdata = SimDiD(sample_size=200)
+#'
+#' # define the variable names as a list()
+#' varname_options = list()
+#' varname_options$time_name = "year"
+#' varname_options$outcome_name = "Y"
+#' varname_options$cohort_name = "cohort"
+#' varname_options$id_name = "id"
+#'
+#' # estimate the ATT for cohort 2007 at event time 1
+#' DiDge(simdata, varname_options, cohort_time=2007, event_postperiod=1)
+#'
+#' # change the base period to -3
+#' DiDge(simdata, varname_options, event_baseperiod=-3, cohort_time=2007, event_postperiod=1)
+#'
+#' # use only the never-treated control group
+#' DiDge(simdata, varname_options, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
+#'
+#' # use only the never-treated control group
+#' DiDge(simdata, varname_options, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
 #' @export
 DiDge <- function(inputdata, varname_options, cohort_time, event_postperiod, event_baseperiod = -1, control_group = "all"){
 
@@ -49,22 +71,22 @@ DiDge <- function(inputdata, varname_options, cohort_time, event_postperiod, eve
   control_data_prepost = NULL
   if(control_group == "all"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > (cohort_time +  post_time)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
-      inputdata[(get(cohort_name) > (cohort_time +  post_time)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > post_time) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > post_time) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
       by=c("tmp_idvar")
     )
   }
   if(control_group == "never-treated"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > (cohort_time +  post_time)) & is.infinite(get(cohort_name)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
-      inputdata[(get(cohort_name) > (cohort_time +  post_time)) & is.infinite(get(cohort_name)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > post_time) & is.infinite(get(cohort_name)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > post_time) & is.infinite(get(cohort_name)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
       by=c("tmp_idvar")
     )
   }
   if(control_group == "future-treated"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > (cohort_time +  post_time)) & is.finite(get(cohort_name)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
-      inputdata[(get(cohort_name) > (cohort_time +  post_time)) & is.finite(get(cohort_name)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > post_time) & is.finite(get(cohort_name)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > post_time) & is.finite(get(cohort_name)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
       by=c("tmp_idvar")
     )
   }
@@ -178,6 +200,28 @@ DiDe <- function(inputdata, varname_options, control_group = "all", event_basepe
 #' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
+#' @examples
+#' # simulate some data
+#' simdata = SimDiD(sample_size=500)
+#'
+#' # define the variable names as a list()
+#' varname_options = list()
+#' varname_options$time_name = "year"
+#' varname_options$outcome_name = "Y"
+#' varname_options$cohort_name = "cohort"
+#' varname_options$id_name = "id"
+#'
+#' # estimate the ATT for all cohorts at event times 0-1
+#' DiD(simdata, varname_options, min_event=0, max_event=1)
+#'
+#' # change the base period to -3
+#' DiD(simdata, varname_options, event_baseperiod=-3, min_event=0, max_event=1)
+#'
+#' # use only the never-treated control group
+#' DiD(simdata, varname_options, control_group = "never-treated", min_event=0, max_event=1)
+#'
+#' # use only the future treated control group, check the pre-periods -4 through -2
+#' DiD(simdata, varname_options, control_group = "future-treated", min_event=-4, max_event=-2)
 #' @export
 DiD <- function(inputdata, varname_options, control_group = "all", event_baseperiod=-1, min_event=NULL, max_event=NULL){
 

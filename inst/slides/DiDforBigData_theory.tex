@@ -1,0 +1,386 @@
+
+
+\documentclass[usenames,dvipsnames]{beamer}
+\usetheme{metropolis}
+
+\usepackage{pgfpages}
+%\setbeameroption{show notes on second screen}
+\setbeameroption{hide notes}
+%\setbeamertemplate{note page}{\insertnote}
+
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amssymb}
+\usepackage{pifont} 
+\usepackage{esint}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{listings}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{verbatim}
+\usepackage{soul}
+
+\setbeamertemplate{footline}
+{
+  \hbox{\begin{beamercolorbox}[wd=1\paperwidth,ht=2.25ex,dp=1ex,right]{framenumber}%
+      \usebeamerfont{framenumber}\insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+    \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+
+\usepackage{appendixnumberbeamer}
+ 
+%Information to be included in the title page:
+\title{\fontsize{15}{0}\selectfont DiD for Big Data in R\\\vspace{0.1cm}\fontsize{12}{30}\selectfont  Theoretical Background}
+\author{\fontsize{12}{30}\selectfont  Bradley Setzler, Penn State}
+\institute{\fontsize{6}{6}\selectfont \vspace{0.5cm} \textit{This draft compiled on: \today} }
+\date{ }
+ 
+ 
+ \linespread{.8}
+ 
+ 
+\begin{document}
+ 
+\frame{
+\titlepage
+}
+ 
+ 
+ 
+%\begin{frame}{Advantages of the DiD for Big Data Package in R}
+%
+%\url{https://github.com/setzler/DiDforBigData}
+%
+%\begin{itemize}
+%\item[$\bullet$]  \textbf{Consistent Estimates:} Even in staggered-DiD designs, it provides the consistent point estimates and valid SEs. 
+%\vspace{0.1cm}
+%\item[$\bullet$]  \textbf{Transparency:} The simple plug-in formulas provided above are at the high-school level of math. There is no mystery about what the code is doing; it literally takes averages and variances, then adds/subtracts them.
+%\vspace{0.1cm}
+%\item[$\bullet$] \textbf{User-friendly:} The user only needs to provide the data in a standard data-frame format. It is easy to set the options for event range ($e$), base period ($b$), and  choice of control group ($\mathcal{C}$). It also provides pretty plots automatically.
+%\vspace{0.1cm}
+%\item[$\bullet$] \textbf{Big-data:} I wrote it natively in a big-data language.
+%\begin{itemize}
+%\item[-] My package successfully estimates DiD for \textbf{1 million unique individuals in  20 seconds on a single core}. 
+%\item[-] The other packages in R require between 1 hour and $\infty$ hours to estimate DiD with 1 million individuals.
+%\end{itemize}
+%\vspace{0.1cm}
+%\item[$\bullet$]  \textbf{Light-weight:} The complete package is less than 0.1 MB in size, so it can easily be transferred onto admin servers, via email, etc. Furthermore, it only has 1 dependency, data.table, which is a standard R package available on nearly any system.
+%\end{itemize}
+%
+%\end{frame}
+
+ 
+
+\begin{frame}{Notation and Identification (1/4)}
+ 
+\vspace{-0.1cm}
+
+\textbf{Notation and Definition of Treatment:}
+
+\vspace{-0.05cm}
+
+\begin{itemize}
+\item[$\bullet$] $i$: unit of observation. 
+\begin{itemize}
+\item[$\rightarrow$]  We will often say ``individual".
+\end{itemize}
+
+\vspace{0.1cm}
+\item[$\bullet$] $t$: calendar time. Sample time frame is $\mathcal{T}$.
+\begin{itemize}
+\item[$\rightarrow$] We will often say ``year".
+\end{itemize}
+
+\vspace{0.1cm}
+\item[$\bullet$] $D_{i,t}$: indicator for currently receiving treatment.
+\begin{itemize}
+\item[$\rightarrow$] Permanent treatment: $D_{i,t} =1 \implies D_{i,t+1}=1,\; t \in \mathcal{T}$.
+\end{itemize}
+
+\vspace{0.1cm}
+\item[$\bullet$] $G_i \equiv \min\{t: D_{i,t}=1\}$: time that $i$ first receives  treatment.
+\begin{itemize}
+\item[$\rightarrow$] We will often say ``cohort" or ``onset time".
+\item[$\rightarrow$] If $i$ never receives treatment, we can write $G_i = \infty$. 
+\item[$\rightarrow$] Note: $D_{i,t} \equiv 1\{t \geq G_i\}$.
+\end{itemize}
+
+\vspace{0.1cm}
+\item[$\bullet$] $E_{i,t} \equiv (t - G_{i})$: time since first treatment. 
+\begin{itemize}
+\item[$\rightarrow$] We will often say ``event time".
+\item[$\rightarrow$] Sometimes we will consider fixing an event time $e$ years after treatment versus $b$ years before treatment.
+\end{itemize}
+
+\vspace{0.1cm}
+\item[$\bullet$] Potential outcomes: Let $Y_{i,t}(g)$ denote the outcome that is experienced if treated at $g$.
+
+\vspace{0.1cm}
+\item[$\bullet$] Observed outcome: $Y_{i,t} =   Y_{i,t}(\infty) + \sum_{g} 1\{G_i=g\} (Y_{i,t}(g) - Y_{i,t}(\infty))$.
+\end{itemize}
+ 
+\vspace{-0.05cm}
+
+\end{frame}
+
+
+\begin{frame}{Notation and Identification (2/4)}
+
+\textbf{Goal: Identify ATT at an event time.} We assume throughout that the goal is to identify the average treatment effect on the treated (ATT) at event time $e$. Formally, we seek to identify,
+\begin{equation} \notag
+\textrm{ATT}_{e} \equiv   \mathbb{E}[Y_{i,t}({\color{blue} g}) - Y_{i,t}({\color{red} \infty}) | {\color{blue}E_{i,t}=e}]  
+\end{equation}
+The identification challenge is that $\mathbb{E}[ Y_{i,t}({\color{red}\infty}) | {\color{blue}E_{i,t}=e}] $ is a counterfactual object -- it is the average outcome that \textit{would have been experienced} by those receiving treatment for $e$ years  \textit{if they had not received treatment}.
+
+
+
+
+\textbf{Decomposition into cohort-specific ATTs.} Define,
+\begin{equation} \notag
+\begin{aligned}
+\textrm{ATT}_{g,e} & \equiv   \mathbb{E}[Y_{i,g+e}({\color{blue} g})- Y_{i,g+e}({\color{red}\infty}) | {\color{blue}G_i = g}]  \\
+\omega_{g,e} & \equiv \mathbb{E}[G_i=g | E_{i,t}=e]
+\end{aligned}
+\end{equation}
+where the cohort shares that have been treated at each event time ($\omega_{g,e}$) are observed. Rearranging terms,  
+\begin{equation} \notag
+\textrm{ATT}_{e} =  \sum_{g} \omega_{g,e} \textrm{ATT}_{g,e}
+\end{equation}
+Thus, given $e$, it is sufficient to identify  $\textrm{ATT}_{g,e}$, $\forall g \; \text{s.t.} \; \omega_{g,e}>0$.
+
+\end{frame}
+
+
+\begin{frame}{Notation and Identification (3/4)}
+
+\textbf{Control Group:} Define a control group membership indicator ${\color{red} \mathcal{C}_{g,e}(G_i)}$. At a minimum,   $ {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1} \implies G_i > (g+e)$. We may further restrict ${\color{red} \mathcal{C}}$ based on context, e.g., some  consider the never-treated control group, ${\color{red} \mathcal{C}_{g,e}(G_i)}  {=}  1\{G_i  {=}  \infty\}$.
+
+\textbf{Assumption 1: Parallel trends.}
+\begin{equation} \notag
+\begin{aligned}
+ \exists b<0 \; \text{s.t.} &\quad \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+\\ &\quad = \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{blue}G_i = g}], \; \forall e \geq 0
+\end{aligned}
+\end{equation}
+This restricts the relationship between the treated group ${\color{blue}G_i = g}$ and the control group ${\color{red} \mathcal{C}_{g,e}(G_i) {=} 1}$: the change in average outcome for the treated group \textit{would have been the same in the absence of treatment} as that of the control group.
+
+\textbf{Assumption 2: No anticipation.} 
+\begin{equation} \notag
+\exists b<0 \;\; \text{s.t.} \;\; \mathbb{E}[Y_{i,g+b}({\color{blue} g}) | {\color{blue} G_i = g }] = \mathbb{E}[Y_{i,g+b}({\color{red} \infty}) | {\color{blue} G_i = g }] , \;\; \forall g
+\end{equation}
+This restricts \textit{when} the treated cohorts respond to treatment. 
+
+\textbf{Note:} Both assumptions need only hold for the event time $e$ and pre-period $b$ chosen by the researcher.
+ 
+\end{frame}
+
+
+
+\begin{frame}{Notation and Identification (4/4)}
+
+\textbf{Difference-in-differences:} Define the population estimator,
+\begin{equation} \notag 
+\text{DiD}_{g,e} {\equiv}  \mathbb{E}[Y_{i,g+e} {-} Y_{i,g+b} | {\color{blue} G_i = g }] {-}
+\mathbb{E}[Y_{i,g+e} {-} Y_{i,g+b} | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}]
+\end{equation}
+It depends only on observed outcomes, not counterfactuals.
+
+\textbf{Impose parallel trends:}  By the parallel-trends assumption, we can replace the second expectation as follows:
+\begin{equation} \notag 
+\text{DiD}_{g,e} {\equiv}  \mathbb{E}[Y_{i,g+e} {-} Y_{i,g+b} | {\color{blue} G_i = g }] {-}
+\mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{blue}G_i = g}]
+\end{equation}
+
+\textbf{Impose no anticipation:} By the no-anticipation assumption, we can cancel out the two terms involving $Y_{i,g+b}$:
+\begin{equation} \notag 
+\text{DiD}_{g,e} \equiv  \mathbb{E}[Y_{i,g+e}  | {\color{blue} G_i = g }] -
+\mathbb{E}[Y_{i,g+e}({\color{red} \infty})  | {\color{blue}G_i = g}]
+=
+\text{ATT}_{g,e}
+\end{equation}
+
+\vspace{-0.05cm}
+
+Thus, we have proven that $\text{DiD}_{g,e}=\text{ATT}_{g,e}$ if the parallel-trends and no-anticipation assumptions hold for the pair $(g,e)$. 
+
+\textbf{Result:} If  parallel-trends and no-anticipation hold $\forall g \; \text{s.t.} \; \omega_{g,e}>0$, $$\text{ATT}_{e} = \sum_{g:\; w_{g,e}>0} \omega_{g,e} \text{DiD}_{g,e} $$
+
+\vspace{-0.05cm}
+
+\end{frame}
+
+
+ 
+
+\begin{frame}{Estimator used by DiD for Big Data (1/4)}
+
+
+
+\textbf{Estimator based on averages.} Replacing population means with sample means, the package  implements the following DiD:
+
+\vspace{-0.55cm}
+
+\begin{equation} \notag  
+\textrm{DiD}_{g,e} 
+{=}
+\underbrace{ \mathbb{E}[Y_{i,g+e} - Y_{i,g+b}  | {\color{blue} G_i {=} g} ] }_{\textbf{Difference for treated group}}
+{-} \underbrace{
+\left(
+  \mathbb{E}[Y_{i,g+e} - Y_{i,g+b} | {\color{red} \mathcal{C}_{g,e}(G_i) {=} 1}]      
+\right) 
+  }_{\textbf{Difference for control group}}  
+\end{equation}
+ 
+\vspace{-0.2cm}
+
+where, following Callaway and Sant'Anna (2021), we require that parallel-trends and no-anticipation holds for one of these 3 possible control groups:
+\begin{equation} \notag
+\begin{aligned}
+\text{``all"} & \quad {\color{red} \mathcal{C}_{g,e}(G_i)} = 
+1\{ G_i > (g+e) \} \\
+\text{``future-treated"} & \quad {\color{red} \mathcal{C}_{g,e}(G_i)} = 
+1\{ G_i > (g+e) \; \& \; G_i < \infty \} \\
+\text{``never-treated"} & \quad {\color{red} \mathcal{C}_{g,e}(G_i)} = 
+1\{  G_i = \infty \}
+\end{aligned}
+\end{equation}
+
+\vspace{-0.05cm} 
+
+\textbf{Researcher choices.} The DiD researcher must make 3 choices:
+\vspace{-0.1cm}
+\begin{itemize}
+\item[\textbf{1.}] What is the range of event times $e$  for which you would like $\text{ATT}_e$ estimates? Default: $e=-5,...,5$.
+\item[\textbf{2.}] Which pre-period should be the base? Default: $b=-1$.
+\item[\textbf{3.}] Which of the 3 control selections ${\color{red} \mathcal{C}}$ to use? Default: ``all".
+\end{itemize}
+
+
+\end{frame}
+
+
+
+
+
+
+
+\begin{frame}{Estimator used by DiD for Big Data (2/4)}
+
+Fix some $(e,b,g)$. Consider testing $\text{ATT}_{g,e} =0$.
+
+\textbf{Notation:} Consider treatment group ${\color{blue}\mathcal{T}} \equiv 1\{G_i =g\}$ and control group ${\color{red}\mathcal{C}}$, which could be any of the three options above.  
+
+Define within-$i$ differences ${\color{blue}A_{i}} \equiv Y_{i,g+e} - Y_{i,g+b}, i\in{\color{blue}\mathcal{T}}$ with mean ${\color{blue}\mu_A}\equiv \mathbb{E}[{\color{blue}A}_{i} | i \in {\color{blue}\mathcal{T}} ]$, and ${\color{red}B_{i}} \equiv Y_{i,g+e} - Y_{i,g+b}, i\in{\color{red}\mathcal{C}}$ with mean ${\color{red}\mu_B} \equiv \mathbb{E}[{\color{red}B_i} |  i\in{\color{red}\mathcal{C}}]$, where subscripts are dropped if unambiguous.
+
+\textbf{Hypothesis Testing:}  Since $\text{ATT}_{g,e} \equiv {\color{blue}\mu_A} - {\color{red}\mu_B}$, consider,
+\vspace{-0.03cm}
+\begin{equation} \notag
+\text{Test statistic:} \;\; \text{DiD}_{g,e} = {\color{blue}\overline{A}} - {\color{red}\overline{B}} , \quad \text{Null} \;\; H_0:   {\color{blue}\mu_A} - {\color{red}\mu_B} = 0
+\end{equation}
+
+
+\vspace{-0.12cm}
+
+\textbf{Central Limit Theorem:} Denote the population variances by ${\color{blue}\sigma^2_A}\equiv \text{Var}[{\color{blue}A}_{i} | i \in {\color{blue}\mathcal{T}} ]$ and ${\color{red}\sigma^2_B} \equiv \text{Var}[{\color{red}B_i} |  i\in{\color{red}\mathcal{C}}]$. By the CLT under the null, and that the samples are drawn independently across $i$,  
+\vspace{-0.03cm}
+\begin{equation} \notag
+ {\color{blue}\overline{A}} \sim_d \mathcal{N}\left( {\color{blue}\mu_A} , \; {\color{blue}\sigma^2_A}/N_A \right), \quad  {\color{red}\overline{B}} \sim_d \mathcal{N}\left( {\color{red}\mu_B} , \; {\color{red}\sigma^2_B}/N_B \right) 
+\end{equation}
+\begin{equation} \notag
+\implies  \text{DiD}_{g,e} = \left(  {\color{blue}\overline{A}} - {\color{red}\overline{B}} \right) \sim_d  \mathcal{N}\left( 0 , \;  {\color{blue}\sigma^2_A}/N_A  + {\color{red}\sigma^2_B}/N_B   \right)
+\end{equation}
+Thus,  $\text{SE}(\text{DiD}_{g,e}) = \sqrt{{\color{blue}\sigma^2_A}/N_A  + {\color{red}\sigma^2_B}/N_B  }$. The empirical counterpart is trivial to compute (e.g. no matrix inversion needed).
+
+ 
+\end{frame}
+
+
+
+
+
+
+
+
+
+\begin{frame}{Estimator used by DiD for Big Data (3/4)}
+
+\vspace{-0.1cm}
+
+We usually are not interested in the ATT for a specific cohort $g$. Instead, we are usually interested in the ATT that is $e$ years after treatment, averaging across cohorts.
+
+\textbf{Average Effects by Event Time.} Let  $\omega_g$ denote the share of treated units in cohort $g$. Since treated  cohorts are independent of one another at a given $e$, CLT implies,
+
+\vspace{-0.5cm}
+
+\begin{equation} \notag
+\text{DiD}_e =   \sum_\mathcal{G} \omega_g \text{DiD}_{g,e},  
+\quad
+\text{SE}\left( \text{DiD}_e \right) =  
+\sqrt{
+\sum_{g \in \mathcal{G}} \omega_g^2 \text{Var}(\text{DiD}_{g,e})
+}
+\end{equation} 
+
+\vspace{-0.25cm}
+
+\textbf{Average across Event Times:} Similarly, we are often interested in an average of  $\text{DiD}_e$ across event times. Letting $\mathcal{E}$ denote a set of event times (e.g. $\mathcal{E} = \{ 1, 2, 3\}$), we are typically interested in the equally-weighted average, which has the following SE:
+
+\vspace{-0.7cm}
+
+\begin{equation} \notag
+\text{DiD}_{\mathcal{E}} =  \frac{1}{|\mathcal{E}|} \sum_\mathcal{E} \text{DiD}_e,
+\quad
+\text{SE}\left( \text{DiD}_\mathcal{E} \right) =  
+ \frac{1}{|\mathcal{E}|}
+\sqrt{
+\sum_{e \in \mathcal{E}} \text{Var}(\text{DiD}_{e})
+}
+\end{equation} 
+
+\vspace{-0.1cm}
+
+The R package provides all possible  $ \text{DiD}_e$ with their SEs by default, and user-friendly options to estimate various $\text{DiD}_\mathcal{E}$ and their SEs.
+
+\end{frame}
+
+
+
+
+
+
+
+\begin{frame}{Estimator used by DiD for Big Data (4/4)}
+
+ 
+\textbf{Event study parameters:} For $\mathcal{H} \in \{ \mathcal{T} , \mathcal{C} \}$, one may wish to plot averages across event times:
+\begin{equation} \notag
+\bar{Y}^\mathcal{H}_{g,e} = \sum_{i \in \mathcal{H}_g}Y_{i,g+e} , \;
+\text{SE}(\bar{Y}^\mathcal{H}_{g,e}) = \sqrt{\frac{\sigma^2_{\mathcal{H},g,e}}{|\mathcal{H}_g|}},  \; \sigma^2_{\mathcal{H},g,e} = \text{Var}[Y_{i,g+e} | i \in \mathcal{H}_g]
+\end{equation} 
+\begin{equation} \notag
+\bar{Y}^\mathcal{H}_{e} = \sum_{g \in \mathcal{G}}
+\omega_g \bar{Y}^\mathcal{H}_{g,e}
+ , \;
+\text{SE}(\bar{Y}^\mathcal{H}_{g,e}) = \sqrt{\sum_g \omega_g^2 \text{Var}(\bar{Y}^\mathcal{H}_{g,e})},
+\end{equation} 
+
+The package provides these means and SEs by default.
+
+\vspace{0.5cm}
+
+\textbf{Plots:} The package also provides automated plots, both for presenting the event study parameters and for presenting the ATT estimates. These can be plotted by $(g,e)$ or by $e$ (average over $g$).
+
+\end{frame}
+
+
+
+
+\end{document}
+

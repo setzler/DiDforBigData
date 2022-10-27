@@ -1,0 +1,298 @@
+setwd("~/github/DiDforBigData")
+library(ggplot2)
+library(scales)
+library(didimputation)
+library(did)
+library(DIDmultiplegt)
+library(DiDforBigData)
+library(profmem)
+library(parallel)
+
+# didimputation
+Borusyaketal <- function(inputdata, varname_options, horizon=c(0,1,2,3)){
+  BJS = did_imputation(data=inputdata, yname = varname_options$outcome_name, gname=varname_options$cohort_name,
+                       tname = varname_options$time_name, idname = varname_options$id_name, horizon=horizon)
+  BJS = as.data.table(BJS)[,list(EventTime=term, ATTe=estimate, ATTe_SE=std.error)]
+  return(BJS)
+}
+
+# did
+CallawaySantanna <- function(inputdata, varname_options, est_method="reg"){
+  CS =  att_gt(yname = varname_options$outcome_name,
+               gname = varname_options$cohort_name,
+               idname = varname_options$id_name,
+               tname = varname_options$time_name,
+               xformla = ~1,
+               data = inputdata,
+               est_method = "reg",
+               control_group = "notyettreated",
+               base_period="universal",
+               anticipation=0)
+  CS_main = data.table(Cohort=CS$group, EventTime=CS$t-CS$group, CalendarTime=CS$t, ATTge=CS$att, ATTge_SE=CS$se)
+  CS_ES = aggte(CS,type="dynamic")
+  CS_ES = data.table(EventTime=CS_ES$egt, ATTe=CS_ES$att.egt, ATTe_SE=CS_ES$se.egt)
+  return(list(results_cohort=CS, results_average=CS_ES))
+}
+
+deChaisemartin <- function(inputdata,varname_options,dynamic=5,placebo=0,brep=2){
+  # set up variable names
+  time_name = varname_options$time_name
+  outcome_name = varname_options$outcome_name
+  cohort_name = varname_options$cohort_name
+  id_name = varname_options$id_name
+  # estimation
+  inputdata[, D := as.numeric(year >= get(cohort_name))]
+  CH_res = did_multiplegt(df=copy(inputdata), Y=outcome_name, T = time_name, G = id_name, D = "D",
+                          dynamic=dynamic, placebo=placebo, brep=brep, cluster=id_name)
+  # collect results
+  if(dynamic>0){
+    CH_res_dyn = data.table( EventTime=0, ATTe=CH_res$effect, ATTe_SE=CH_res$se_effect)
+    for(ee in 1:dynamic){
+      CH_res_dyn = rbindlist(list(CH_res_dyn, data.table( EventTime=ee, ATTe=CH_res[[paste0("dynamic_",ee)]], ATTe_SE=CH_res[[paste0("se_dynamic_",ee)]])))
+    }
+    if(placebo>0){
+      for(ee in 1:placebo){
+        CH_res_dyn = rbindlist(list(CH_res_dyn, data.table( EventTime=(-1*ee), ATTe=CH_res[[paste0("placebo_",ee)]], ATTe_SE=CH_res[[paste0("se_placebo_",ee)]])))
+      }
+    }
+    CH_res_dyn = CH_res_dyn[order(EventTime)]
+    return(CH_res_dyn)
+  }
+}
+
+stackedES <- function(inputdata, varname_options){
+  library(eventStudy)
+  inputdata[, (varname_options$cohort_name) := as.integer(get(varname_options$cohort_name))]
+  inputdata[is.na(get(varname_options$cohort_name)), (varname_options$cohort_name) := 2030] # ES() doesn't like Inf
+  ES_res <- ES(long_data=inputdata, outcomevar=varname_options$outcome_name,
+               unit_var=varname_options$id_name, cal_time_var=varname_options$time_name,
+               onset_time_var=varname_options$cohort_name, cluster_vars=varname_options$id_name)
+  return(ES_res)
+}
+
+
+# Compare to OLS
+saturatedOLS <- function(inputdata){
+  # set up variable names
+  time_name = varname_options$time_name
+  outcome_name = varname_options$outcome_name
+  cohort_name = varname_options$cohort_name
+  id_name = varname_options$id_name
+  # rename
+  setnames(inputdata,cohort_name,"cohort")
+  setnames(inputdata,time_name,"year")
+  setnames(inputdata,outcome_name,"Y")
+  setnames(inputdata,id_name,"id")
+  # cohort and year sets
+  Gset = inputdata[,unique(cohort)]
+  Gset = Gset[is.finite(Gset)]
+  Gset = sort(Gset)
+  Tset = inputdata[,unique(year)]
+  Tset = sort(Tset)
+  # construct the cohort dummies and cohort-time interactions
+  cohort_names = c()
+  int_names = c()
+  for(GG in Gset){
+    for(TT in Tset){
+      if(!(TT - GG == -2)){
+        int_names = c(int_names, paste0("intTT",TT,"GG",GG))
+        inputdata[, (paste0("intTT",TT,"GG",GG)) := as.numeric(year==TT & cohort==GG)]
+      }
+    }
+  }
+  for(GG in Gset){
+    cohort_names = c(cohort_names, paste0("cohortGG",GG))
+    inputdata[, (paste0("cohortGG",GG)) := as.numeric(cohort==GG)]
+  }
+  # run OLS
+  DiD_formula = paste0("Y ~ -1 + factor(year) + ",paste0(cohort_names, collapse=" + ")," + ",paste0(int_names, collapse=" + "))
+  DiD_model = lm(DiD_formula, data=inputdata)
+  # extract coefficients
+  OLS_mat = data.table(summary(DiD_model)$coefficients)
+  OLS_mat$rownames = rownames(summary(DiD_model)$coefficients)
+  OLS_mat = OLS_mat[14:nrow(OLS_mat)]
+  OLS_mat[, CalendarTime := substr(rownames, 6,9)]
+  OLS_mat[, Cohort := substr(rownames, 12,15)]
+  setnames(OLS_mat,c("Estimate","Std. Error"),c("OLS","OLS_SE"))
+  OLS_mat = OLS_mat[,list(CalendarTime=as.integer(CalendarTime),Cohort=as.integer(Cohort),OLS, OLS_SE)]
+  return(OLS_mat)
+
+}
+
+
+ValidateDiD <- function(estimators = c("DiDforBigData","CSreg","BJS"), sample_sizes=c(1e3,1e4,1e5), reps=3, file="inst/speed_test.csv"){
+
+  # prepare variable names
+  varname_options = list()
+  varname_options$time_name = "year"
+  varname_options$outcome_name = "Y"
+  varname_options$cohort_name = "cohort"
+  varname_options$id_name = "id"
+
+  # define speed tester
+  speed_tester <- function(sample_size,reps){
+    all_res = data.table()
+    for(seed in 1:reps){
+      this_res = data.table()
+      # simulate
+      inputdata = SimDiD(sample_size = sample_size, seed = seed, ATTcohortdiff = 2, minyear=2004, maxyear=2013)
+      # my package
+      if("DiDforBigData" %in% estimators){
+        time0 = proc.time()[3]
+        My_p <- profmem({ My_res <- DiD(copy(inputdata), varname_options = varname_options, min_event = -1, max_event = 3) })
+        time1 = proc.time()[3]
+        My_time = (time1 - time0)/60
+        My_mem = sum(My_p$bytes,na.rm=T)/1e9
+        My_ATT = My_res$results_average[EventTime==1]$ATTe
+        My_ATTse = My_res$results_average[EventTime==1]$ATTe_SE
+        this_res = rbindlist(list(this_res, data.table(method="DiDforBigData", ATTe=My_ATT,ATTse=My_ATTse, Mem=My_mem, Time=My_time)))
+        gc()
+        print(sprintf("finished DiDforBigData in %s",My_time))
+      }
+      # Borusyak et al
+      if("BJS" %in% estimators){
+        time0 = proc.time()[3]
+        BJS_p <- profmem({ BJS_res <-  Borusyaketal(copy(inputdata), varname_options, horizon=c(0,1,2,3)) })
+        time1 = proc.time()[3]
+        BJS_time = (time1 - time0)/60
+        BJS_mem = sum(BJS_p$bytes,na.rm=T)/1e9
+        BJS_ATT = BJS_res[EventTime==1]$ATTe
+        BJS_ATTse = BJS_res[EventTime==1]$ATTe_SE
+        this_res = rbindlist(list(this_res, data.table(method="BJS", ATTe=BJS_ATT, ATTse=BJS_ATTse, Mem=BJS_mem, Time=BJS_time)))
+        gc()
+        print(sprintf("finished BJS in %s",BJS_time))
+      }
+      # Callaway Sant'Anna, reg
+      if("CSreg" %in% estimators){
+        time0 = proc.time()[3]
+        CSreg_p <- profmem({ CSreg_res <- CallawaySantanna(copy(inputdata), varname_options, est_method = "reg") })
+        time1 = proc.time()[3]
+        CSreg_time = (time1 - time0)/60
+        CSreg_mem = sum(CSreg_p$bytes,na.rm=T)/1e9
+        CSreg_ATT = CSreg_res$results_average[EventTime==1]$ATTe
+        CSreg_ATTse = CSreg_res$results_average[EventTime==1]$ATTe_SE
+        this_res = rbindlist(list(this_res, data.table(method="CSreg", ATTe=CSreg_ATT, ATTse=CSreg_ATTse, Mem=CSreg_mem, Time=CSreg_time)))
+        gc()
+        print(sprintf("finished CSreg in %s",CSreg_time))
+      }
+      # Callaway Sant'Anna, dr
+      if("CSdr" %in% estimators){
+        time0 = proc.time()[3]
+        CSdr_p <- profmem({ CSdr_res <- CallawaySantanna(copy(inputdata), varname_options, est_method = "dr") })
+        time1 = proc.time()[3]
+        CSdr_time = (time1 - time0)/60
+        CSdr_mem = sum(CSdr_p$bytes,na.rm=T)/1e9
+        CSdr_ATT = CSdr_res$results_average[EventTime==1]$ATTe
+        CSdr_ATTse = CSdr_res$results_average[EventTime==1]$ATTe_SE
+        this_res = rbindlist(list(this_res, data.table(method="CSdr", ATTe=CSdr_ATT, ATTse=CSdr_ATTse, Mem=CSdr_mem, Time=CSdr_time)))
+        gc()
+        print(sprintf("finished CSdr in %s",CSdr_time))
+      }
+      # de Chaisemartin & D'Haultfoeuille
+      if("CH" %in% estimators){
+        time0 = proc.time()[3]
+        CH_p <- profmem({ CH_res <- deChaisemartin(copy(inputdata),varname_options,dynamic=3,brep=20) })
+        time1 = proc.time()[3]
+        CH_time = (time1 - time0)/60
+        CH_mem = sum(CH_p$bytes,na.rm=T)/1e9
+        CH_ATT = CH_res[EventTime==1]$ATTe
+        CH_ATTse = CH_res[EventTime==1]$ATTe_SE
+        this_res = rbindlist(list(this_res, data.table(method="CH", ATTe=CH_ATT, ATTse=CH_ATTse, Mem=CH_mem, Time=CH_time)))
+        gc()
+        print(sprintf("finished CH in %s",CH_time))
+      }
+      # collect
+      all_res = rbindlist(list(all_res,this_res))
+    }
+    if(reps>1){
+      all_res = all_res[,list(ATTe=median(ATTe),ATTse=median(ATTse),Mem=median(Mem),Time=median(Time)),method]
+    }
+    all_res$sample_size = sample_size
+    return(all_res)
+  }
+
+  all_speeds = data.table()
+  for(nn in sample_sizes){
+    print(sprintf("starting sample size %s",nn))
+    speeds = speed_tester(sample_size=nn,reps=reps)
+    all_speeds = rbindlist(list(all_speeds, speeds))
+    gc()
+    print(all_speeds[])
+    print(sprintf("sample %s done",nn))
+  }
+
+  write.csv(all_speeds, file=file, row.names = FALSE)
+
+  return(all_speeds)
+
+}
+
+
+plot_results_small <- function(){
+
+  testresults = rbindlist(list(
+    setDT(read.csv(file="inst/speed_test_small.csv")),
+    setDT(read.csv(file="inst/speed_test_moderate.csv"))
+  ))
+  testresults[method=="BJS", variable := "Borusyak Jaravel\n& Spiess\ndidimputation"]
+  testresults[method=="CSreg", variable := "Callaway &\nSant'Anna\ndid using reg"]
+  testresults[method=="CSdr", variable := "Callaway &\nSant'Anna\ndid using dr"]
+  testresults[method=="CH", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
+  testresults[method=="DiDforBigData", variable := "DiD for\nBig Data"]
+
+  gg = ggplot(aes(x=factor(sample_size), y=Time, fill=variable),data=testresults)+
+    theme_bw(base_size=22) + theme(legend.position = "bottom") +
+    labs(x="Sample Size",y="",title="Estimation Time (Minutes)",fill="") +
+    scale_y_continuous(breaks=pretty_breaks()) +
+    geom_bar(stat='identity', position='dodge') +
+    scale_fill_manual(values=c('blue','purple','green','red','black'))
+  ggsave(gg,filename="inst/speedtest_small.png",width=11,height=6)
+
+  gg = ggplot(aes(x=factor(sample_size), y=Mem, fill=variable),data=testresults)+
+    theme_bw(base_size=22) + theme(legend.position = "bottom") +
+    labs(x="Sample Size",y="",title="Memory Usage (Gigabits)",fill="") +
+    scale_y_continuous(breaks=pretty_breaks()) +
+    geom_bar(stat='identity', position='dodge') +
+    scale_fill_manual(values=c('blue','purple','green','red','black'))
+  ggsave(gg,filename="inst/memorytest_small.png",width=11,height=6)
+
+  # make ggplot
+  variable_vals = sort(testresults[,unique(variable)])
+  testresults[, variable := factor(variable, levels=variable_vals)]
+  testresults = testresults[order(sample_size,variable)]
+  ci_factor = 1.96
+  testresults[, sample_size_char := as.character(sample_size)]
+  testresults[, sample_size_num := order(as.numeric(sample_size)), method]
+  mapping = unique(testresults[,.(sample_size_char,sample_size_num)])
+  mapping_lab = c()
+  for(ii in 1:nrow(mapping)){
+    mapping_lab = c(mapping_lab, paste0(as.character(mapping[ii,sample_size_num]), "=", as.character(mapping[ii,sample_size_char])))
+  }
+  variables = testresults[, unique(variable) ]
+  max_jitter = 0.25
+  jitter_vals = seq(-max_jitter, max_jitter, length.out=length(variables))
+  for(ii in 1:length(jitter_vals)){
+    testresults[variable==variables[ii], jitter_val := jitter_vals[ii]]
+  }
+  testresults[, sample_size_num := sample_size_num + jitter_val ]
+  gg <- ggplot(aes( x=sample_size_num, y = ATTe, color=variable), data = testresults) +
+    labs(x = "Sample Size", y ="", color="", title="DiD Estimates (95% CI)") +
+    geom_point() + theme_bw(base_size = 20) +
+    geom_errorbar(aes(ymin = ATTe - ci_factor * ATTse, ymax = ATTe + ci_factor * ATTse), width=0.1) +
+    scale_y_continuous(breaks = pretty_breaks(), limits=c(3.5,4.5)) +
+    geom_hline(yintercept=4, color="black", linetype="dashed") +
+    theme(legend.position = "bottom") +
+    scale_color_manual(values=c('blue','purple','green','red','black')) +
+    scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="1000" , "2"="5000" , "3"="10000" , "4"="20000"))
+  ggsave(gg,filename="inst/estimates_small.png",width=11,height=6)
+
+
+}
+
+
+# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg","CSdr","CH","BJS"), sample_sizes=c(1e3,5e3), reps=3, file="inst/speed_test_small.csv")
+# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg","CSdr","CH","BJS"), sample_sizes=c(1e4,2e4), reps=3, file="inst/speed_test_moderate.csv")
+# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg"), sample_sizes=c(5e4,1e5), reps=3, file="inst/speed_test_large.csv")
+# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg"), sample_sizes=c(5e5), reps=1, file="inst/speed_test_larger.csv")
+# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg"), sample_sizes=c(1e6), reps=1, file="inst/speed_test_largerr.csv")
+

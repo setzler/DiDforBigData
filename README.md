@@ -5,7 +5,7 @@ This R package provides a big-data-friendly and memory-efficient
 difference-in-differences (DiD) estimator for staggered (and
 non-staggered) treatment contexts.
 
-## Motivation
+# Motivation
 
 #### Background:
 
@@ -30,16 +30,23 @@ large to perform the estimation using available software.
 
 #### Big Data Challenge:
 
-To verify their claim, I wrote a simple panel data simulator with 10
-years of data and 4 equally-sized treatment cohorts (including a
-never-treated cohort). I simulated it with different numbers of
-individuals and applied the available R estimators to it. I found that
-most of the estimators cannot run successfully with sample size greater
-than 10,000 individuals. The exception is the excellent `did` package by
-[Callaway & Sant’Anna (2021)](https://bcallaway11.github.io/did/);
-however, this package becomes very slow with sample size above 100,000
-and infeasible with sample size above 1 million (see demonstration
-below).
+To verify that existing packages for staggered DiD could not handle
+large samples, I wrote a simple panel data simulator with staggered
+treatment roll-out and heterogeneous treatment effects. I simulated it
+with different numbers of individuals and applied the available R
+packages that implement the methods of:
+
+- Borusyak, Jaravel, and Spiess (2022);
+- Callaway & Sant’Anna (2021); and
+- de Chaisemartin & D’Haultfoeuille (2020).
+
+Even using the fast M1 silicon in my 2021 Macbook Pro, I found that only
+the Callaway & Sant’Anna (2021) implementation could successfully
+estimate DiD with 100,000 unique individuals. While many DiD
+applications consider only a small number of unique individuals (e.g. a
+state-level policy roll-out design would typically have only 50 or so
+unique individuals), DiD designs at the household-level or firm-level
+using administrative data often involve millions of unique individuals.
 
 Estimating DiD with large administrative data poses three challenges:
 
@@ -67,11 +74,80 @@ following:
     and staggered treatment in less than 1 minute (see demonstration
     below).
 2.  **Memory:** This package avoids memory-intensive activities like
-    matrix-inversion and data-stacking. It uses much less memory than
-    other packages (see demonstration below).
+    matrix-inversion and data-stacking. In fact, this package is
+    entirely free of OLS. It uses much less memory than other packages
+    (see demonstration below).
 3.  **Dependencies:** This package has only *one* dependency,
     `data.table`, which is already installed with most R distributions.
     This package is also extremely small, so it can easily be
     transferred onto servers, via email, etc.
 
-## Demonstration
+# Demonstration
+
+This section will compare 5 implementations of DiD estimators for
+staggered treatment contexts:
+
+1.  The implementation of the Borusyak, Jaravel, and Spiess (2022)
+    approach in R package `didimputation`;
+2.  The implementation of the baseline Callaway & Sant’Anna (2021)
+    approach in R package `did` using `est_method = "dr"`;
+3.  The implementation of the regression-based Callaway &
+    Sant’Anna (2021) approach in R package `did` using
+    `est_method = "reg"`;
+4.  The implementation of the de Chaisemartin & D’Haultfoeuille (2020)
+    approach in R package `did_multiplegt` using `brep=20`; and,
+5.  My R package `DiDforBigData`.
+
+Below, I draw the simulated data 3 times per sample size, and apply each
+estimator. Results are presented for the median across those 3 draws.
+Sample Size refers to the number of unique individuals. Since there are
+10 simulated years of data, and the sample is balanced across years, the
+number of observations is 10 times the number of unique individuals.
+
+Note: I only consider contexts in which the data is balanced, treatment
+is permanent once it begins, and the unconditional parallel-trends and
+no-anticipation assumptions hold strictly for all treatment cohorts.
+Under these assumptions, all of the estimators considered are
+consistent. However, in empirical contexts in which these assumptions do
+not hold, only some of the estimators may be valid. For example, only
+the approach of de Chaisemartin & D’Haultfoeuille (2020) can allow for
+temporary treatments.
+
+#### Estimates
+
+I verify that all of the estimators provide similar point estimates and
+standard errors. Here, I show the point estimates and 95% confidence
+intervals (using +/- 1.96\*SE) for the DiD estimate at event time +1
+(averaging across cohorts). The true ATT is 4 at event time +1. I also
+verify that two-way fixed-effects OLS estimation would find an effect of
+about 5.5 at event time +1 when the sample is large.
+
+![](vignettes/estimates_small.png)
+
+#### Speed test
+
+**Small Samples:** Here is the run-time required to complete the DiD
+estimation using each package:
+
+![](vignettes/speedtest_small.png)
+
+We see that, with 20,000 unique individuals, the implementations of the
+Borusyak, Jaravel, and Spiess (2022) and de Chaisemartin &
+D’Haultfoeuille (2020) approaches have become very slow. I could not get
+either approach to run successfully with 100,000 unique individuals, as
+they both crash R.
+
+**Large samples:** Given the above results, we cannot rely on the
+implementations of the Borusyak, Jaravel, and Spiess (2022) and de
+Chaisemartin & D’Haultfoeuille (2020) approaches if there are 100,000 or
+more individuals. We now compare the implementation of the Callaway &
+Sant’Anna (2021) approach to `DiDforBigData` when the sample size is
+large. Since the two estimation methods of Callaway & Sant’Anna (2021)
+perform similarly, we focus on `did` using `est_method = "reg"`.
+
+#### Memory test
+
+**Small Samples:** Here is the memory used to complete the DiD
+estimation by each package:
+
+![](vignettes/memorytest_small.png)

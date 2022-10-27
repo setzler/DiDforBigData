@@ -2,7 +2,6 @@
 
 export(DiD)
 export(DiDge)
-export(EfficiencyTestDiD)
 export(PlotDiD)
 export(PlotES)
 export(SimDiD)

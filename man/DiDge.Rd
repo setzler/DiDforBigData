@@ -2,7 +2,7 @@
 % Please edit documentation in R/DiD_estimator.R
 \name{DiDge}
 \alias{DiDge}
-\title{Estimate DiD estimation for a single cohort (g) and a single event time (e).}
+\title{Estimate DiD for a single cohort (g) and a single event time (e).}
 \usage{
 DiDge(
   inputdata,
@@ -30,5 +30,28 @@ DiDge(
 A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
 }
 \description{
-Estimate DiD estimation for a single cohort (g) and a single event time (e).
+Estimate DiD for a single cohort (g) and a single event time (e).
+}
+\examples{
+# simulate some data
+simdata = SimDiD(sample_size=200)
+
+# define the variable names as a list()
+varname_options = list()
+varname_options$time_name = "year"
+varname_options$outcome_name = "Y"
+varname_options$cohort_name = "cohort"
+varname_options$id_name = "id"
+
+# estimate the ATT for cohort 2007 at event time 1
+DiDge(simdata, varname_options, cohort_time=2007, event_postperiod=1)
+
+# change the base period to -3
+DiDge(simdata, varname_options, event_baseperiod=-3, cohort_time=2007, event_postperiod=1)
+
+# use only the never-treated control group
+DiDge(simdata, varname_options, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
+
+# use only the never-treated control group
+DiDge(simdata, varname_options, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
 }

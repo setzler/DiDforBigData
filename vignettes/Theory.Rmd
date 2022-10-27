@@ -1,0 +1,52 @@
+---
+title: "Theory"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Theory}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+The slides are available in pdf form here: [slides](DiDforBigData_theory.pdf). For convenience, they are converted to PNG images here:
+
+![](slide1.png) 
+
+![](slide2.png) 
+
+
+![](slide3.png) 
+
+
+
+![](slide4.png) 
+
+
+
+
+
+
+![](slide5.png) 
+
+
+
+![](slide6.png) 
+
+
+
+![](slide7.png) 
+
+
+![](slide8.png) 
+
+
+
+![](slide9.png) 
+

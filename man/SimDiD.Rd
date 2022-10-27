@@ -8,7 +8,9 @@ SimDiD(
   seed = 1,
   sample_size = 100,
   cohorts = c(2007, 2010, 2012),
-  ATTs = c(1, 1, 1),
+  ATTat0 = 1,
+  ATTgrowth = 1,
+  ATTcohortdiff = 0.5,
   anticipation = 0,
   minyear = 2003,
   maxyear = 2013,
@@ -24,7 +26,11 @@ SimDiD(
 
 \item{cohorts}{Vector of years at which treatment onset occurs. Default is cohorts=c(2007,2010,2012).}
 
-\item{ATTs}{Vector of treatment effects. Must be same length as cohorts. Default is ATTs=c(1,1,1).}
+\item{ATTat0}{Treatment effect at event time 0. Default is 1.}
+
+\item{ATTgrowth}{Increment in the ATT for each event time after 0. Default is 1.}
+
+\item{ATTcohortdiff}{Incrememnt in the ATT for each cohort. Default is 0.5.}
 
 \item{anticipation}{Number of years prior to cohort to allow 50\% treatment effects. Default is anticipation=0.}
 
@@ -42,8 +48,30 @@ SimDiD(
 A data.table with variables (id, year, cohort, Y), where Y is the outcome variable.
 }
 \description{
-Simulate data from the model Y_it =  alpha_i + mu_t + ATT*(t >= G_i) + epsilon_it, where i is individual, t is year, and G_i is the cohort.
+Simulate data from the model Y_it =  alpha_i + mu_t + ATT*(t >= G_i) + epsilon_it,
+where i is individual, t is year, and G_i is the cohort.
+The ATT formula is ATTat0 + EventTime*ATTgrowth + \*cohort_counter\*ATTcohortdiff,
+where cohort_counter is the order of treated cohort (first, second, etc.).
 }
 \examples{
+# simulate data with default options
 SimDiD()
+
+# change the random seed
+SimDiD(seed=123)
+
+# increase sample size
+SimDiD(sample_size=200)
+
+# increase the initial ATT for the first treated cohort
+SimDiD(ATTat0=2)
+
+# change cross-time and cross-cohort ATT variation, where the formula is ATTat0 + EventTime*ATTgrowth
+SimDiD(ATTgrowth=2,ATTcohortdiff=3)
+
+# change the range of years considered and treatment cohorts
+SimDiD(minyear=1994, maxyear=1999, cohorts=c(1995,1996))
+
+# add two periods of anticipation prior to treatment. The effect will be 0.5*ATTat0.
+SimDiD(anticipation=2)
 }
