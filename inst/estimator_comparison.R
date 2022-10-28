@@ -253,21 +253,24 @@ plot_results <- function(output_dir="docs/articles"){
   testresults[method=="CH10", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
   testresults[method=="CH20", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
   testresults[method=="DiDforBigData", variable := "DiD for\nBig Data"]
+  testresults[, sample_size_char := order(sample_size), variable]
 
-  gg = ggplot(aes(x=factor(sample_size), y=Time, fill=variable),data=testresults)+
+  gg = ggplot(aes(x=sample_size_char, y=Time, fill=variable),data=testresults)+
     theme_bw(base_size=22) + theme(legend.position = "bottom") +
     labs(x="Sample Size (Unique Individuals)",y="",title="Estimation Time (Minutes)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('blue','black','red','green'))
+    scale_fill_manual(values=c('blue','black','red','green')) +
+    scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="1,000" , "2"="5,000" , "3"="10,000" , "4"="20,000"))
   ggsave(gg,filename=sprintf("%s/speedtest_small.png",output_dir),width=10,height=6)
 
-  gg = ggplot(aes(x=factor(sample_size), y=Mem, fill=variable),data=testresults)+
+  gg = ggplot(aes(x=sample_size_char, y=Mem, fill=variable),data=testresults)+
     theme_bw(base_size=22) + theme(legend.position = "bottom") +
     labs(x="Sample Size (Unique Individuals)",y="",title="Memory Usage (Gigabits)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('blue','black','red','green'))
+    scale_fill_manual(values=c('blue','black','red','green')) +
+    scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="1,000" , "2"="5,000" , "3"="10,000" , "4"="20,000"))
   ggsave(gg,filename=sprintf("%s/memorytest_small.png",output_dir),width=10,height=6)
 
   # make ggplot
@@ -297,7 +300,7 @@ plot_results <- function(output_dir="docs/articles"){
     geom_hline(yintercept=4, color="black", linetype="dashed") +
     theme(legend.position = "bottom") +
     scale_color_manual(values=c('blue','black','red','green')) +
-    scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="1000" , "2"="5000" , "3"="10000" , "4"="20000"))
+    scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="1,000" , "2"="5,000" , "3"="10,000" , "4"="20,000"))
   ggsave(gg,filename=sprintf("%s/estimates_small.png",output_dir),width=10,height=6)
 
 
@@ -310,21 +313,24 @@ plot_results <- function(output_dir="docs/articles"){
   testresults[method=="CSreg", variable := "Callaway &\nSant'Anna\ndid using reg"]
   testresults[method=="CSdr", variable := "Callaway &\nSant'Anna\ndid"]
   testresults[method=="DiDforBigData", variable := "DiD for\nBig Data"]
+  testresults[, sample_size_char := order(sample_size), variable]
 
-  gg = ggplot(aes(x=factor(sample_size), y=Time, fill=variable),data=testresults)+
+  gg = ggplot(aes(x=sample_size_char, y=Time, fill=variable),data=testresults)+
     theme_bw(base_size=22) + theme(legend.position = "bottom") +
     labs(x="Sample Size (Unique Individuals)",y="",title="Estimation Time (Minutes)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('black','green'))
+    scale_fill_manual(values=c('black','green')) +
+    scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="50,000" , "2"="100,000" , "3"="500,000" , "4"="1,000,000"))
   ggsave(gg,filename=sprintf("%s/speedtest_large.png",output_dir),width=11,height=6)
 
-  gg = ggplot(aes(x=factor(sample_size), y=Mem, fill=variable),data=testresults)+
+  gg = ggplot(aes(x=sample_size_char, y=Mem, fill=variable),data=testresults)+
     theme_bw(base_size=22) + theme(legend.position = "bottom") +
     labs(x="Sample Size (Unique Individuals)",y="",title="Memory Usage (Gigabits)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('black','green'))
+    scale_fill_manual(values=c('black','green')) +
+    scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="50,000" , "2"="100,000" , "3"="500,000" , "4"="1,000,000"))
   ggsave(gg,filename=sprintf("%s/memorytest_large.png",output_dir),width=10,height=6)
 
 }

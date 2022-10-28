@@ -99,7 +99,7 @@ estimators for staggered treatment contexts:
     approach in R package `did` using `est_method = "dr"` (though
     performance is nearly identical using `est_method = "reg"`);
 3.  The implementation of the de Chaisemartin & D’Haultfoeuille (2020)
-    approach in R package `did_multiplegt` using `brep=20`; and,
+    approach in R package `DIDmultiplegt` using `brep=20`; and,
 4.  My R package `DiDforBigData`.
 
 Below, I draw the simulated data 3 times per sample size, and apply each
