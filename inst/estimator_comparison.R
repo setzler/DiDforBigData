@@ -1,27 +1,26 @@
 setwd("~/github/DiDforBigData")
-library(ggplot2)
-library(scales)
+library(stringr)
 library(didimputation)
 library(did)
 library(DIDmultiplegt)
 library(DiDforBigData)
 library(profmem)
-library(parallel)
+# library(parallel)
 
 # didimputation
-Borusyaketal <- function(inputdata, varname_options, horizon=c(0,1,2,3)){
-  BJS = did_imputation(data=inputdata, yname = varname_options$outcome_name, gname=varname_options$cohort_name,
-                       tname = varname_options$time_name, idname = varname_options$id_name, horizon=horizon)
+Borusyaketal <- function(inputdata, varnames, horizon=c(0,1,2,3)){
+  BJS = did_imputation(data=inputdata, yname = varnames$outcome_name, gname=varnames$cohort_name,
+                       tname = varnames$time_name, idname = varnames$id_name, horizon=horizon)
   BJS = as.data.table(BJS)[,list(EventTime=term, ATTe=estimate, ATTe_SE=std.error)]
   return(BJS)
 }
 
 # did
-CallawaySantanna <- function(inputdata, varname_options, est_method="reg"){
-  CS =  att_gt(yname = varname_options$outcome_name,
-               gname = varname_options$cohort_name,
-               idname = varname_options$id_name,
-               tname = varname_options$time_name,
+CallawaySantanna <- function(inputdata, varnames, est_method="reg"){
+  CS =  att_gt(yname = varnames$outcome_name,
+               gname = varnames$cohort_name,
+               idname = varnames$id_name,
+               tname = varnames$time_name,
                xformla = ~1,
                data = inputdata,
                est_method = "reg",
@@ -34,12 +33,12 @@ CallawaySantanna <- function(inputdata, varname_options, est_method="reg"){
   return(list(results_cohort=CS, results_average=CS_ES))
 }
 
-deChaisemartin <- function(inputdata,varname_options,dynamic=5,placebo=0,brep=2){
+deChaisemartin <- function(inputdata,varnames,dynamic=5,placebo=0,brep=2){
   # set up variable names
-  time_name = varname_options$time_name
-  outcome_name = varname_options$outcome_name
-  cohort_name = varname_options$cohort_name
-  id_name = varname_options$id_name
+  time_name = varnames$time_name
+  outcome_name = varnames$outcome_name
+  cohort_name = varnames$cohort_name
+  id_name = varnames$id_name
   # estimation
   inputdata[, D := as.numeric(year >= get(cohort_name))]
   CH_res = did_multiplegt(df=copy(inputdata), Y=outcome_name, T = time_name, G = id_name, D = "D",
@@ -60,13 +59,13 @@ deChaisemartin <- function(inputdata,varname_options,dynamic=5,placebo=0,brep=2)
   }
 }
 
-stackedES <- function(inputdata, varname_options){
+stackedES <- function(inputdata, varnames){
   library(eventStudy)
-  inputdata[, (varname_options$cohort_name) := as.integer(get(varname_options$cohort_name))]
-  inputdata[is.na(get(varname_options$cohort_name)), (varname_options$cohort_name) := 2030] # ES() doesn't like Inf
-  ES_res <- ES(long_data=inputdata, outcomevar=varname_options$outcome_name,
-               unit_var=varname_options$id_name, cal_time_var=varname_options$time_name,
-               onset_time_var=varname_options$cohort_name, cluster_vars=varname_options$id_name)
+  inputdata[, (varnames$cohort_name) := as.integer(get(varnames$cohort_name))]
+  inputdata[is.na(get(varnames$cohort_name)), (varnames$cohort_name) := 2030] # ES() doesn't like Inf
+  ES_res <- ES(long_data=inputdata, outcomevar=varnames$outcome_name,
+               unit_var=varnames$id_name, cal_time_var=varnames$time_name,
+               onset_time_var=varnames$cohort_name, cluster_vars=varnames$id_name)
   return(ES_res)
 }
 
@@ -74,10 +73,10 @@ stackedES <- function(inputdata, varname_options){
 # Compare to OLS
 saturatedOLS <- function(inputdata){
   # set up variable names
-  time_name = varname_options$time_name
-  outcome_name = varname_options$outcome_name
-  cohort_name = varname_options$cohort_name
-  id_name = varname_options$id_name
+  time_name = varnames$time_name
+  outcome_name = varnames$outcome_name
+  cohort_name = varnames$cohort_name
+  id_name = varnames$id_name
   # rename
   setnames(inputdata,cohort_name,"cohort")
   setnames(inputdata,time_name,"year")
@@ -120,26 +119,29 @@ saturatedOLS <- function(inputdata){
 }
 
 
-ValidateDiD <- function(estimators = c("DiDforBigData","CSreg","BJS"), sample_sizes=c(1e3,1e4,1e5), reps=3, file="inst/speed_test.csv"){
+ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5), reps=3){
 
   # prepare variable names
-  varname_options = list()
-  varname_options$time_name = "year"
-  varname_options$outcome_name = "Y"
-  varname_options$cohort_name = "cohort"
-  varname_options$id_name = "id"
+  varnames = list()
+  varnames$time_name = "year"
+  varnames$outcome_name = "Y"
+  varnames$cohort_name = "cohort"
+  varnames$id_name = "id"
 
   # define speed tester
   speed_tester <- function(sample_size,reps){
+    if(sample_size >= 2e4){
+      reps = 1
+    }
     all_res = data.table()
     for(seed in 1:reps){
       this_res = data.table()
       # simulate
       inputdata = SimDiD(sample_size = sample_size, seed = seed, ATTcohortdiff = 2, minyear=2004, maxyear=2013)
       # my package
-      if("DiDforBigData" %in% estimators){
+      if(str_detect(estimator,"DiDforBigData")){
         time0 = proc.time()[3]
-        My_p <- profmem({ My_res <- DiD(copy(inputdata), varname_options = varname_options, min_event = -1, max_event = 3) })
+        My_p <- profmem({ My_res <- DiD(copy(inputdata), varnames = varnames, min_event = -1, max_event = 3) })
         time1 = proc.time()[3]
         My_time = (time1 - time0)/60
         My_mem = sum(My_p$bytes,na.rm=T)/1e9
@@ -149,23 +151,10 @@ ValidateDiD <- function(estimators = c("DiDforBigData","CSreg","BJS"), sample_si
         gc()
         print(sprintf("finished DiDforBigData in %s",My_time))
       }
-      # Borusyak et al
-      if("BJS" %in% estimators){
-        time0 = proc.time()[3]
-        BJS_p <- profmem({ BJS_res <-  Borusyaketal(copy(inputdata), varname_options, horizon=c(0,1,2,3)) })
-        time1 = proc.time()[3]
-        BJS_time = (time1 - time0)/60
-        BJS_mem = sum(BJS_p$bytes,na.rm=T)/1e9
-        BJS_ATT = BJS_res[EventTime==1]$ATTe
-        BJS_ATTse = BJS_res[EventTime==1]$ATTe_SE
-        this_res = rbindlist(list(this_res, data.table(method="BJS", ATTe=BJS_ATT, ATTse=BJS_ATTse, Mem=BJS_mem, Time=BJS_time)))
-        gc()
-        print(sprintf("finished BJS in %s",BJS_time))
-      }
       # Callaway Sant'Anna, reg
-      if("CSreg" %in% estimators){
+      if("CSreg" %in% estimator){
         time0 = proc.time()[3]
-        CSreg_p <- profmem({ CSreg_res <- CallawaySantanna(copy(inputdata), varname_options, est_method = "reg") })
+        CSreg_p <- profmem({ CSreg_res <- CallawaySantanna(copy(inputdata), varnames, est_method = "reg") })
         time1 = proc.time()[3]
         CSreg_time = (time1 - time0)/60
         CSreg_mem = sum(CSreg_p$bytes,na.rm=T)/1e9
@@ -176,9 +165,9 @@ ValidateDiD <- function(estimators = c("DiDforBigData","CSreg","BJS"), sample_si
         print(sprintf("finished CSreg in %s",CSreg_time))
       }
       # Callaway Sant'Anna, dr
-      if("CSdr" %in% estimators){
+      if("CSdr" %in% estimator){
         time0 = proc.time()[3]
-        CSdr_p <- profmem({ CSdr_res <- CallawaySantanna(copy(inputdata), varname_options, est_method = "dr") })
+        CSdr_p <- profmem({ CSdr_res <- CallawaySantanna(copy(inputdata), varnames, est_method = "dr") })
         time1 = proc.time()[3]
         CSdr_time = (time1 - time0)/60
         CSdr_mem = sum(CSdr_p$bytes,na.rm=T)/1e9
@@ -188,10 +177,23 @@ ValidateDiD <- function(estimators = c("DiDforBigData","CSreg","BJS"), sample_si
         gc()
         print(sprintf("finished CSdr in %s",CSdr_time))
       }
-      # de Chaisemartin & D'Haultfoeuille
-      if("CH" %in% estimators){
+      # Borusyak et al
+      if("BJS" %in% estimator){
         time0 = proc.time()[3]
-        CH_p <- profmem({ CH_res <- deChaisemartin(copy(inputdata),varname_options,dynamic=3,brep=20) })
+        BJS_p <- profmem({ BJS_res <-  Borusyaketal(copy(inputdata), varnames, horizon=c(0,1,2,3)) })
+        time1 = proc.time()[3]
+        BJS_time = (time1 - time0)/60
+        BJS_mem = sum(BJS_p$bytes,na.rm=T)/1e9
+        BJS_ATT = BJS_res[EventTime==1]$ATTe
+        BJS_ATTse = BJS_res[EventTime==1]$ATTe_SE
+        this_res = rbindlist(list(this_res, data.table(method="BJS", ATTe=BJS_ATT, ATTse=BJS_ATTse, Mem=BJS_mem, Time=BJS_time)))
+        gc()
+        print(sprintf("finished BJS in %s",BJS_time))
+      }
+      # de Chaisemartin & D'Haultfoeuille
+      if(str_detect(estimator,"CH")){
+        time0 = proc.time()[3]
+        CH_p <- profmem({ CH_res <- deChaisemartin(copy(inputdata),varnames,dynamic=3,brep=20) })
         time1 = proc.time()[3]
         CH_time = (time1 - time0)/60
         CH_mem = sum(CH_p$bytes,na.rm=T)/1e9
@@ -213,7 +215,7 @@ ValidateDiD <- function(estimators = c("DiDforBigData","CSreg","BJS"), sample_si
 
   all_speeds = data.table()
   for(nn in sample_sizes){
-    print(sprintf("starting sample size %s",nn))
+    print(sprintf("starting Sample Size (Unique Individuals) %s",nn))
     speeds = speed_tester(sample_size=nn,reps=reps)
     all_speeds = rbindlist(list(all_speeds, speeds))
     gc()
@@ -221,6 +223,7 @@ ValidateDiD <- function(estimators = c("DiDforBigData","CSreg","BJS"), sample_si
     print(sprintf("sample %s done",nn))
   }
 
+  file = sprintf("docs/articles/speed_test_%s.csv",estimator)
   write.csv(all_speeds, file=file, row.names = FALSE)
 
   return(all_speeds)
@@ -228,33 +231,44 @@ ValidateDiD <- function(estimators = c("DiDforBigData","CSreg","BJS"), sample_si
 }
 
 
-plot_results_small <- function(){
+plot_results <- function(output_dir="docs/articles"){
+  library(ggplot2)
+  library(scales)
+  library(data.table)
 
   testresults = rbindlist(list(
-    setDT(read.csv(file="inst/speed_test_small.csv")),
-    setDT(read.csv(file="inst/speed_test_moderate.csv"))
+    setDT(read.csv(file="inst/speed_test_DiDforBigData.csv")),
+    setDT(read.csv(file="inst/speed_test_CSdr.csv")),
+    setDT(read.csv(file="inst/speed_test_CH.csv")),
+    setDT(read.csv(file="inst/speed_test_CH10.csv")),
+    setDT(read.csv(file="inst/speed_test_CH20.csv")),
+    setDT(read.csv(file="inst/speed_test_BJS.csv"))
+    # setDT(read.csv(file="inst/speed_test_CSreg.csv"))
   ))
+  testresults = testresults[sample_size <= 2e4]
   testresults[method=="BJS", variable := "Borusyak Jaravel\n& Spiess\ndidimputation"]
   testresults[method=="CSreg", variable := "Callaway &\nSant'Anna\ndid using reg"]
-  testresults[method=="CSdr", variable := "Callaway &\nSant'Anna\ndid using dr"]
+  testresults[method=="CSdr", variable := "Callaway &\nSant'Anna\ndid"]
   testresults[method=="CH", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
+  testresults[method=="CH10", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
+  testresults[method=="CH20", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
   testresults[method=="DiDforBigData", variable := "DiD for\nBig Data"]
 
   gg = ggplot(aes(x=factor(sample_size), y=Time, fill=variable),data=testresults)+
     theme_bw(base_size=22) + theme(legend.position = "bottom") +
-    labs(x="Sample Size",y="",title="Estimation Time (Minutes)",fill="") +
+    labs(x="Sample Size (Unique Individuals)",y="",title="Estimation Time (Minutes)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('blue','purple','green','red','black'))
-  ggsave(gg,filename="inst/speedtest_small.png",width=11,height=6)
+    scale_fill_manual(values=c('blue','black','red','green'))
+  ggsave(gg,filename=sprintf("%s/speedtest_small.png",output_dir),width=10,height=6)
 
   gg = ggplot(aes(x=factor(sample_size), y=Mem, fill=variable),data=testresults)+
     theme_bw(base_size=22) + theme(legend.position = "bottom") +
-    labs(x="Sample Size",y="",title="Memory Usage (Gigabits)",fill="") +
+    labs(x="Sample Size (Unique Individuals)",y="",title="Memory Usage (Gigabits)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('blue','purple','green','red','black'))
-  ggsave(gg,filename="inst/memorytest_small.png",width=11,height=6)
+    scale_fill_manual(values=c('blue','black','red','green'))
+  ggsave(gg,filename=sprintf("%s/memorytest_small.png",output_dir),width=10,height=6)
 
   # make ggplot
   variable_vals = sort(testresults[,unique(variable)])
@@ -268,7 +282,7 @@ plot_results_small <- function(){
   for(ii in 1:nrow(mapping)){
     mapping_lab = c(mapping_lab, paste0(as.character(mapping[ii,sample_size_num]), "=", as.character(mapping[ii,sample_size_char])))
   }
-  variables = testresults[, unique(variable) ]
+  variables = testresults[, sort(unique(variable)) ]
   max_jitter = 0.25
   jitter_vals = seq(-max_jitter, max_jitter, length.out=length(variables))
   for(ii in 1:length(jitter_vals)){
@@ -276,23 +290,54 @@ plot_results_small <- function(){
   }
   testresults[, sample_size_num := sample_size_num + jitter_val ]
   gg <- ggplot(aes( x=sample_size_num, y = ATTe, color=variable), data = testresults) +
-    labs(x = "Sample Size", y ="", color="", title="DiD Estimates (95% CI)") +
+    labs(x = "Sample Size (Unique Individuals)", y ="", color="", title="DiD Estimates (95% CI)") +
     geom_point() + theme_bw(base_size = 20) +
     geom_errorbar(aes(ymin = ATTe - ci_factor * ATTse, ymax = ATTe + ci_factor * ATTse), width=0.1) +
     scale_y_continuous(breaks = pretty_breaks(), limits=c(3.5,4.5)) +
     geom_hline(yintercept=4, color="black", linetype="dashed") +
     theme(legend.position = "bottom") +
-    scale_color_manual(values=c('blue','purple','green','red','black')) +
+    scale_color_manual(values=c('blue','black','red','green')) +
     scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="1000" , "2"="5000" , "3"="10000" , "4"="20000"))
-  ggsave(gg,filename="inst/estimates_small.png",width=11,height=6)
+  ggsave(gg,filename=sprintf("%s/estimates_small.png",output_dir),width=10,height=6)
 
+
+
+  testresults = rbindlist(list(
+    setDT(read.csv(file="inst/speed_test_DiDforBigData.csv")),
+    setDT(read.csv(file="inst/speed_test_CSdr.csv"))
+  ))
+  testresults = testresults[sample_size > 2e4]
+  testresults[method=="CSreg", variable := "Callaway &\nSant'Anna\ndid using reg"]
+  testresults[method=="CSdr", variable := "Callaway &\nSant'Anna\ndid"]
+  testresults[method=="DiDforBigData", variable := "DiD for\nBig Data"]
+
+  gg = ggplot(aes(x=factor(sample_size), y=Time, fill=variable),data=testresults)+
+    theme_bw(base_size=22) + theme(legend.position = "bottom") +
+    labs(x="Sample Size (Unique Individuals)",y="",title="Estimation Time (Minutes)",fill="") +
+    scale_y_continuous(breaks=pretty_breaks()) +
+    geom_bar(stat='identity', position='dodge') +
+    scale_fill_manual(values=c('black','green'))
+  ggsave(gg,filename=sprintf("%s/speedtest_large.png",output_dir),width=11,height=6)
+
+  gg = ggplot(aes(x=factor(sample_size), y=Mem, fill=variable),data=testresults)+
+    theme_bw(base_size=22) + theme(legend.position = "bottom") +
+    labs(x="Sample Size (Unique Individuals)",y="",title="Memory Usage (Gigabits)",fill="") +
+    scale_y_continuous(breaks=pretty_breaks()) +
+    geom_bar(stat='identity', position='dodge') +
+    scale_fill_manual(values=c('black','green'))
+  ggsave(gg,filename=sprintf("%s/memorytest_large.png",output_dir),width=10,height=6)
 
 }
 
 
-# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg","CSdr","CH","BJS"), sample_sizes=c(1e3,5e3), reps=3, file="inst/speed_test_small.csv")
-# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg","CSdr","CH","BJS"), sample_sizes=c(1e4,2e4), reps=3, file="inst/speed_test_moderate.csv")
-# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg"), sample_sizes=c(5e4,1e5), reps=3, file="inst/speed_test_large.csv")
-# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg"), sample_sizes=c(5e5), reps=1, file="inst/speed_test_larger.csv")
-# speedtest = ValidateDiD(estimators = c("DiDforBigData","CSreg"), sample_sizes=c(1e6), reps=1, file="inst/speed_test_largerr.csv")
+# speedtest = ValidateDiD(estimator = "DiDforBigData", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
+# speedtest = ValidateDiD(estimator = "DiDforBigDataMils", sample_sizes=c(10e6), reps=1)
+# speedtest = ValidateDiD(estimator = "CSreg", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
+# speedtest = ValidateDiD(estimator = "CSdr", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
+# speedtest = ValidateDiD(estimator = "BJS", sample_sizes=c(1e3,5e3,1e4,2e4), reps=3)
+# speedtest = ValidateDiD(estimator = "CH", sample_sizes=c(1e3,5e3), reps=3)
+# speedtest = ValidateDiD(estimator = "CH10", sample_sizes=c(1e4), reps=3)
+# speedtest = ValidateDiD(estimator = "CH20", sample_sizes=c(2e4), reps=1)
+plot_results(output_dir="vignettes")
+plot_results()
 

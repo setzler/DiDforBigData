@@ -6,9 +6,9 @@
 \usage{
 DiD(
   inputdata,
-  varname_options,
+  varnames,
   control_group = "all",
-  event_baseperiod = -1,
+  baseperiod = -1,
   min_event = NULL,
   max_event = NULL
 )
@@ -16,11 +16,11 @@ DiD(
 \arguments{
 \item{inputdata}{A data.table.}
 
-\item{varname_options}{A list of the form varname_options = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.}
+\item{varnames}{A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.}
 
 \item{control_group}{There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".}
 
-\item{event_baseperiod}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is event_baseperiod=-1.}
+\item{baseperiod}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.}
 
 \item{min_event}{This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.}
 
@@ -34,24 +34,27 @@ Estimate DiD for all possible cohorts and event time pairs (g,e), as well as the
 }
 \examples{
 # simulate some data
-simdata = SimDiD(sample_size=500)
+simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2)
 
 # define the variable names as a list()
-varname_options = list()
-varname_options$time_name = "year"
-varname_options$outcome_name = "Y"
-varname_options$cohort_name = "cohort"
-varname_options$id_name = "id"
+varnames = list()
+varnames$time_name = "year"
+varnames$outcome_name = "Y"
+varnames$cohort_name = "cohort"
+varnames$id_name = "id"
 
-# estimate the ATT for all cohorts at event times 0-1
-DiD(simdata, varname_options, min_event=0, max_event=1)
+# estimate the ATT for all cohorts at event time 1 only
+DiD(simdata, varnames, min_event=1, max_event=1)
 
 # change the base period to -3
-DiD(simdata, varname_options, event_baseperiod=-3, min_event=0, max_event=1)
+DiD(simdata, varnames, baseperiod=-3, min_event=1, max_event=1)
 
-# use only the never-treated control group
-DiD(simdata, varname_options, control_group = "never-treated", min_event=0, max_event=1)
+# check the pre-periods -4 through -2
+DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=-2)
 
-# use only the future treated control group, check the pre-periods -4 through -2
-DiD(simdata, varname_options, control_group = "future-treated", min_event=-4, max_event=-2)
+# use only the never-treated control group, estimate events -4 through 1
+DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=1)
+
+# use only the future treated control group, estimate events -4 through 1
+DiD(simdata, varnames, control_group = "future-treated", min_event=-4, max_event=1)
 }

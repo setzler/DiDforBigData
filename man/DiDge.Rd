@@ -6,19 +6,19 @@
 \usage{
 DiDge(
   inputdata,
-  varname_options,
+  varnames,
   cohort_time,
   event_postperiod,
-  event_baseperiod = -1,
+  baseperiod = -1,
   control_group = "all"
 )
 }
 \arguments{
 \item{inputdata}{A data.table.}
 
-\item{varname_options}{A list of the form varname_options = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.}
+\item{varnames}{A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.}
 
-\item{event_baseperiod}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is event_baseperiod=-1.}
+\item{baseperiod}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.}
 
 \item{control_group}{There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".}
 
@@ -37,21 +37,21 @@ Estimate DiD for a single cohort (g) and a single event time (e).
 simdata = SimDiD(sample_size=200)
 
 # define the variable names as a list()
-varname_options = list()
-varname_options$time_name = "year"
-varname_options$outcome_name = "Y"
-varname_options$cohort_name = "cohort"
-varname_options$id_name = "id"
+varnames = list()
+varnames$time_name = "year"
+varnames$outcome_name = "Y"
+varnames$cohort_name = "cohort"
+varnames$id_name = "id"
 
 # estimate the ATT for cohort 2007 at event time 1
-DiDge(simdata, varname_options, cohort_time=2007, event_postperiod=1)
+DiDge(simdata, varnames, cohort_time=2007, event_postperiod=1)
 
 # change the base period to -3
-DiDge(simdata, varname_options, event_baseperiod=-3, cohort_time=2007, event_postperiod=1)
+DiDge(simdata, varnames, baseperiod=-3, cohort_time=2007, event_postperiod=1)
 
 # use only the never-treated control group
-DiDge(simdata, varname_options, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
+DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
 
 # use only the never-treated control group
-DiDge(simdata, varname_options, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
+DiDge(simdata, varnames, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
 }

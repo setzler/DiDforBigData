@@ -43,7 +43,7 @@ library(DiDforBigData)
 I provide a simple data simulator as follows:
 
 ```{r echo=T, eval=T, message=FALSE}
-simdata = SimDiD(sample_size = 1000)
+simdata = SimDiD(sample_size = 1000, seed=123)
 print(simdata)
 ```
 
@@ -54,23 +54,23 @@ Your real data needs to have this same format, i.e., there need to be variables 
 We need to define the list of variable names:
 
 ```{r echo=T, eval=T, message=FALSE}
-varname_options = list()
-varname_options$time_name = "year"
-varname_options$outcome_name = "Y"
-varname_options$cohort_name = "cohort"
-varname_options$id_name = "id"
+varnames = list()
+varnames$time_name = "year"
+varnames$outcome_name = "Y"
+varnames$cohort_name = "cohort"
+varnames$id_name = "id"
 ```
 
 Then, we choose an event time (+3) and a cohort of treated units (2010), then estimate DiD:
 
 ```{r echo=T, eval=T, message=FALSE}
-did_2010 = DiDge(inputdata = simdata, varname_options = varname_options, 
+did_2010 = DiDge(inputdata = simdata, varnames = varnames, 
              cohort_time = 2010, event_postperiod = 3)
 
 print(did_2010)
 ```
 
-Note that it used -1 as the base year (``Preevent") and it estimated an ATT of about 1 (which is the default true TT in the simulation).
+Note that it used -1 as the base year and it estimated an ATT of about 1 (which is the default true TT in the simulation).
 
 
 ## 3. Estimate DiD for All Cohorts
@@ -78,7 +78,7 @@ Note that it used -1 as the base year (``Preevent") and it estimated an ATT of a
 Suppose we want to estimate the ATT at each event time from -3 to +5. We can do so as follows:
 
 ```{r echo=T, eval=T, message=FALSE}
-did_all = DiD(inputdata = simdata, varname_options = varname_options, min_event = -3, max_event = 5)
+did_all = DiD(inputdata = simdata, varnames = varnames, min_event = -3, max_event = 5)
 ```
 
 The output of DiD() is a list. One object in the list is results_average, which includes the average ATT across cohorts:

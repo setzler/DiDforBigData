@@ -2,9 +2,9 @@
 #' Estimate DiD for a single cohort (g) and a single event time (e).
 #'
 #' @param inputdata A data.table.
-#' @param varname_options A list of the form varname_options = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
+#' @param varnames A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
 #' @param control_group There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".
-#' @param event_baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is event_baseperiod=-1.
+#' @param baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.
 #' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
@@ -13,38 +13,38 @@
 #' simdata = SimDiD(sample_size=200)
 #'
 #' # define the variable names as a list()
-#' varname_options = list()
-#' varname_options$time_name = "year"
-#' varname_options$outcome_name = "Y"
-#' varname_options$cohort_name = "cohort"
-#' varname_options$id_name = "id"
+#' varnames = list()
+#' varnames$time_name = "year"
+#' varnames$outcome_name = "Y"
+#' varnames$cohort_name = "cohort"
+#' varnames$id_name = "id"
 #'
 #' # estimate the ATT for cohort 2007 at event time 1
-#' DiDge(simdata, varname_options, cohort_time=2007, event_postperiod=1)
+#' DiDge(simdata, varnames, cohort_time=2007, event_postperiod=1)
 #'
 #' # change the base period to -3
-#' DiDge(simdata, varname_options, event_baseperiod=-3, cohort_time=2007, event_postperiod=1)
+#' DiDge(simdata, varnames, baseperiod=-3, cohort_time=2007, event_postperiod=1)
 #'
 #' # use only the never-treated control group
-#' DiDge(simdata, varname_options, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
+#' DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
 #'
 #' # use only the never-treated control group
-#' DiDge(simdata, varname_options, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
+#' DiDge(simdata, varnames, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
 #' @export
-DiDge <- function(inputdata, varname_options, cohort_time, event_postperiod, event_baseperiod = -1, control_group = "all"){
+DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all"){
 
   # set up variable names
-  time_name = varname_options$time_name
-  outcome_name = varname_options$outcome_name
-  cohort_name = varname_options$cohort_name
-  id_name = varname_options$id_name
+  time_name = varnames$time_name
+  outcome_name = varnames$outcome_name
+  cohort_name = varnames$cohort_name
+  id_name = varnames$id_name
 
   # prepare time periods
-  pre_time = cohort_time + event_baseperiod
+  pre_time = cohort_time + baseperiod
   post_time = cohort_time + event_postperiod
   time_set = sort(inputdata[get(cohort_name) == cohort_time, unique(get(time_name))])
   if(!(pre_time %in% time_set)){
-    stop(print(sprintf("error: for cohort %s, preperiod %s is unavailable.",cohort_time,event_baseperiod)))
+    stop(print(sprintf("error: for cohort %s, preperiod %s is unavailable.",cohort_time,baseperiod)))
   }
   if(!(post_time %in% time_set)){
     stop(print(sprintf("error: for cohort %s, postperiod %s is unavailable.",cohort_time,event_postperiod)))
@@ -71,22 +71,22 @@ DiDge <- function(inputdata, varname_options, cohort_time, event_postperiod, eve
   control_data_prepost = NULL
   if(control_group == "all"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > post_time) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
-      inputdata[(get(cohort_name) > post_time) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
       by=c("tmp_idvar")
     )
   }
   if(control_group == "never-treated"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > post_time) & is.infinite(get(cohort_name)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
-      inputdata[(get(cohort_name) > post_time) & is.infinite(get(cohort_name)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.infinite(get(cohort_name)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.infinite(get(cohort_name)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
       by=c("tmp_idvar")
     )
   }
   if(control_group == "future-treated"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > post_time) & is.finite(get(cohort_name)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
-      inputdata[(get(cohort_name) > post_time) & is.finite(get(cohort_name)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.finite(get(cohort_name)) & (get(time_name) == pre_time), list(tmp_idvar=get(id_name),control_pre_outcome=get(outcome_name))],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.finite(get(cohort_name)) & (get(time_name) == post_time), list(tmp_idvar=get(id_name),control_post_outcome=get(outcome_name))],
       by=c("tmp_idvar")
     )
   }
@@ -100,14 +100,14 @@ DiDge <- function(inputdata, varname_options, cohort_time, event_postperiod, eve
   results[, Cohort := cohort_time]
   results[, Preperiod := pre_time]
   results[, CalendarTime := post_time]
-  results[, Preevent := event_baseperiod]
+  results[, Baseperiod := baseperiod]
   results[, EventTime := event_postperiod]
   results[, Econtrol_SE := sqrt(Econtrol_var/Ncontrol_post)]
   results[, Etreated_SE := sqrt(Etreated_var/Ntreated_post)]
   results[, pred_Etreated_post := Etreated_pre + (Econtrol_post - Econtrol_pre)]
   results[, ATTge := (Etreated_post - pred_Etreated_post)]
   results[, ATTge_SE := sqrt(treated_diff_var/Ntreated_post + control_diff_var/Ncontrol_post)]
-  results = results[,.(EventTime,Preevent,Cohort,CalendarTime,ATTge,ATTge_SE,
+  results = results[,.(EventTime,Baseperiod,Cohort,CalendarTime,ATTge,ATTge_SE,
                        Econtrol_pre,Econtrol_post,Econtrol_SE,Etreated_pre,Etreated_post,Etreated_SE,pred_Etreated_post,
                        Ncontrol_pre,Ncontrol_post,Ntreated_pre,Ntreated_post)]
   return(results)
@@ -115,13 +115,13 @@ DiDge <- function(inputdata, varname_options, cohort_time, event_postperiod, eve
 
 
 
-DiDe <- function(inputdata, varname_options, control_group = "all", event_baseperiod=-1, min_event=NULL, max_event=NULL){
+DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL){
 
   # set up variable names
-  time_name = varname_options$time_name
-  outcome_name = varname_options$outcome_name
-  cohort_name = varname_options$cohort_name
-  id_name = varname_options$id_name
+  time_name = varnames$time_name
+  outcome_name = varnames$outcome_name
+  cohort_name = varnames$cohort_name
+  id_name = varnames$id_name
 
   # set up and checks
   cohorts = sort(inputdata[, unique(get(cohort_name))])
@@ -142,7 +142,7 @@ DiDe <- function(inputdata, varname_options, control_group = "all", event_basepe
   }
 
   min_time_actual = inputdata[,min(get(time_name))]
-  invalid_cohorts = cohorts - event_baseperiod < min_time_actual
+  invalid_cohorts = cohorts - baseperiod < min_time_actual
   if(sum(invalid_cohorts) > 0){
     print(sprintf("We cannot provide ATT estimates for cohort %s due to the absence of a base_preperiod in the data.", paste0(cohorts[invalid_cohorts], collapse=",")))
     cohorts_todrop = cohorts[invalid_cohorts]
@@ -164,8 +164,8 @@ DiDe <- function(inputdata, varname_options, control_group = "all", event_basepe
     }
     # loop DiD over the event times for this cohort
     for(event_postperiod in event_periods){
-      res = DiDge(inputdata, cohort_time = cc, event_postperiod = event_postperiod, event_baseperiod = event_baseperiod,
-                            varname_options=varname_options, control_group = control_group)
+      res = DiDge(inputdata, cohort_time = cc, event_postperiod = event_postperiod, baseperiod = baseperiod,
+                            varnames=varnames, control_group = control_group)
       results_cohort = rbindlist(list(results_cohort,res))
     }
   }
@@ -186,7 +186,7 @@ DiDe <- function(inputdata, varname_options, control_group = "all", event_basepe
                                           Ntreated_pre=sum(Ntreated_pre),
                                           Ncontrol_post=sum(Ncontrol_post),
                                           Ncontrol_pre=sum(Ncontrol_pre)
-                                          ), list(EventTime,Preevent)][order(EventTime,Preevent)]
+                                          ), list(EventTime,Baseperiod)][order(EventTime,Baseperiod)]
 
   return(list(results_cohort=results_cohort, results_average=results_average))
 }
@@ -194,38 +194,41 @@ DiDe <- function(inputdata, varname_options, control_group = "all", event_basepe
 #' Estimate DiD for all possible cohorts and event time pairs (g,e), as well as the average across cohorts for each event time (e).
 #'
 #' @param inputdata A data.table.
-#' @param varname_options A list of the form varname_options = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
+#' @param varnames A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
 #' @param control_group There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".
-#' @param event_baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is event_baseperiod=-1.
+#' @param baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.
 #' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
 #' @examples
 #' # simulate some data
-#' simdata = SimDiD(sample_size=500)
+#' simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2)
 #'
 #' # define the variable names as a list()
-#' varname_options = list()
-#' varname_options$time_name = "year"
-#' varname_options$outcome_name = "Y"
-#' varname_options$cohort_name = "cohort"
-#' varname_options$id_name = "id"
+#' varnames = list()
+#' varnames$time_name = "year"
+#' varnames$outcome_name = "Y"
+#' varnames$cohort_name = "cohort"
+#' varnames$id_name = "id"
 #'
-#' # estimate the ATT for all cohorts at event times 0-1
-#' DiD(simdata, varname_options, min_event=0, max_event=1)
+#' # estimate the ATT for all cohorts at event time 1 only
+#' DiD(simdata, varnames, min_event=1, max_event=1)
 #'
 #' # change the base period to -3
-#' DiD(simdata, varname_options, event_baseperiod=-3, min_event=0, max_event=1)
+#' DiD(simdata, varnames, baseperiod=-3, min_event=1, max_event=1)
 #'
-#' # use only the never-treated control group
-#' DiD(simdata, varname_options, control_group = "never-treated", min_event=0, max_event=1)
+#' # check the pre-periods -4 through -2
+#' DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=-2)
 #'
-#' # use only the future treated control group, check the pre-periods -4 through -2
-#' DiD(simdata, varname_options, control_group = "future-treated", min_event=-4, max_event=-2)
+#' # use only the never-treated control group, estimate events -4 through 1
+#' DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=1)
+#'
+#' # use only the future treated control group, estimate events -4 through 1
+#' DiD(simdata, varnames, control_group = "future-treated", min_event=-4, max_event=1)
 #' @export
-DiD <- function(inputdata, varname_options, control_group = "all", event_baseperiod=-1, min_event=NULL, max_event=NULL){
+DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL){
 
-  results = DiDe(inputdata=inputdata, varname_options=varname_options, control_group=control_group, event_baseperiod=event_baseperiod, min_event=min_event, max_event=max_event)
+  results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event)
 
   return(results)
 }
