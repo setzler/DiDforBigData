@@ -324,7 +324,7 @@ We usually are not interested in the ATT for a specific cohort $g$. Instead, we 
 \quad
 \text{SE}\left( \text{DiD}_e \right) =  
 \sqrt{
-\sum_{g \in \mathcal{G}} \omega_g^2 \text{Var}(\text{DiD}_{g,e})
+\sum_{g \in \mathcal{G}} \omega_g^2 \text{SE}(\text{DiD}_{g,e})^2
 }
 \end{equation} 
 
@@ -340,7 +340,7 @@ We usually are not interested in the ATT for a specific cohort $g$. Instead, we 
 \text{SE}\left( \text{DiD}_\mathcal{E} \right) =  
  \frac{1}{|\mathcal{E}|}
 \sqrt{
-\sum_{e \in \mathcal{E}} \text{Var}(\text{DiD}_{e})
+\sum_{e \in \mathcal{E}} \text{SE}(\text{DiD}_{e})^2
 }
 \end{equation} 
 
@@ -379,6 +379,149 @@ The package provides these means and SEs by default.
 
 \end{frame}
 
+
+
+
+
+\begin{frame}{Accounting for Covariates (1/4)}
+
+\vspace{-0.1cm}
+
+\textbf{Recall: Definition of parallel trends.} 
+\vspace{-0.1cm}
+\begin{equation} \notag
+\begin{aligned}
+ \exists b<0 \; \text{s.t.} &\quad \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+\\ &\quad = \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{blue}G_i = g}], \; \forall e \geq 0
+\end{aligned}
+\end{equation}
+
+\textbf{Time-invariant Covariate:} Suppose potential outcomes in the case with no-treatment are given by the model,
+ $$Y_{i,t}(\infty) = \alpha_i + \mu_t + X_i{\color{ForestGreen}\beta_t} + \epsilon_{i,t}$$
+
+Is the parallel-trends condition violated? Note that,
+$$Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) = (\mu_{g+e} - \mu_{g+b}) + X_i({\color{ForestGreen}\beta_{g+e}} - {\color{ForestGreen}\beta_{g+b}})$$
+
+Plugging this into the expectations above, we see that:
+\begin{itemize}
+\item[1.] If $\beta_{g+e} = \beta_{g+b}$, then  parallel trends holds, as $X_i$ cancels out in $Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty})$.
+\vspace{0.05cm}
+\item[2.] If ${\color{ForestGreen}\beta_{g+e}} \neq {\color{ForestGreen}\beta_{g+b}}$, then parallel trends holds only if,
+\begin{equation} \notag
+ \mathbb{E}[ X_i  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+=
+\mathbb{E}[ X_i  | {\color{blue}G_i = g}]  
+\end{equation}
+\end{itemize}
+ 
+\vspace{-0.1cm}
+
+\end{frame}
+
+
+
+\begin{frame}{Accounting for Covariates (2/4)}
+
+\vspace{-0.1cm}
+
+\textbf{Recap:} If $Y_{i,t}(\infty) = \alpha_i + \mu_t + X_i{\color{ForestGreen}\beta_t} + \epsilon_{i,t}$ and ${\color{ForestGreen}\beta_{g+e}} \neq {\color{ForestGreen}\beta_{g+b}}$, then parallel trends holds only if,
+\begin{equation} \notag
+ \mathbb{E}[ X_i  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+=
+\mathbb{E}[ X_i  | {\color{blue} G_i=g} ]  
+\end{equation}
+
+\textbf{Discrete correction:} If $X_i \in \mathcal{X}$ is discrete, parallel trends holds if we condition on treatment and control groups with the same $X_i$:
+$$
+ \mathbb{E}[ X_i  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1} \; \& \; X_i=x] 
+-
+\mathbb{E}[ X_i  | {\color{blue} G_i=g}  \; \& \; X_i=x] 
+= x-x =0 
+$$
+I.e. parallel trends must hold mechanically when conditioning on treatment and control groups within the same $X_i=x$ bin.
+
+\vspace{0.1cm}
+
+\textbf{Testing:} Define $\text{DiD}_{g,e}(x)$ as follows:
+\begin{equation} \notag
+\mathbb{E}[Y_{i,g+e} - Y_{i,g+b}  | {\color{blue} G_i {=} g}  \; \& \; X_i {=} x ] {-}
+ \mathbb{E}[Y_{i,g+e} - Y_{i,g+b} | {\color{red} \mathcal{C}_{g,e}(G_i) {=} 1}  \; \& \; X_i {=} x]
+\end{equation}
+Then, we can test that  $\text{ATT}_{g,e}$ is zero using,
+\begin{equation} \notag
+\text{DiD}_{g,e} =   \sum_\mathcal{X} \omega_g(x) \text{DiD}_{g,e}(x),  
+\quad
+\omega_g(x) = \mathbb{E}[X_i = x | G_i =g]
+\end{equation} 
+\begin{equation} \notag
+\text{SE}\left( \text{DiD}_{g,e} \right) =  
+\sqrt{
+\sum_{x \in \mathcal{X}} (\omega_g(x))^2 \text{SE}(\text{DiD}_{g,e}(x))^2
+}
+\end{equation} 
+
+\end{frame}
+
+
+
+\begin{frame}{Accounting for Covariates (3/4)}
+
+\vspace{-0.1cm}
+
+
+\textbf{Time-varying Covariates:} Suppose that it is the covariates $X$ rather than the coefficient $\beta$ that varies over time: 
+\begin{equation} \notag
+Y_{i,t}(\infty) = \alpha_i + \mu_t + {\color{ForestGreen} X_{i,t} }\beta + \epsilon_{i,t}
+\end{equation}
+
+\vspace{-0.1cm}
+
+Is parallel trends violated? Note that,
+$$Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) = (\mu_{g+e} - \mu_{g+b}) + \left({\color{ForestGreen}X_{i,g+e}} - {\color{ForestGreen}X_{i,g+b}}\right)\beta $$
+
+Plugging this into the expectations above, parallel trends requires
+\begin{equation} \notag
+ \mathbb{E}[ X_{i,g+e} - X_{i,g+b}  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+=
+\mathbb{E}[ X_{i,g+e} - X_{i,g+b}  | {\color{blue}G_i = g}]  
+\end{equation} 
+Though this will not hold in general, it holds if $X$ is age or time, as  $X_{i,g+e} - X_{i,g+b}=(e-b)$ is the same for  $G_i = g$ and $\mathcal{C}$.
+
+\textbf{Discrete correction for time-varying covariates:} Suppose $X \in \mathcal{X}$ is discrete. Then, the difference  $\tilde{X}_i \equiv X_{i,g+e} - X_{i,g+b}$ is also discrete. We can condition on $\tilde{X}_i=x$ and use the same approach we used for time-invariant covariates above.
+
+\vspace{-0.1cm}
+
+
+\end{frame}
+
+
+
+
+\begin{frame}{Accounting for Covariates (4/4)}
+
+\vspace{-0.1cm}
+
+\textbf{Recall:} We consider the case in which $X$ varies over time:
+\begin{equation} \notag
+Y_{i,t}(\infty) = \alpha_i + \mu_t + {\color{ForestGreen} X_{i,t} }\beta + \epsilon_{i,t}
+\end{equation}
+
+\vspace{0.1cm}
+
+\textbf{Regression representation:} Let $\mathcal{H}_{g,e}$ denote the union of the treated and control group for a particular $(g,e)$ pair. Then, 
+\begin{equation} \notag
+\begin{aligned}
+(Y_{i,g+e} - Y_{i,g+b}) &= \tilde{\mu} + 1\{G_i=g\}(Y_{i,g+e}(g) - Y_{i,g+e}(\infty)) \\
+& + (X_{i,g+e} - X_{i,g+b})\beta + \tilde{\epsilon},\quad \forall i \in \mathcal{H}_{g,e}
+\end{aligned}
+\end{equation}
+which is a regression equation \textit{with no fixed effects} that can be estimated separately for each $g,e$ pair. In particular, the coefficient on $1\{G_i=g\}$ recovers $\mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+e}(\infty) | G_i =g]$.
+
+\vspace{0.3cm}
+
+\textbf{OLS:} Thus, we can apply OLS to regress $Y_{i,g+e} - Y_{i,g+b}$ on $1\{G_i=g\}$ and  $X_{i,g+e} - X_{i,g+b}$, using the standard OLS point estimate and SE for the coefficient on $1\{G_i=g\}$. Note that this OLS formulation accommodates both discrete and continuous $X_{i,t}$.
+
+\end{frame}
 
 
 
