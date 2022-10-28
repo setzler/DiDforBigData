@@ -96,11 +96,16 @@ estimators for staggered treatment contexts:
 1.  The implementation of the Borusyak, Jaravel, and Spiess (2022)
     approach in R package `didimputation`;
 2.  The implementation of the baseline Callaway & Sant’Anna (2021)
-    approach in R package `did` using `est_method = "dr"` (though
-    performance is nearly identical using `est_method = "reg"`);
+    approach in R package `did` using `est_method = "dr"`;
 3.  The implementation of the de Chaisemartin & D’Haultfoeuille (2020)
     approach in R package `DIDmultiplegt` using `brep=20`; and,
 4.  My R package `DiDforBigData`.
+
+Regarding Callaway & Sant’Anna (2021), there many options available in
+this package, so I compare three: the default, the estimation method
+`est_method = "reg"` (not shown below since it gives nearly identical
+results to the default), and the case in which boostrapping of standard
+errors is turned off `bstrap=F`.
 
 Below, I draw the simulated data 3 times per sample size, and apply each
 estimator. Results are presented for the median across those 3 draws.

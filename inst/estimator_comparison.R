@@ -16,7 +16,7 @@ Borusyaketal <- function(inputdata, varnames, horizon=c(0,1,2,3)){
 }
 
 # did
-CallawaySantanna <- function(inputdata, varnames, est_method="reg"){
+CallawaySantanna <- function(inputdata, varnames, est_method="reg", bstrap=TRUE){
   CS =  att_gt(yname = varnames$outcome_name,
                gname = varnames$cohort_name,
                idname = varnames$id_name,
@@ -26,6 +26,7 @@ CallawaySantanna <- function(inputdata, varnames, est_method="reg"){
                est_method = "reg",
                control_group = "notyettreated",
                base_period="universal",
+               bstrap=bstrap,
                anticipation=0)
   CS_main = data.table(Cohort=CS$group, EventTime=CS$t-CS$group, CalendarTime=CS$t, ATTge=CS$att, ATTge_SE=CS$se)
   CS_ES = aggte(CS,type="dynamic")
@@ -177,6 +178,19 @@ ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5)
         gc()
         print(sprintf("finished CSdr in %s",CSdr_time))
       }
+      # Callaway Sant'Anna, without bstrap
+      if("CSbs" %in% estimator){
+        time0 = proc.time()[3]
+        CSbs_p <- profmem({ CSbs_res <- CallawaySantanna(copy(inputdata), varnames, bstrap=FALSE) })
+        time1 = proc.time()[3]
+        CSbs_time = (time1 - time0)/60
+        CSbs_mem = sum(CSbs_p$bytes,na.rm=T)/1e9
+        CSbs_ATT = CSbs_res$results_average[EventTime==1]$ATTe
+        CSbs_ATTse = CSbs_res$results_average[EventTime==1]$ATTe_SE
+        this_res = rbindlist(list(this_res, data.table(method="CSbs", ATTe=CSbs_ATT, ATTse=CSbs_ATTse, Mem=CSbs_mem, Time=CSbs_time)))
+        gc()
+        print(sprintf("finished CSbs in %s",CSbs_time))
+      }
       # Borusyak et al
       if("BJS" %in% estimator){
         time0 = proc.time()[3]
@@ -223,7 +237,7 @@ ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5)
     print(sprintf("sample %s done",nn))
   }
 
-  file = sprintf("docs/articles/speed_test_%s.csv",estimator)
+  file = sprintf("inst/speed_test_%s.csv",estimator)
   write.csv(all_speeds, file=file, row.names = FALSE)
 
   return(all_speeds)
@@ -239,6 +253,7 @@ plot_results <- function(output_dir="docs/articles"){
   testresults = rbindlist(list(
     setDT(read.csv(file="inst/speed_test_DiDforBigData.csv")),
     setDT(read.csv(file="inst/speed_test_CSdr.csv")),
+    setDT(read.csv(file="inst/speed_test_CSbs.csv")),
     setDT(read.csv(file="inst/speed_test_CH.csv")),
     setDT(read.csv(file="inst/speed_test_CH10.csv")),
     setDT(read.csv(file="inst/speed_test_CH20.csv")),
@@ -249,6 +264,7 @@ plot_results <- function(output_dir="docs/articles"){
   testresults[method=="BJS", variable := "Borusyak Jaravel\n& Spiess\ndidimputation"]
   testresults[method=="CSreg", variable := "Callaway &\nSant'Anna\ndid using reg"]
   testresults[method=="CSdr", variable := "Callaway &\nSant'Anna\ndid"]
+  testresults[method=="CSbs", variable := "Callaway &\nSant'Anna\ndid bstrap=F"]
   testresults[method=="CH", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
   testresults[method=="CH10", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
   testresults[method=="CH20", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
@@ -260,18 +276,18 @@ plot_results <- function(output_dir="docs/articles"){
     labs(x="Sample Size (Unique Individuals)",y="",title="Estimation Time (Minutes)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('blue','black','red','green')) +
+    scale_fill_manual(values=c('blue','black','purple','red','green')) +
     scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="1,000" , "2"="5,000" , "3"="10,000" , "4"="20,000"))
-  ggsave(gg,filename=sprintf("%s/speedtest_small.png",output_dir),width=10,height=6)
+  ggsave(gg,filename=sprintf("%s/speedtest_small.png",output_dir),width=11,height=6)
 
   gg = ggplot(aes(x=sample_size_char, y=Mem, fill=variable),data=testresults)+
     theme_bw(base_size=22) + theme(legend.position = "bottom") +
     labs(x="Sample Size (Unique Individuals)",y="",title="Memory Usage (Gigabits)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('blue','black','red','green')) +
+    scale_fill_manual(values=c('blue','black','purple','red','green')) +
     scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="1,000" , "2"="5,000" , "3"="10,000" , "4"="20,000"))
-  ggsave(gg,filename=sprintf("%s/memorytest_small.png",output_dir),width=10,height=6)
+  ggsave(gg,filename=sprintf("%s/memorytest_small.png",output_dir),width=11,height=6)
 
   # make ggplot
   variable_vals = sort(testresults[,unique(variable)])
@@ -299,7 +315,7 @@ plot_results <- function(output_dir="docs/articles"){
     scale_y_continuous(breaks = pretty_breaks(), limits=c(3.5,4.5)) +
     geom_hline(yintercept=4, color="black", linetype="dashed") +
     theme(legend.position = "bottom") +
-    scale_color_manual(values=c('blue','black','red','green')) +
+    scale_color_manual(values=c('blue','black','purple','red','green')) +
     scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="1,000" , "2"="5,000" , "3"="10,000" , "4"="20,000"))
   ggsave(gg,filename=sprintf("%s/estimates_small.png",output_dir),width=10,height=6)
 
@@ -307,11 +323,13 @@ plot_results <- function(output_dir="docs/articles"){
 
   testresults = rbindlist(list(
     setDT(read.csv(file="inst/speed_test_DiDforBigData.csv")),
-    setDT(read.csv(file="inst/speed_test_CSdr.csv"))
+    setDT(read.csv(file="inst/speed_test_CSdr.csv")),
+    setDT(read.csv(file="inst/speed_test_CSbs.csv"))
   ))
   testresults = testresults[sample_size > 2e4]
   testresults[method=="CSreg", variable := "Callaway &\nSant'Anna\ndid using reg"]
   testresults[method=="CSdr", variable := "Callaway &\nSant'Anna\ndid"]
+  testresults[method=="CSbs", variable := "Callaway &\nSant'Anna\ndid bstrap=F"]
   testresults[method=="DiDforBigData", variable := "DiD for\nBig Data"]
   testresults[, sample_size_char := order(sample_size), variable]
 
@@ -320,7 +338,7 @@ plot_results <- function(output_dir="docs/articles"){
     labs(x="Sample Size (Unique Individuals)",y="",title="Estimation Time (Minutes)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('black','green')) +
+    scale_fill_manual(values=c('black','purple','green')) +
     scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="50,000" , "2"="100,000" , "3"="500,000" , "4"="1,000,000"))
   ggsave(gg,filename=sprintf("%s/speedtest_large.png",output_dir),width=11,height=6)
 
@@ -329,7 +347,7 @@ plot_results <- function(output_dir="docs/articles"){
     labs(x="Sample Size (Unique Individuals)",y="",title="Memory Usage (Gigabits)",fill="") +
     scale_y_continuous(breaks=pretty_breaks()) +
     geom_bar(stat='identity', position='dodge') +
-    scale_fill_manual(values=c('black','green')) +
+    scale_fill_manual(values=c('black','purple','green')) +
     scale_x_continuous(breaks=c(1,2,3,4),labels=c("1"="50,000" , "2"="100,000" , "3"="500,000" , "4"="1,000,000"))
   ggsave(gg,filename=sprintf("%s/memorytest_large.png",output_dir),width=10,height=6)
 
@@ -340,6 +358,7 @@ plot_results <- function(output_dir="docs/articles"){
 # speedtest = ValidateDiD(estimator = "DiDforBigDataMils", sample_sizes=c(10e6), reps=1)
 # speedtest = ValidateDiD(estimator = "CSreg", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
 # speedtest = ValidateDiD(estimator = "CSdr", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
+# speedtest = ValidateDiD(estimator = "CSbs", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
 # speedtest = ValidateDiD(estimator = "BJS", sample_sizes=c(1e3,5e3,1e4,2e4), reps=3)
 # speedtest = ValidateDiD(estimator = "CH", sample_sizes=c(1e3,5e3), reps=3)
 # speedtest = ValidateDiD(estimator = "CH10", sample_sizes=c(1e4), reps=3)
