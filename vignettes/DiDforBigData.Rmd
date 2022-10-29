@@ -43,25 +43,33 @@ library(DiDforBigData)
 I provide a simple data simulator as follows:
 
 ```{r echo=T, eval=T, message=FALSE}
-simdata = SimDiD(sample_size = 1000, seed=123)
+sim = SimDiD(sample_size = 5000, seed=123)
+
+# true ATTs in the simulation
+print(sim$true_ATT)
+
+# simulated data
+simdata = sim$simdata
 print(simdata)
 ```
 
-Your real data needs to have this same format, i.e., there need to be variables for the individual identifier (e.g. `id`), the time variable (e.g. `year`), the cohort at which treatment begins (e.g. `cohort`), and the outcome variable (e.g. `Y`). 
+Your real data needs to have this "long" format, i.e., there need to be variables for the individual identifier (e.g. `id`), the time variable (e.g. `year`), the cohort at which treatment begins (e.g. `cohort`), and the outcome variable (e.g. `Y`). No other variables are required. These variables can have any names you prefer.
 
-## 2. Estimate DiD for a Single Cohort 
-
-We need to define the list of variable names:
+Before going to the estimation, we need to prepare a list of the variable names:
 
 ```{r echo=T, eval=T, message=FALSE}
 varnames = list()
-varnames$time_name = "year"
+varnames$time_name = "year" 
 varnames$outcome_name = "Y"
 varnames$cohort_name = "cohort"
 varnames$id_name = "id"
 ```
 
-Then, we choose an event time (+3) and a cohort of treated units (2010), then estimate DiD:
+
+
+## 2. Estimate DiD for a Single Cohort 
+
+We choose an event time (+3) and a cohort of treated units (2010), then estimate DiD:
 
 ```{r echo=T, eval=T, message=FALSE}
 did_2010 = DiDge(inputdata = simdata, varnames = varnames, 
@@ -70,7 +78,11 @@ did_2010 = DiDge(inputdata = simdata, varnames = varnames,
 print(did_2010)
 ```
 
-Note that it used -1 as the base year and it estimated an ATT of about 1 (which is the default true TT in the simulation).
+
+Comparing this estimate to the true ATT above, we see that the estimation performed well.
+
+Note that it used -1 as the base year by default. This is easy to change.
+
 
 
 ## 3. Estimate DiD for All Cohorts

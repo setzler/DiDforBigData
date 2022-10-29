@@ -34,7 +34,7 @@ Estimate DiD for all possible cohorts and event time pairs (g,e), as well as the
 }
 \examples{
 # simulate some data
-simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2)
+simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2)$simdata
 
 # define the variable names as a list()
 varnames = list()

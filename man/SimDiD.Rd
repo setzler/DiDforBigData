@@ -16,7 +16,8 @@ SimDiD(
   maxyear = 2013,
   idvar = 1,
   yearvar = 1,
-  shockvar = 1
+  shockvar = 1,
+  add_covariates = FALSE
 )
 }
 \arguments{
@@ -43,9 +44,13 @@ SimDiD(
 \item{yearvar}{Variance of year effects (mu_i). Default is yearvar=1.}
 
 \item{shockvar}{Variance of idiosyncratic shocks (epsilon_it). Default is shockvar=1.}
+
+\item{add_covariates}{Add 2 covariates, called "X1" and "X2". Deault is FALSE.}
 }
 \value{
-A data.table with variables (id, year, cohort, Y), where Y is the outcome variable.
+A list with two data.tables.
+The first data.table is simulated data with variables (id, year, cohort, Y), where Y is the outcome variable.
+The second data.table contains the true ATT values, both at the (event,cohort) level and by event averaging across cohorts.
 }
 \description{
 Simulate data from the model Y_it =  alpha_i + mu_t + ATT*(t >= G_i) + epsilon_it,

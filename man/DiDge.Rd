@@ -34,7 +34,7 @@ Estimate DiD for a single cohort (g) and a single event time (e).
 }
 \examples{
 # simulate some data
-simdata = SimDiD(sample_size=200)
+simdata = SimDiD(sample_size=200)$simdata
 
 # define the variable names as a list()
 varnames = list()
@@ -54,4 +54,10 @@ DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, even
 
 # use only the never-treated control group
 DiDge(simdata, varnames, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
+
+#' # simulate some data with covariates, add the covariates to the varnames, update the estimates
+simdata = SimDiD(sample_size=200)$simdata
+varnames$covariate_names = c("X1","X2")
+DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
+
 }

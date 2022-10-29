@@ -48,8 +48,8 @@ the Callaway & Sant’Anna (2021) implementation could successfully
 estimate DiD with 100,000 unique individuals. While many DiD
 applications consider only a small number of unique individuals (e.g. a
 state-level policy roll-out design would typically have only 50 or so
-unique individuals), DiD designs at the household-level or firm-level
-using administrative data often involve millions of unique individuals.
+unique units), DiD designs at the household-level or firm-level using
+administrative data often involve millions of unique individuals.
 
 Estimating DiD with large administrative data poses three challenges:
 
@@ -88,6 +88,9 @@ following:
     This package is also extremely small, so it can easily be
     transferred onto servers, via email, etc.
 
+The derivations of the analytical formulas used by `DiDforBigData` are
+available here as a slideshow: [slides](DiDforBigData_theory.pdf).
+
 # Demonstration
 
 This section will compare the following implementations of DiD
@@ -96,16 +99,17 @@ estimators for staggered treatment contexts:
 1.  The implementation of the Borusyak, Jaravel, and Spiess (2022)
     approach in R package `didimputation`;
 2.  The implementation of the baseline Callaway & Sant’Anna (2021)
-    approach in R package `did` using `est_method = "dr"`;
+    approach in R package `did`;
 3.  The implementation of the de Chaisemartin & D’Haultfoeuille (2020)
-    approach in R package `DIDmultiplegt` using `brep=20`; and,
+    approach in R package `DIDmultiplegt` using 20 bootstrap draws for
+    standard errors (`brep=20`); and,
 4.  My R package `DiDforBigData`.
 
-Regarding Callaway & Sant’Anna (2021), there many options available in
-this package, so I compare three: the default, the estimation method
+Regarding Callaway & Sant’Anna (2021), there are many options available
+in this package, so I compare three: the default; the estimation method
 `est_method = "reg"` (not shown below since it gives nearly identical
-results to the default), and the case in which boostrapping of standard
-errors is turned off `bstrap=F`.
+results as the default); and the case in which standard errors are
+computed analytically rather than by bootstrap (`bstrap=F`).
 
 Below, I draw the simulated data 3 times per sample size, and apply each
 estimator. Results are presented for the median across those 3 draws.
@@ -120,7 +124,7 @@ assumptions, all of the estimators considered are consistent. However,
 in empirical contexts in which these assumptions do not hold, only some
 of the estimators may be valid. For example, only the approach of de
 Chaisemartin & D’Haultfoeuille (2020) can allow for treatments that
-switch off and on.
+switch off and on repeatedly for the same individual.
 
 #### Estimates
 
@@ -177,4 +181,4 @@ approaches all use relatively little memory at these sample sizes.
 
 When considering large samples, we see that `DiDforBigData` uses very
 little memory, while the implementation of the Callaway & Sant’Anna
-(2021) approach uses quite a lot.
+(2021) approach uses quite a lot of memory.
