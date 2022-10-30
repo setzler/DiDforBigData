@@ -273,30 +273,30 @@ where, following Callaway and Sant'Anna (2021), we require that parallel-trends 
 
 \begin{frame}{Estimator used by DiD for Big Data (2/4)}
 
-Fix some $(e,b,g)$. Consider testing $\text{ATT}_{g,e} =0$.
+Fix some $(e,b)$. Consider testing $\text{ATT}_{g,e} =0$.
 
-\textbf{Notation:} Consider treatment group ${\color{blue}\mathcal{T}} \equiv 1\{G_i =g\}$ and control group ${\color{red}\mathcal{C}}$, which could be any of the three options above.  
+\textbf{Notation:} Consider treatment group ${\color{blue}\mathcal{T}_g} \equiv 1\{G_i =g\}$ and control group ${\color{red}\mathcal{C}_g}$, which could be any of the three options above.  
 
-Define within-$i$ differences ${\color{blue}A_{i}} \equiv Y_{i,g+e} - Y_{i,g+b}, i\in{\color{blue}\mathcal{T}}$ with mean ${\color{blue}\mu_A}\equiv \mathbb{E}[{\color{blue}A}_{i} | i \in {\color{blue}\mathcal{T}} ]$, and ${\color{red}B_{i}} \equiv Y_{i,g+e} - Y_{i,g+b}, i\in{\color{red}\mathcal{C}}$ with mean ${\color{red}\mu_B} \equiv \mathbb{E}[{\color{red}B_i} |  i\in{\color{red}\mathcal{C}}]$, where subscripts are dropped if unambiguous.
+Define within-$i$ differences ${\color{blue}A_{i}} \equiv Y_{i,g+e} - Y_{i,g+b}, i\in{\color{blue}\mathcal{T}_g}$ with mean ${\color{blue}\mu_{A,g}}\equiv \mathbb{E}[{\color{blue}A}_{i} | i \in {\color{blue}\mathcal{T}_{g}} ]$, and ${\color{red}B_{i}} \equiv Y_{i,g+e} - Y_{i,g+b}, i\in{\color{red}\mathcal{C}_g}$ with mean ${\color{red}\mu_{B,g}} \equiv \mathbb{E}[{\color{red}B_i} |  i\in{\color{red}\mathcal{C}_g}]$, where subscripts are dropped if unambiguous.
 
-\textbf{Hypothesis Testing:}  Since $\text{ATT}_{g,e} \equiv {\color{blue}\mu_A} - {\color{red}\mu_B}$, consider,
+\textbf{Hypothesis Testing:}  Since $\text{ATT}_{g,e} \equiv {\color{blue}\mu_{A,g}} - {\color{red}\mu_{B,g}}$, consider,
 \vspace{-0.03cm}
 \begin{equation} \notag
-\text{Test statistic:} \;\; \text{DiD}_{g,e} = {\color{blue}\overline{A}} - {\color{red}\overline{B}} , \quad \text{Null} \;\; H_0:   {\color{blue}\mu_A} - {\color{red}\mu_B} = 0
+\text{Test statistic:} \;\; \text{DiD}_{g,e} = {\color{blue}\overline{A}_g} - {\color{red}\overline{B}_g} , \quad \text{Null} \;\; H_0:   {\color{blue}\mu_{A,g}} - {\color{red}\mu_{B,g}} = 0
 \end{equation}
 
 
 \vspace{-0.12cm}
 
-\textbf{Central Limit Theorem:} Denote the population variances by ${\color{blue}\sigma^2_A}\equiv \text{Var}[{\color{blue}A}_{i} | i \in {\color{blue}\mathcal{T}} ]$ and ${\color{red}\sigma^2_B} \equiv \text{Var}[{\color{red}B_i} |  i\in{\color{red}\mathcal{C}}]$. By the CLT under the null, and that the samples are drawn independently across $i$,  
+\textbf{Central Limit Theorem:} Denote the population variances by ${\color{blue}\sigma^2_{A,g}}\equiv \text{Var}[{\color{blue}A}_{i} | i \in {\color{blue}\mathcal{T}_g} ]$ and ${\color{red}\sigma^2_{B,g}} \equiv \text{Var}[{\color{red}B_i} |  i\in{\color{red}\mathcal{C}_g}]$. By the CLT under the null, with samples  drawn independently across $i$,  
 \vspace{-0.03cm}
 \begin{equation} \notag
- {\color{blue}\overline{A}} \sim_d \mathcal{N}\left( {\color{blue}\mu_A} , \; {\color{blue}\sigma^2_A}/N_A \right), \quad  {\color{red}\overline{B}} \sim_d \mathcal{N}\left( {\color{red}\mu_B} , \; {\color{red}\sigma^2_B}/N_B \right) 
+ {\color{blue}\overline{A}_g} \sim_d \mathcal{N}\left( {\color{blue}\mu_{A,g}} , \; {\color{blue}\sigma^2_{A,g}}/N_{A,g} \right), \quad  {\color{red}\overline{B}_g} \sim_d \mathcal{N}\left( {\color{red}\mu_{B,g}} , \; {\color{red}\sigma^2_{B,g}}/N_{B,g} \right) 
 \end{equation}
 \begin{equation} \notag
-\implies  \text{DiD}_{g,e} = \left(  {\color{blue}\overline{A}} - {\color{red}\overline{B}} \right) \sim_d  \mathcal{N}\left( 0 , \;  {\color{blue}\sigma^2_A}/N_A  + {\color{red}\sigma^2_B}/N_B   \right)
+\implies  \text{DiD}_{g,e} = \left(  {\color{blue}\overline{A}_g} - {\color{red}\overline{B}_g} \right) \sim_d  \mathcal{N}\left( 0 , \;  {\color{blue}\sigma^2_{A,g}}/N_{A,g}  + {\color{red}\sigma^2_{B,g}}/N_{B,g}   \right)
 \end{equation}
-Thus,  $\text{SE}(\text{DiD}_{g,e}) = \sqrt{{\color{blue}\sigma^2_A}/N_A  + {\color{red}\sigma^2_B}/N_B  }$. The empirical counterpart is trivial to compute (e.g. no matrix inversion needed).
+Thus,  $\text{SE}(\text{DiD}_{g,e}) = \sqrt{{\color{blue}\sigma^2_{A,g}}/N_{A,g}  + {\color{red}\sigma^2_{B,g}}/N_{B,g}  }$. The empirical counterpart is trivial to compute (e.g. no matrix inversion needed).
 
  
 \end{frame}
@@ -313,40 +313,28 @@ Thus,  $\text{SE}(\text{DiD}_{g,e}) = \sqrt{{\color{blue}\sigma^2_A}/N_A  + {\co
 
 \vspace{-0.1cm}
 
-We usually are not interested in the ATT for a specific cohort $g$. Instead, we are usually interested in the ATT that is $e$ years after treatment, averaging across cohorts.
+Rather than the ATT for a specific cohort $g$, we often are interested in the event time $e$ ATT averaged across cohorts.
 
-\textbf{Average Effects by Event Time.} Let  $\omega_g$ denote the share of treated units in cohort $g$. Since treated  cohorts are independent of one another at a given $e$, CLT implies,
+\textbf{Average Effects by Event Time.} Let  $\omega_g \equiv \mathbb{E}[G_i =g | G_i < \infty]$ denote the share of treated units in cohort $g$.  We can define,
 
 \vspace{-0.5cm}
 
 \begin{equation} \notag
-\text{DiD}_e =   \sum_\mathcal{G} \omega_g \text{DiD}_{g,e},  
-\quad
-\text{SE}\left( \text{DiD}_e \right) =  
-\sqrt{
-\sum_{g \in \mathcal{G}} \omega_g^2 \text{SE}(\text{DiD}_{g,e})^2
-}
+\text{DiD}_e  \equiv   \sum_\mathcal{G} \omega_g \text{DiD}_{g,e} =  \sum_\mathcal{G} \omega_g \left(  {\color{blue}\overline{A}_g} - {\color{red}\overline{B}_g} \right), 
+  \; \text{ATT}_e \equiv \sum_g   \omega_{g}  ( {\color{blue}\mu_{A,g}} - {\color{red}\mu_{B,g}} )
 \end{equation} 
 
 \vspace{-0.25cm}
 
-\textbf{Average across Event Times:} Similarly, we are often interested in an average of  $\text{DiD}_e$ across event times. Letting $\mathcal{E}$ denote a set of event times (e.g. $\mathcal{E} = \{ 1, 2, 3\}$), we are typically interested in the equally-weighted average, which has the following SE:
-
-\vspace{-0.7cm}
-
+\textbf{Serial correlation.} Suppose that there is serial correlation, such that within-$i$ there is correlation in differences over time in the idiosyncratic errors $\epsilon_{i,t}$. By CLT, the variance in $\text{DiD}_e$ is,
 \begin{equation} \notag
-\text{DiD}_{\mathcal{E}} =  \frac{1}{|\mathcal{E}|} \sum_\mathcal{E} \text{DiD}_e,
-\quad
-\text{SE}\left( \text{DiD}_\mathcal{E} \right) =  
- \frac{1}{|\mathcal{E}|}
-\sqrt{
-\sum_{e \in \mathcal{E}} \text{SE}(\text{DiD}_{e})^2
-}
-\end{equation} 
+\text{Var}(\text{DiD}_e) \; \rightarrow_d \; \sum_g \omega_g^2 \text{SE}(\text{DiD}_{g,e})^2   +
+ \sum_g \sum_{g'\neq g} \omega_g \omega_{g'}
+\text{Cov}\left(  {\color{red}\overline{B}_g}, {\color{red}\overline{B}_{g'}}   \right)
+\end{equation}
+where we use that $\text{Cov} (  {\color{blue}\overline{A}_g}, {\color{red}\overline{B}_{g'}} ) = 0, \forall(g,g')$ since the same individual is never in both groups, and that $\text{Cov} (  {\color{blue}\overline{A}_g}, {\color{blue}\overline{A}_{g'}} ) = 0, \forall(g,g')$, since the same treated unit can never be $e$ years from treatment for two different $g$.
 
-\vspace{-0.1cm}
-
-The R package provides all possible  $ \text{DiD}_e$ with their SEs by default, and user-friendly options to estimate various $\text{DiD}_\mathcal{E}$ and their SEs.
+However, the same never-treated individuals appear in every control group, so serial correlation implies  $\text{Cov} (  {\color{red}\overline{B}_g}, {\color{red}\overline{B}_{g'}}  ) \neq 0$.
 
 \end{frame}
 

@@ -82,6 +82,8 @@ DiDge_nobins <- function(inputdata, varnames, cohort_time, event_postperiod, bas
   treated_post = treated_data_prepost[, list(Ntreated_post=sum(!is.na(get(treated_post_outcome))),Etreated_post=mean(get(treated_post_outcome)),Etreated_var=var(get(treated_post_outcome)))]
   treated_results = cbind(treated_pre,treated_post)
   treated_results$treated_diff_var = treated_data_prepost[, var(get(treated_post_outcome) - get(treated_pre_outcome))]
+  treated_results[, Ntreated_pre := NULL]
+  setnames(treated_results,"Ntreated_post","Ntreated")
 
   control_pre_outcome = paste0("control_",outcome_name,"_pre")
   control_post_outcome = paste0("control_",outcome_name,"_post")
@@ -89,6 +91,8 @@ DiDge_nobins <- function(inputdata, varnames, cohort_time, event_postperiod, bas
   control_post = control_data_prepost[, list(Ncontrol_post=sum(!is.na(get(control_post_outcome))),Econtrol_post=mean(get(control_post_outcome)),Econtrol_var=var(get(control_post_outcome)))]
   control_results = cbind(control_pre,control_post)
   control_results$control_diff_var = control_data_prepost[, var(get(control_post_outcome) - get(control_pre_outcome))]
+  control_results[, Ncontrol_pre := NULL]
+  setnames(control_results,"Ncontrol_post","Ncontrol")
 
   # set up results
   results = cbind(control_results,treated_results)
@@ -97,16 +101,16 @@ DiDge_nobins <- function(inputdata, varnames, cohort_time, event_postperiod, bas
   results[, CalendarTime := post_time]
   results[, Baseperiod := baseperiod]
   results[, EventTime := event_postperiod]
-  results[, Econtrol_SE := sqrt(Econtrol_var/Ncontrol_post)]
-  results[, Etreated_SE := sqrt(Etreated_var/Ntreated_post)]
+  results[, Econtrol_SE := sqrt(Econtrol_var/Ncontrol)]
+  results[, Etreated_SE := sqrt(Etreated_var/Ntreated)]
   results[, pred_Etreated_post := Etreated_pre + (Econtrol_post - Econtrol_pre)]
   results[, ATTge := (Etreated_post - pred_Etreated_post)]
-  results[, ATTge_SE := sqrt(treated_diff_var/Ntreated_post + control_diff_var/Ncontrol_post)]
+  results[, ATTge_SE := sqrt(treated_diff_var/Ntreated + control_diff_var/Ncontrol)]
 
   results_variables_order = c("Cohort","EventTime","Baseperiod","CalendarTime","ATTge","ATTge_SE",
                               "Econtrol_pre","Econtrol_post","Econtrol_SE",
                               "Etreated_pre","Etreated_post","Etreated_SE","pred_Etreated_post",
-                              "Ncontrol_pre","Ncontrol_post","Ntreated_pre","Ntreated_post")
+                              "Ncontrol","Ntreated")
 
   # OLS
   if(!is.null(covariate_names)){
@@ -162,8 +166,8 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   # take the average across bins
   original_names = names(results_bins)
   original_names = original_names[original_names != bin_name]
-  results_bins[, Ntreated_bin := sum(Ntreated_post), list(Cohort,EventTime,Baseperiod,CalendarTime)]
-  results_bins[, bin_weights := Ntreated_post/Ntreated_bin]
+  results_bins[, Ntreated_bin := sum(Ntreated), list(Cohort,EventTime,Baseperiod,CalendarTime)]
+  results_bins[, bin_weights := Ntreated/Ntreated_bin]
   results_average = results_bins[, list(ATTge=sum(bin_weights * ATTge),
                                           ATTge_SE=sqrt(sum(bin_weights^2 * ATTge_SE^2)),
                                           Etreated_post=sum(bin_weights*Etreated_post),
@@ -173,10 +177,8 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
                                           Econtrol_pre=sum(bin_weights*Econtrol_pre),
                                           Econtrol_SE=sqrt(sum(bin_weights^2*Econtrol_SE^2)),
                                           pred_Etreated_post=sum(bin_weights*pred_Etreated_post),
-                                          Ntreated_post=sum(Ntreated_post),
-                                          Ntreated_pre=sum(Ntreated_pre),
-                                          Ncontrol_post=sum(Ncontrol_post),
-                                          Ncontrol_pre=sum(Ncontrol_pre)
+                                          Ntreated=sum(Ntreated),
+                                          Ncontrol=sum(Ncontrol)
   ), list(Cohort,EventTime,Baseperiod,CalendarTime)][order(Cohort,EventTime)]
   results_average = results_average[,.SD,.SDcols=original_names]
   return(results_average)
@@ -256,6 +258,8 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
   nevertreated_exist = sum(is.infinite(cohorts))>0
   cohorts = cohorts[!is.infinite(cohorts)]
 
+  upperbound_outcomeyear = Inf
+
   if(control_group=="never-treated"){
     if(!nevertreated_exist){
       stop("You specified control_group='never-treated', but there are no never-treated observations. Note: you must code never-treated observations as infinity (Inf).")
@@ -264,17 +268,19 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 
   if(control_group=="future-treated"){
     if(length(cohorts) <= 1){
-      stop("You specified control_group='future-treated', but there is only one treatment cohort with finite cohort time, so no control units are available based on will-be-treated observations.")
+      stop("You specified control_group='future-treated', but there is only one treatment cohort with finite cohort time, so no control units are available based on future-treated observations.")
     }
+    upperbound_outcomeyear = max(cohorts)
     cohorts = cohorts[!(cohorts == max(cohorts))]
   }
 
+  # drop cohorts that are useless since they were treated before the baseperiod
   min_time_actual = inputdata[,min(get(time_name))]
-  invalid_cohorts = cohorts - baseperiod < min_time_actual
-  if(sum(invalid_cohorts) > 0){
-    print(sprintf("We cannot provide ATT estimates for cohort %s due to the absence of a base_preperiod in the data.", paste0(cohorts[invalid_cohorts], collapse=",")))
-    cohorts_todrop = cohorts[invalid_cohorts]
-    cohorts = cohorts[!invalid_cohorts]
+  too_early_cohorts = cohorts - baseperiod < min_time_actual
+  if(sum(too_early_cohorts) > 0){
+    warning(sprintf("We cannot provide ATT estimates for cohort %s due to the absence of a base_preperiod in the data.", paste0(cohorts[too_early_cohorts], collapse=",")))
+    cohorts_todrop = cohorts[too_early_cohorts]
+    cohorts = cohorts[!too_early_cohorts]
     inputdata = inputdata[!(get(cohort_name) %in% cohorts_todrop)]
   }
 
@@ -283,6 +289,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
   for(cc in cohorts){
     # set up cohort-specific event times
     times_for_cohort = sort(inputdata[get(cohort_name) == cc, unique(get(time_name))])
+    times_for_cohort = times_for_cohort[times_for_cohort < upperbound_outcomeyear]
     event_periods = times_for_cohort - cc
     if(!is.null(min_event)){
       event_periods = event_periods[event_periods >= min_event]
@@ -300,8 +307,8 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
   results_cohort=results_cohort[order(Cohort,EventTime)]
 
   # take the average across cohorts
-  results_cohort[, Ntreated_event := sum(Ntreated_post), by="EventTime"]
-  results_cohort[, cohort_weights := Ntreated_post/Ntreated_event]
+  results_cohort[, Ntreated_event := sum(Ntreated), by="EventTime"]
+  results_cohort[, cohort_weights := Ntreated/Ntreated_event]
   results_average = results_cohort[, list(ATTe=sum(cohort_weights * ATTge),
                                           ATTe_SE=sqrt(sum(cohort_weights^2 * ATTge_SE^2)),
                                           Etreated_post=sum(cohort_weights*Etreated_post),
@@ -310,10 +317,8 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
                                           Econtrol_post=sum(cohort_weights*Econtrol_post),
                                           Econtrol_pre=sum(cohort_weights*Econtrol_pre),
                                           Econtrol_SE=sqrt(sum(cohort_weights^2*Econtrol_SE^2)),
-                                          Ntreated_post=sum(Ntreated_post),
-                                          Ntreated_pre=sum(Ntreated_pre),
-                                          Ncontrol_post=sum(Ncontrol_post),
-                                          Ncontrol_pre=sum(Ncontrol_pre)
+                                          Ntreated=sum(Ntreated),
+                                          Ncontrol=sum(Ncontrol)
                                           ), list(EventTime,Baseperiod)][order(EventTime,Baseperiod)]
 
   return(list(results_cohort=results_cohort, results_average=results_average))
