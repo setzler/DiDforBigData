@@ -50,3 +50,11 @@ The slides are available in pdf form here: [slides](DiDforBigData_theory.pdf). F
 
 ![](slide9.png) 
 
+![](slide10.png) 
+
+![](slide11.png) 
+
+![](slide12.png) 
+
+![](slide13.png) 
+

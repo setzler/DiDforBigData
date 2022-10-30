@@ -519,7 +519,7 @@ which is a regression equation \textit{with no fixed effects} that can be estima
 
 \vspace{0.3cm}
 
-\textbf{OLS:} Thus, we can apply OLS to regress $Y_{i,g+e} - Y_{i,g+b}$ on $1\{G_i=g\}$ and  $X_{i,g+e} - X_{i,g+b}$, using the standard OLS point estimate and SE for the coefficient on $1\{G_i=g\}$. Note that this OLS formulation accommodates both discrete and continuous $X_{i,t}$.
+\textbf{OLS:} Thus, we can apply OLS to regress $Y_{i,g+e} - Y_{i,g+b}$ on $1\{G_i=g\}$ and  $X_{i,g+e} - X_{i,g+b}$, using the standard OLS point estimate and SE for the coefficient on $1\{G_i=g\}$. Note that this OLS formulation accommodates both discrete and continuous $X_{i,t}$. Importantly, no fixed effects have to be estimated, even in the case with continuous time-varying covariates -- the regression just has a few regressors, remaining computationally fast and efficient.
 
 \end{frame}
 

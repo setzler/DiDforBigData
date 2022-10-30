@@ -223,7 +223,11 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 #'
 #' # simulate some data with bins, add the bins to the varnames, update the estimates
 #' sim = SimDiD(sample_size=3000, bin_covars=TRUE)
+#'
+#' # if we do not add the bin_name to varnames, it will ignore bins and give biased estimates:
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
+#'
+#' # now we account for bins:
 #' varnames$bin_name = c("bin")
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 #'
@@ -231,11 +235,9 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all"){
   bin_name = varnames$bin_name
   if(is.null(bin_name)){
-    print("none")
     return(DiDge_nobins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group))
   }
   if(!is.null(bin_name)){
-    print("bins")
     return(DiDge_bins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group))
   }
 }

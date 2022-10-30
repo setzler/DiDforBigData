@@ -62,7 +62,7 @@ DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod 
 varnames$covariate_names = NULL # we are done with this example
 
 # simulate some data with bins, add the bins to the varnames, update the estimates
-sim = SimDiD(sample_size=200, bin_covars=TRUE)
+sim = SimDiD(sample_size=3000, bin_covars=TRUE)
 DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 varnames$bin_name = c("bin")
 DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)

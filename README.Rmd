@@ -54,14 +54,14 @@ This section will compare the following implementations of DiD estimators for st
 
 1. The implementation of the Borusyak, Jaravel, and Spiess (2022) approach in R package `didimputation`;
 2. The implementation of the baseline Callaway & Sant'Anna (2021) approach in R package `did`;
-3. The implementation of the de Chaisemartin & D'Haultfoeuille (2020) approach in R package `DIDmultiplegt` using 20 bootstrap draws for standard errors (`brep=20`); and,
+3. The implementation of the de Chaisemartin & D'Haultfoeuille (2020) approach in R package `DIDmultiplegt` using 40 bootstrap draws for standard errors (`brep=40`); and,
 4. My R package `DiDforBigData`.
 
 Regarding Callaway & Sant'Anna (2021), there are many options available in this package, so I compare three: the default; the estimation method `est_method = "reg"` (not shown below since it gives nearly identical results as the default); and the case in which standard errors are computed analytically rather than by bootstrap (`bstrap=F`).
 
 Below, I draw the simulated data 3 times per sample size, and apply each estimator. Results are presented for the median across those 3 draws. Sample Size refers to the number of unique individuals. Since there are 10 simulated years of data, and the sample is balanced across years, the number of observations is 10 times the number of unique individuals.
 
-Note: I only consider contexts in which the data is balanced, treatment is permanent once it begins, and the parallel-trends and no-anticipation assumptions hold unconditionally for all treatment cohorts. Under these assumptions, all of the estimators considered are consistent. However, in empirical contexts in which these assumptions do not hold, only some of the estimators may be valid. For example, only the approach of de Chaisemartin & D'Haultfoeuille (2020) can allow for treatments that switch off and on repeatedly for the same individual.
+A caveat: I only consider contexts in which the data is balanced, treatment is permanent once it begins, and the parallel-trends and no-anticipation assumptions hold unconditionally for all treatment cohorts. Under these assumptions, all of the estimators considered are consistent. However, in empirical contexts in which these assumptions do not hold, only some of the estimators may be valid. For example, only the approach of de Chaisemartin & D'Haultfoeuille (2020) can allow for treatments that switch off and on repeatedly for the same individual.
 
 
 
