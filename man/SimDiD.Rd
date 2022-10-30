@@ -17,7 +17,8 @@ SimDiD(
   idvar = 1,
   yearvar = 1,
   shockvar = 1,
-  add_covariates = FALSE
+  time_covars = FALSE,
+  bin_covars = FALSE
 )
 }
 \arguments{
@@ -45,7 +46,9 @@ SimDiD(
 
 \item{shockvar}{Variance of idiosyncratic shocks (epsilon_it). Default is shockvar=1.}
 
-\item{add_covariates}{Add 2 covariates, called "X1" and "X2". Deault is FALSE.}
+\item{time_covars}{Add 2 time-varying covariates, called "X1" and "X2". Default is FALSE.}
+
+\item{bin_covars}{Add 10 randomly assigned bins, with bin-specific shocks. Default is FALSE.}
 }
 \value{
 A list with two data.tables.
@@ -79,4 +82,11 @@ SimDiD(minyear=1994, maxyear=1999, cohorts=c(1995,1996))
 
 # add two periods of anticipation prior to treatment. The effect will be 0.5*ATTat0.
 SimDiD(anticipation=2)
+
+# add covariates "X1" and "X2", which vary over time differentially by cohort.
+SimDiD(time_covars=TRUE)
+
+# add covariate "market", which is time-invariant but each market experiences a shock.
+SimDiD(bin_covars=TRUE)
+
 }

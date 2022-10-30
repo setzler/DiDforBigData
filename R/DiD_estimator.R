@@ -1,43 +1,6 @@
 
-#' Estimate DiD for a single cohort (g) and a single event time (e).
-#'
-#' @param inputdata A data.table.
-#' @param varnames A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
-#' @param control_group There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".
-#' @param baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.
-#' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
-#' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
-#' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
-#' @examples
-#' # simulate some data
-#' simdata = SimDiD(sample_size=200)$simdata
-#'
-#' # define the variable names as a list()
-#' varnames = list()
-#' varnames$time_name = "year"
-#' varnames$outcome_name = "Y"
-#' varnames$cohort_name = "cohort"
-#' varnames$id_name = "id"
-#'
-#' # estimate the ATT for cohort 2007 at event time 1
-#' DiDge(simdata, varnames, cohort_time=2007, event_postperiod=1)
-#'
-#' # change the base period to -3
-#' DiDge(simdata, varnames, baseperiod=-3, cohort_time=2007, event_postperiod=1)
-#'
-#' # use only the never-treated control group
-#' DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
-#'
-#' # use only the never-treated control group
-#' DiDge(simdata, varnames, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
-#'
-#' #' # simulate some data with covariates, add the covariates to the varnames, update the estimates
-#' simdata = SimDiD(sample_size=200)$simdata
-#' varnames$covariate_names = c("X1","X2")
-#' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-#'
-#' @export
-DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all"){
+
+DiDge_nobins <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all"){
 
   # set up variable names
   time_name = varnames$time_name
@@ -169,6 +132,113 @@ DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod
   return(results)
 }
 
+DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all"){
+
+  # set up variable names
+  time_name = varnames$time_name
+  outcome_name = varnames$outcome_name
+  cohort_name = varnames$cohort_name
+  id_name = varnames$id_name
+  bin_name = varnames$bin_name
+
+  # get bins
+  pre_time = cohort_time + baseperiod
+  post_time = cohort_time + event_postperiod
+  bin_set_treated_pre = inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time)][,.N,bin][N>1][,sort(bin)]
+  bin_set_treated_post = inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time)][,.N,bin][N>1][,sort(bin)]
+  bin_set_control_pre = inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == pre_time)][,.N,bin][N>1][,sort(bin)]
+  bin_set_control_post = inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == post_time)][,.N,bin][N>1][,sort(bin)]
+  bin_set = Reduce(intersect, list(bin_set_treated_pre,bin_set_treated_post,bin_set_control_pre,bin_set_control_post))
+
+  # loop DiD over bins
+  results_bins = NULL
+  for(binval in bin_set){
+    res = DiDge_nobins(inputdata[get(bin_name)==binval], cohort_time = cohort_time, event_postperiod = event_postperiod, baseperiod = baseperiod,
+                varnames=varnames, control_group = control_group)
+    res[, (bin_name) := binval]
+    results_bins = rbindlist(list(results_bins,res))
+  }
+
+  # take the average across bins
+  original_names = names(results_bins)
+  original_names = original_names[original_names != bin_name]
+  results_bins[, Ntreated_bin := sum(Ntreated_post), list(Cohort,EventTime,Baseperiod,CalendarTime)]
+  results_bins[, bin_weights := Ntreated_post/Ntreated_bin]
+  results_average = results_bins[, list(ATTge=sum(bin_weights * ATTge),
+                                          ATTge_SE=sqrt(sum(bin_weights^2 * ATTge_SE^2)),
+                                          Etreated_post=sum(bin_weights*Etreated_post),
+                                          Etreated_pre=sum(bin_weights*Etreated_pre),
+                                          Etreated_SE=sqrt(sum(bin_weights^2*Etreated_SE^2)),
+                                          Econtrol_post=sum(bin_weights*Econtrol_post),
+                                          Econtrol_pre=sum(bin_weights*Econtrol_pre),
+                                          Econtrol_SE=sqrt(sum(bin_weights^2*Econtrol_SE^2)),
+                                          pred_Etreated_post=sum(bin_weights*pred_Etreated_post),
+                                          Ntreated_post=sum(Ntreated_post),
+                                          Ntreated_pre=sum(Ntreated_pre),
+                                          Ncontrol_post=sum(Ncontrol_post),
+                                          Ncontrol_pre=sum(Ncontrol_pre)
+  ), list(Cohort,EventTime,Baseperiod,CalendarTime)][order(Cohort,EventTime)]
+  results_average = results_average[,.SD,.SDcols=original_names]
+  return(results_average)
+}
+
+
+#' Estimate DiD for a single cohort (g) and a single event time (e).
+#'
+#' @param inputdata A data.table.
+#' @param varnames A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
+#' @param control_group There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".
+#' @param baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.
+#' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
+#' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
+#' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
+#' @examples
+#' # simulate some data
+#' simdata = SimDiD(sample_size=200)$simdata
+#'
+#' # define the variable names as a list()
+#' varnames = list()
+#' varnames$time_name = "year"
+#' varnames$outcome_name = "Y"
+#' varnames$cohort_name = "cohort"
+#' varnames$id_name = "id"
+#'
+#' # estimate the ATT for cohort 2007 at event time 1
+#' DiDge(simdata, varnames, cohort_time=2007, event_postperiod=1)
+#'
+#' # change the base period to -3
+#' DiDge(simdata, varnames, baseperiod=-3, cohort_time=2007, event_postperiod=1)
+#'
+#' # use only the never-treated control group
+#' DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
+#'
+#' # use only the never-treated control group
+#' DiDge(simdata, varnames, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
+#'
+#' # simulate some data with covariates, add the covariates to the varnames, update the estimates
+#' sim = SimDiD(sample_size=200,time_covars=TRUE)
+#' varnames$covariate_names = c("X1","X2")
+#' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
+#' varnames$covariate_names = NULL # we are done with this example
+#'
+#' # simulate some data with bins, add the bins to the varnames, update the estimates
+#' sim = SimDiD(sample_size=3000, bin_covars=TRUE)
+#' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
+#' varnames$bin_name = c("bin")
+#' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
+#'
+#' @export
+DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all"){
+  bin_name = varnames$bin_name
+  if(is.null(bin_name)){
+    print("none")
+    return(DiDge_nobins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group))
+  }
+  if(!is.null(bin_name)){
+    print("bins")
+    return(DiDge_bins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group))
+  }
+}
 
 
 DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL){

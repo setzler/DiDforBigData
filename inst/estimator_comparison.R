@@ -138,7 +138,7 @@ ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5)
     for(seed in 1:reps){
       this_res = data.table()
       # simulate
-      inputdata = SimDiD(sample_size = sample_size, seed = seed, ATTcohortdiff = 2, minyear=2004, maxyear=2013)$simdata
+      inputdata = SimDiD(sample_size = sample_size, seed =1000+seed, ATTcohortdiff = 2, minyear=2004, maxyear=2013)$simdata
       # my package
       if(str_detect(estimator,"DiDforBigData")){
         time0 = proc.time()[3]
@@ -207,7 +207,7 @@ ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5)
       # de Chaisemartin & D'Haultfoeuille
       if(str_detect(estimator,"CH")){
         time0 = proc.time()[3]
-        CH_p <- profmem({ CH_res <- deChaisemartin(copy(inputdata),varnames,dynamic=3,brep=20) })
+        CH_p <- profmem({ CH_res <- deChaisemartin(copy(inputdata),varnames,dynamic=3,brep=40) })
         time1 = proc.time()[3]
         CH_time = (time1 - time0)/60
         CH_mem = sum(CH_p$bytes,na.rm=T)/1e9
@@ -254,7 +254,8 @@ plot_results <- function(output_dir="docs/articles"){
     setDT(read.csv(file="inst/speed_test_DiDforBigData.csv")),
     setDT(read.csv(file="inst/speed_test_CSdr.csv")),
     setDT(read.csv(file="inst/speed_test_CSbs.csv")),
-    setDT(read.csv(file="inst/speed_test_CH.csv")),
+    setDT(read.csv(file="inst/speed_test_CH1.csv")),
+    setDT(read.csv(file="inst/speed_test_CH5.csv")),
     setDT(read.csv(file="inst/speed_test_CH10.csv")),
     setDT(read.csv(file="inst/speed_test_CH20.csv")),
     setDT(read.csv(file="inst/speed_test_BJS.csv"))
@@ -266,8 +267,6 @@ plot_results <- function(output_dir="docs/articles"){
   testresults[method=="CSdr", variable := "Callaway &\nSant'Anna\ndid"]
   testresults[method=="CSbs", variable := "Callaway &\nSant'Anna\ndid bstrap=F"]
   testresults[method=="CH", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
-  testresults[method=="CH10", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
-  testresults[method=="CH20", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
   testresults[method=="DiDforBigData", variable := "DiD for\nBig Data"]
   testresults[, sample_size_char := order(sample_size), variable]
 
@@ -360,7 +359,8 @@ plot_results <- function(output_dir="docs/articles"){
 # speedtest = ValidateDiD(estimator = "CSdr", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
 # speedtest = ValidateDiD(estimator = "CSbs", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
 # speedtest = ValidateDiD(estimator = "BJS", sample_sizes=c(1e3,5e3,1e4,2e4), reps=3)
-# speedtest = ValidateDiD(estimator = "CH", sample_sizes=c(1e3,5e3), reps=3)
+# speedtest = ValidateDiD(estimator = "CH1", sample_sizes=c(1e3), reps=3)
+# speedtest = ValidateDiD(estimator = "CH5", sample_sizes=c(5e3), reps=3)
 # speedtest = ValidateDiD(estimator = "CH10", sample_sizes=c(1e4), reps=3)
 # speedtest = ValidateDiD(estimator = "CH20", sample_sizes=c(2e4), reps=1)
 # plot_results(output_dir="vignettes")
