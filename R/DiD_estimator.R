@@ -323,9 +323,29 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
   for(event in data_cohort[,unique(EventTime)]){
     data_event = data_cohort[EventTime==event]
     cohorts = data_event[,sort(unique(Cohort))]
-    covmat = matrix()
-    for(cc in cohorts){
+    covmat = matrix(nrow=length(cohorts),ncol=length(cohorts))
+    numcc = length(cohorts)
+    for(cc_row_iter in 1:numcc){
+      cc_row_val = cohorts[cc_row_iter]
+      for(cc_col_iter in 1:numcc){
+        cc_col_val = cohorts[cc_col_iter]
+        if(cc_col_val == cc_row_val){
+          covmat[cc_row_iter, cc_col_iter] =
+            data_event[Cohort==cc_row_val & treated==1, var(Y_diff)/.N] +
+            data_event[Cohort==cc_row_val & treated==0, var(Y_diff)/.N]
+        }
+        if(cc_col_val != cc_row_val){
+          # extract relevant datasets
+          cc_row_treated = data_event[Cohort==cc_row_val & treated==1]
+          cc_row_control = data_event[Cohort==cc_row_val & treated==0]
+          cc_col_treated = data_event[Cohort==cc_col_val & treated==1]
+          cc_col_control = data_event[Cohort==cc_col_val & treated==0]
+          # term 1
+          cc_row_treated_col_control = merge(cc_row_treated, cc_col_control, by=id_name)
+          covterm1 = cc_row_treated_col_control[, cov(Y_diff.x, Y_diff.y)]/sqrt(cc_row_treated[,.N]* cc_col_control[,.N])
 
+        }
+      }
     }
   }
 
