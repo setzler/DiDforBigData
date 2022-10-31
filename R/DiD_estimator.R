@@ -1,6 +1,6 @@
 
 
-DiDge_nobins <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all"){
+DiDge_nobins <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", return_data=FALSE){
 
   # set up variable names
   time_name = varnames$time_name
@@ -133,6 +133,15 @@ DiDge_nobins <- function(inputdata, varnames, cohort_time, event_postperiod, bas
   # combine means into an output table
   results = results[,.SD,.SDcols=results_variables_order]
   results = results[order(Cohort,EventTime)]
+  if(return_data){
+    names(treated_data_prepost) = gsub("treated_","",names(treated_data_prepost))
+    names(control_data_prepost) = gsub("control_","",names(control_data_prepost))
+    data_prepost = rbindlist(list(treated_data_prepost,control_data_prepost))
+    data_prepost[, Cohort := cohort_time]
+    data_prepost[, EventTime := event_postperiod]
+    data_prepost = data_prepost[,list(id, Cohort, EventTime, treated, Y_diff = Y_post - Y_pre)]
+    return(list(results=results,data_prepost=data_prepost))
+  }
   return(results)
 }
 
@@ -193,6 +202,7 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 #' @param baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.
 #' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
+#' @param return_data If true, this returns the treated and control differenced data. Default is FALSE.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
 #' @examples
 #' # simulate some data
@@ -234,10 +244,10 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 #'
 #' @export
-DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all"){
+DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", return_data=FALSE){
   bin_name = varnames$bin_name
   if(is.null(bin_name)){
-    return(DiDge_nobins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group))
+    return(DiDge_nobins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group, return_data=return_data))
   }
   if(!is.null(bin_name)){
     return(DiDge_bins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group))
@@ -286,6 +296,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 
   # cohort-specific estimation
   results_cohort = data.table()
+  data_cohort = data.table()
   for(cc in cohorts){
     # set up cohort-specific event times
     times_for_cohort = sort(inputdata[get(cohort_name) == cc, unique(get(time_name))])
@@ -300,11 +311,23 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
     # loop DiD over the event times for this cohort
     for(event_postperiod in event_periods){
       res = DiDge(inputdata, cohort_time = cc, event_postperiod = event_postperiod, baseperiod = baseperiod,
-                            varnames=varnames, control_group = control_group)
-      results_cohort = rbindlist(list(results_cohort,res))
+                            varnames=varnames, control_group = control_group, return_data=TRUE)
+      results_cohort = rbindlist(list(results_cohort,res$results))
+      data_cohort = rbindlist(list(data_cohort, res$data))
     }
   }
   results_cohort=results_cohort[order(Cohort,EventTime)]
+  data_cohort=data_cohort[order(Cohort,EventTime)]
+
+  # get the SE
+  for(event in data_cohort[,unique(EventTime)]){
+    data_event = data_cohort[EventTime==event]
+    cohorts = data_event[,sort(unique(Cohort))]
+    covmat = matrix()
+    for(cc in cohorts){
+
+    }
+  }
 
   # take the average across cohorts
   results_cohort[, Ntreated_event := sum(Ntreated), by="EventTime"]
