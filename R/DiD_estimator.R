@@ -230,7 +230,7 @@ getSEs_EventTime <- function(data_cohort,varnames){
           cc_col_control = data_event[Cohort==cc_col_val & treated==0]
           cc_row_control_col_control = merge(cc_row_control, cc_col_control, by=id_name)
           if(nrow(cc_row_control_col_control)){
-            covmat_control_control[cc_row_iter, cc_col_iter] = cc_row_control_col_control[, cov(Y_diff.x, Y_diff.y)]/sqrt(cc_row_control[,.N]* cc_col_control[,.N])
+            covmat_control_control[cc_row_iter, cc_col_iter] = (cc_row_control_col_control[, cov(Y_diff.x, Y_diff.y)]/sqrt(cc_row_control[,as.numeric(.N)]))* 1/sqrt(cc_col_control[,as.numeric(.N)])
           }
         }
         if(cc_col_val > cc_row_val){ # no past treated group can appear in the current or any future control group
@@ -239,7 +239,7 @@ getSEs_EventTime <- function(data_cohort,varnames){
           cc_col_treated = data_event[Cohort==cc_col_val & treated==1]
           cc_row_control_col_treated = merge(cc_row_control, cc_col_treated, by=id_name)
           if(nrow(cc_row_control_col_treated)){
-            covmat_control_treated[cc_row_iter, cc_col_iter] = cc_row_control_col_treated[, cov(Y_diff.x, Y_diff.y)]/sqrt(cc_row_control[,.N]* cc_col_treated[,.N])
+            covmat_control_treated[cc_row_iter, cc_col_iter] = (cc_row_control_col_treated[, cov(Y_diff.x, Y_diff.y)]/sqrt(cc_row_control[,as.numeric(.N)])) * 1/sqrt(cc_col_treated[,as.numeric(.N)])
           }
         }
       }

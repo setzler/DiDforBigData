@@ -353,7 +353,7 @@ plot_results <- function(output_dir="docs/articles"){
 }
 
 
-# speedtest = ValidateDiD(estimator = "DiDforBigData", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
+speedtest = ValidateDiD(estimator = "DiDforBigData", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
 # speedtest = ValidateDiD(estimator = "DiDforBigDataMils", sample_sizes=c(5e6), reps=1)
 # speedtest = ValidateDiD(estimator = "CSreg", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
 # speedtest = ValidateDiD(estimator = "CSdr", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
@@ -363,6 +363,6 @@ plot_results <- function(output_dir="docs/articles"){
 # speedtest = ValidateDiD(estimator = "CH5", sample_sizes=c(5e3), reps=3)
 # speedtest = ValidateDiD(estimator = "CH10", sample_sizes=c(1e4), reps=3)
 # speedtest = ValidateDiD(estimator = "CH20", sample_sizes=c(2e4), reps=1)
-# plot_results(output_dir="vignettes")
-# plot_results()
+plot_results(output_dir="vignettes")
+plot_results()
 

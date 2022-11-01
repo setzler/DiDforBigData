@@ -320,21 +320,15 @@ Rather than the ATT for a specific cohort $g$, we often are interested in the ev
 \vspace{-0.5cm}
 
 \begin{equation} \notag
-\text{DiD}_e  \equiv   \sum_\mathcal{G} \omega_g \text{DiD}_{g,e} =  \sum_\mathcal{G} \omega_g \left(  {\color{blue}\overline{A}_g} - {\color{red}\overline{B}_g} \right), 
-  \; \text{ATT}_e \equiv \sum_g   \omega_{g}  ( {\color{blue}\mu_{A,g}} - {\color{red}\mu_{B,g}} )
+\text{DiD}_e  {\equiv}  \sum_{g \in \mathcal{G}} \omega_g \text{DiD}_{g,e} {=}  \sum_{g \in \mathcal{G}} \omega_g \left(  {\color{blue}\overline{A}_g} - {\color{red}\overline{B}_g} \right), 
+  \; \text{ATT}_e {\equiv} \sum_{g \in \mathcal{G}}  \omega_{g}  ( {\color{blue}\mu_{A,g}} - {\color{red}\mu_{B,g}} )
 \end{equation} 
 
 \vspace{-0.25cm}
 
-\textbf{Serial correlation.} Suppose that there is serial correlation, such that within-$i$ there is correlation in differences over time in the idiosyncratic errors $\epsilon_{i,t}$. By CLT, the variance in $\text{DiD}_e$ is,
-\begin{equation} \notag
-\text{Var}(\text{DiD}_e) \; \rightarrow_d \; \sum_g \omega_g^2 \text{SE}(\text{DiD}_{g,e})^2   +
- \sum_g \sum_{g'\neq g} \omega_g \omega_{g'}
-\text{Cov}\left(  {\color{red}\overline{B}_g}, {\color{red}\overline{B}_{g'}}   \right)
-\end{equation}
-where we use that $\text{Cov} (  {\color{blue}\overline{A}_g}, {\color{red}\overline{B}_{g'}} ) = 0, \forall(g,g')$ since the same individual is never in both groups, and that $\text{Cov} (  {\color{blue}\overline{A}_g}, {\color{blue}\overline{A}_{g'}} ) = 0, \forall(g,g')$, since the same treated unit can never be $e$ years from treatment for two different $g$.
+\textbf{Recall:} For a given $(g,e)$, the treated and control group are mutually exclusive. Thus, independence across $i$ ensures that $\text{Cov}({\color{blue}\overline{A}_g}, {\color{red}\overline{B}_g})=0$. We used this result on the previous slide to obtain simple SEs with no covariance terms for $\text{DiD}_{g,e} = {\color{blue}\overline{A}_g} - {\color{red}\overline{B}_g} $.
 
-However, the same never-treated individuals appear in every control group, so serial correlation implies  $\text{Cov} (  {\color{red}\overline{B}_g}, {\color{red}\overline{B}_{g'}}  ) \neq 0$.
+\textbf{Repeated $i$ in the event time average.} Unlike $\text{DiD}_{g,e}$, $\text{DiD}_e$ depends on both ${\color{red}\overline{B}_g}$ and ${\color{red}\overline{B}_{g'}}$ for different cohorts $g,g'$. The same individual $i$ often appears in multiple control groups (e.g. never-treated units can appear in all control groups). Thus, it is typically true that $\text{Cov}({\color{red}\overline{B}_g}, {\color{red}\overline{B}_{g'}}) \neq 0$, so we cannot ignore covariance terms when calculating the SE for $\text{DiD}_e$. Similarly, if $g<g'$, we often have $\text{Cov}({\color{red}\overline{B}_g}, {\color{blue}\overline{A}_{g'}}) \neq 0$, since some members $i$ of the control group at $g$ later enter the treated group $g'$.
 
 \end{frame}
 
@@ -419,34 +413,39 @@ Plugging this into the expectations above, we see that:
 \mathbb{E}[ X_i  | {\color{blue} G_i=g} ]  
 \end{equation}
 
-\textbf{Discrete correction:} If $X_i \in \mathcal{X}$ is discrete, parallel trends holds if we condition on treatment and control groups with the same $X_i$:
+\textbf{``Bin" correction:} If $X_i \in \mathcal{X}$ is discrete, parallel trends holds if we condition on treatment and control groups with the same $X_i$ bin:
 $$
  \mathbb{E}[ X_i  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1} \; \& \; X_i=x] 
 -
 \mathbb{E}[ X_i  | {\color{blue} G_i=g}  \; \& \; X_i=x] 
 = x-x =0 
 $$
-I.e. parallel trends must hold mechanically when conditioning on treatment and control groups within the same $X_i=x$ bin.
+Parallel trends must hold in this model when conditioning on treatment and control groups within the same $X_i=x$ bin.
 
 \vspace{0.1cm}
 
 \textbf{Testing:} Define $\text{DiD}_{g,e}(x)$ as follows:
+\vspace{-0.05cm}
 \begin{equation} \notag
 \mathbb{E}[Y_{i,g+e} - Y_{i,g+b}  | {\color{blue} G_i {=} g}  \; \& \; X_i {=} x ] {-}
  \mathbb{E}[Y_{i,g+e} - Y_{i,g+b} | {\color{red} \mathcal{C}_{g,e}(G_i) {=} 1}  \; \& \; X_i {=} x]
 \end{equation}
 Then, we can test that  $\text{ATT}_{g,e}$ is zero using,
+\vspace{-0.05cm}
 \begin{equation} \notag
 \text{DiD}_{g,e} =   \sum_\mathcal{X} \omega_g(x) \text{DiD}_{g,e}(x),  
 \quad
 \omega_g(x) = \mathbb{E}[X_i = x | G_i =g]
 \end{equation} 
+\vspace{-0.4cm}
 \begin{equation} \notag
 \text{SE}\left( \text{DiD}_{g,e} \right) =  
 \sqrt{
 \sum_{x \in \mathcal{X}} (\omega_g(x))^2 \text{SE}(\text{DiD}_{g,e}(x))^2
 }
 \end{equation} 
+\vspace{-0.05cm}
+There are no covariances because each $i$ has only one $X_i=x$ bin.
 
 \end{frame}
 
