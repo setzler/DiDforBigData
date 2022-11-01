@@ -268,6 +268,58 @@ getSEs_EventTime <- function(data_cohort,varnames){
   return(ATTe_SEs)
 }
 
+
+getSEs_multipleEventTimes <- function(data_cohort,varnames,events){
+
+  # set up variable names
+  time_name = varnames$time_name
+  outcome_name = varnames$outcome_name
+  cohort_name = varnames$cohort_name
+  id_name = varnames$id_name
+
+  # get the SE
+  data_cohortevents = data_cohort[EventTime %in% events]
+  cohortevents = data.table()
+  for(ee in events){
+    cohortevents = rbindlist(list(cohortevents, data.table(cohort=data_cohortevents[EventTime==ee,sort(unique(Cohort))],event=ee)))
+  }
+  cohortevents = cohortevents[order(cohort,event)]
+  cohortevents1 = copy(cohortevents)[, treated := 1]
+  cohortevents0 = copy(cohortevents)[, treated := 0]
+  cohortevents = rbindlist(list(cohortevents1,cohortevents0))
+  numce = nrow(cohortevents)
+  cohortevents_covmat = matrix(0, numce, numce)
+  cohortevents_weights = rep(NA,numce/2)
+
+
+  for(cc_row_iter in 1:numce){
+    # row
+    cohort_row = cohortevents[cc_row_iter]$cohort
+    event_row = cohortevents[cc_row_iter]$event
+    treated_row = cohortevents[cc_row_iter]$treated
+    data_row = data_cohortevents[Cohort == cohort_row & EventTime==event_row & treated==treated_row]
+    # row weight
+    if(treated_row==1){
+      cohortevents_weights[cc_row_iter] = data_row[, .N]
+    }
+    for(cc_col_iter in 1:numce){
+      # column
+      cohort_col = cohortevents[cc_col_iter]$cohort
+      event_col = cohortevents[cc_col_iter]$event
+      treated_col = cohortevents[cc_col_iter]$treated
+      data_col = data_cohortevents[Cohort == cohort_col & EventTime==event_col & treated==treated_col]
+      # covariance
+      data_rowcol_merge = merge(data_row, data_col, by=id_name)
+      if(nrow(data_rowcol_merge)>0){
+        cohortevents_covmat[cc_row_iter,cc_col_iter] = (data_rowcol_merge[, cov(Y_diff.x, Y_diff.y)]/sqrt(data_row[,as.numeric(.N)])) * 1/sqrt(data_col[,as.numeric(.N)])
+      }
+    }
+  }
+  cohortevents_weights = cohortevents_weights/sum(cohortevents_weights)
+  cohortevents_weights = c(cohortevents_weights,-1*cohortevents_weights)
+
+}
+
 #' Estimate DiD for a single cohort (g) and a single event time (e).
 #'
 #' @param inputdata A data.table.
@@ -329,7 +381,7 @@ DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod
 }
 
 
-DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL){
+DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, return_data=FALSE){
 
   # set up variable names
   time_name = varnames$time_name
@@ -412,6 +464,9 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 
   results_average = results_average[,.SD,.SDcols=c("EventTime","Baseperiod","ATTe","ATTe_SE","ATTe_SE_nocorr","Etreated_post","Etreated_pre","Etreated_SE","Econtrol_post","Econtrol_pre","Econtrol_SE","Ntreated","Ncontrol")]
 
+  if(return_data){
+    return(list(results_cohort=results_cohort, results_average=results_average, data_cohort=data_cohort))
+  }
   return(list(results_cohort=results_cohort, results_average=results_average))
 }
 
@@ -423,6 +478,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 #' @param baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.
 #' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
+#' @param return_data If true, this returns the treated and control differenced data. Default is FALSE.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
 #' @examples
 #' # simulate some data
@@ -450,9 +506,9 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 #' # use only the future treated control group, estimate events -4 through 1
 #' DiD(simdata, varnames, control_group = "future-treated", min_event=-4, max_event=1)
 #' @export
-DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL){
+DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, return_data=FALSE){
 
-  results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event)
+  results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=return_data)
 
   return(results)
 }
