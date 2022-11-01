@@ -10,7 +10,8 @@ DiD(
   control_group = "all",
   baseperiod = -1,
   min_event = NULL,
-  max_event = NULL
+  max_event = NULL,
+  Esets = NULL
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ DiD(
 \item{min_event}{This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.}
 
 \item{max_event}{This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.}
+
+\item{Esets}{If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.}
 }
 \value{
 A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
@@ -57,4 +60,7 @@ DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=
 
 # use only the future treated control group, estimate events -4 through 1
 DiD(simdata, varnames, control_group = "future-treated", min_event=-4, max_event=1)
+
+# estimate average ATTe across sets of events
+DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3)))
 }
