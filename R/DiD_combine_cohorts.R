@@ -92,9 +92,10 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames){
 
   # set up variable names
   time_name = varnames$time_name
-  outcome_name = varnames$outcome_name
+  outcome_name = paste0(varnames$outcome_name,"_diff")
   cohort_name = varnames$cohort_name
   id_name = varnames$id_name
+
 
   # get the SE
   all_events = data_cohort[,sort(unique(EventTime))]
@@ -115,8 +116,8 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames){
         cc_col_val = cohorts[cc_col_iter]
         if(cc_col_val == cc_row_val){
           # diagonals
-          covmat_treated_treated[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==1, var(Y_diff)/.N]
-          covmat_control_control[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==0, var(Y_diff)/.N]
+          covmat_treated_treated[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==1, var(get(outcome_name))/.N]
+          covmat_control_control[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==0, var(get(outcome_name))/.N]
           weight_treated[cc_row_iter] = data_event[Cohort==cc_row_val & treated==1, .N]
         }
         if(cc_col_val < cc_row_val){ # we will make this symmetric at the end
@@ -125,7 +126,7 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames){
           cc_col_control = data_event[Cohort==cc_col_val & treated==0]
           cc_row_control_col_control = merge(cc_row_control, cc_col_control, by=id_name)
           if(nrow(cc_row_control_col_control)){
-            covmat_control_control[cc_row_iter, cc_col_iter] = (cc_row_control_col_control[, cov(Y_diff.x, Y_diff.y)]/sqrt(cc_row_control[,as.numeric(.N)]))* 1/sqrt(cc_col_control[,as.numeric(.N)])
+            covmat_control_control[cc_row_iter, cc_col_iter] = (cc_row_control_col_control[, cov(get(paste0(outcome_name,".x")), get(paste0(outcome_name,".y")))]/sqrt(cc_row_control[,as.numeric(.N)]))* 1/sqrt(cc_col_control[,as.numeric(.N)])
           }
         }
         if(cc_col_val > cc_row_val){ # no past treated group can appear in the current or any future control group
@@ -134,7 +135,7 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames){
           cc_col_treated = data_event[Cohort==cc_col_val & treated==1]
           cc_row_control_col_treated = merge(cc_row_control, cc_col_treated, by=id_name)
           if(nrow(cc_row_control_col_treated)){
-            covmat_control_treated[cc_row_iter, cc_col_iter] = (cc_row_control_col_treated[, cov(Y_diff.x, Y_diff.y)]/sqrt(cc_row_control[,as.numeric(.N)])) * 1/sqrt(cc_col_treated[,as.numeric(.N)])
+            covmat_control_treated[cc_row_iter, cc_col_iter] = (cc_row_control_col_treated[, cov(get(paste0(outcome_name,".x")), get(paste0(outcome_name,".y")))]/sqrt(cc_row_control[,as.numeric(.N)])) * 1/sqrt(cc_col_treated[,as.numeric(.N)])
           }
         }
       }
@@ -167,7 +168,7 @@ getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset){
 
   # set up variable names
   time_name = varnames$time_name
-  outcome_name = varnames$outcome_name
+  outcome_name = paste0(varnames$outcome_name,"_diff")
   cohort_name = varnames$cohort_name
   id_name = varnames$id_name
 
@@ -194,7 +195,7 @@ getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset){
     treated_row = cohortevents[cc_row_iter]$treated
     data_row = data_cohortevents[Cohort == cohort_row & EventTime==event_row & treated==treated_row]
     # row weight
-    cohortevents_means[cc_row_iter] = data_row[,mean(Y_diff)]
+    cohortevents_means[cc_row_iter] = data_row[,mean(get(outcome_name))]
     if(treated_row==1){
       cohortevents_weights[cc_row_iter] = data_row[, .N]
     }
@@ -207,7 +208,7 @@ getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset){
       # covariance
       data_rowcol_merge = merge(data_row, data_col, by=id_name)
       if(nrow(data_rowcol_merge)>0){
-        cohortevents_covmat[cc_row_iter,cc_col_iter] = (data_rowcol_merge[, cov(Y_diff.x, Y_diff.y)]/sqrt(data_row[,as.numeric(.N)])) * 1/sqrt(data_col[,as.numeric(.N)])
+        cohortevents_covmat[cc_row_iter,cc_col_iter] = (data_rowcol_merge[, cov(get(paste0(outcome_name,".x")), get(paste0(outcome_name,".y")))]/sqrt(data_row[,as.numeric(.N)])) * 1/sqrt(data_col[,as.numeric(.N)])
       }
     }
   }
