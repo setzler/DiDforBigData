@@ -18,6 +18,7 @@
 #' @param shockvar Variance of idiosyncratic shocks (epsilon_it). Default is shockvar=1.
 #' @param time_covars Add 2 time-varying covariates, called "X1" and "X2". Default is FALSE.
 #' @param bin_covars Add 10 randomly assigned bins, with bin-specific shocks. Default is FALSE.
+#' @param randomNA If TRUE, randomly assign the outcome variable with missing values (NA) in some cases. Default is FALSE.
 #' @returns A list with two data.tables.
 #' The first data.table is simulated data with variables (id, year, cohort, Y), where Y is the outcome variable.
 #' The second data.table contains the true ATT values, both at the (event,cohort) level and by event averaging across cohorts.
@@ -49,8 +50,11 @@
 #' # add covariate "market", which is time-invariant but each market experiences a shock.
 #' SimDiD(bin_covars=TRUE)
 #'
+#' # randomly set 10% of outcomes to missing.
+#' SimDiD(randomNA=TRUE)
+#'
 #' @export
-SimDiD <- function(seed=1,sample_size=100, cohorts=c(2007,2010,2012), ATTat0=1, ATTgrowth=1, ATTcohortdiff=0.5, anticipation=0, minyear=2003, maxyear=2013, idvar=1, yearvar=1, shockvar=1, time_covars=FALSE, bin_covars=FALSE){
+SimDiD <- function(seed=1,sample_size=100, cohorts=c(2007,2010,2012), ATTat0=1, ATTgrowth=1, ATTcohortdiff=0.5, anticipation=0, minyear=2003, maxyear=2013, idvar=1, yearvar=1, shockvar=1, time_covars=FALSE, bin_covars=FALSE, randomNA=FALSE){
   # seed=1; sample_size=1000; cohorts=c(2007,2010,2012); ATTat0=1; ATTgrowth=1; ATTcohortdiff=0.5; anticipation=0; minyear=2003; maxyear=2013; idvar=1; yearvar=1; shockvar=1; time_covars=FALSE; bin_covars=FALSE
   set.seed(seed)
 
@@ -123,6 +127,10 @@ SimDiD <- function(seed=1,sample_size=100, cohorts=c(2007,2010,2012), ATTat0=1, 
     simdata[, bin_shock := rnorm(1), list(bin,year)]
     simdata[, Y := Y + bin_shock]
     keep_vars = c(keep_vars, "bin")
+  }
+  if(randomNA){
+    simdata[, change_to_NA := runif(nrow(simdata)) < 0.1] # 10% selected randomly
+    simdata[change_to_NA==TRUE, Y := NA]
   }
   simdata = simdata[order(id,year)]
   simdata = simdata[,.SD,.SDcols=keep_vars]

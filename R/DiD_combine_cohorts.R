@@ -78,8 +78,8 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
   }
   results_cohort = rbindlist(lapply(1:length(cohorts), extract_results, subtype="results_cohort"))
   data_cohort = rbindlist(lapply(1:length(cohorts), extract_results, subtype="data_cohort"))
-  results_cohort=results_cohort[order(Cohort,EventTime)]
-  data_cohort=data_cohort[order(Cohort,EventTime)]
+  results_cohort = results_cohort[order(Cohort,EventTime)]
+  data_cohort = data_cohort[order(Cohort,EventTime)]
 
   # collect the SEs
   ATTe_SEs = DiD_getSEs_EventTime(data_cohort=data_cohort,varnames=varnames)
@@ -342,6 +342,13 @@ getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
 #' # estimate average ATTe in parallel
 #' DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)
 #'
+#' # simulate data with missing values
+#' simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, randomNA = TRUE)$simdata
+#'
+#' # make sure DiD still works with missing values
+#' DiD(simdata, varnames, min_event=-4, max_event=6)
+#'
+#'
 #' # simulate data with time-varying covariates
 #' sim = SimDiD(sample_size=2000,time_covars=TRUE)
 #' simdata = sim$simdata
@@ -354,6 +361,13 @@ getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
 #'
 #' # run estimation that controls for time-varying covariates
 #' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
+#'
+#' # simulate data with time-varying covariates and missing values
+#' simdata = SimDiD(sample_size=2000,time_covars=TRUE,randomNA=TRUE)$simdata
+#'
+#' # re-run estimation that controls for time-varying covariates, with missing values
+#' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
+#'
 #' @export
 DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, Esets=NULL, parallel_cores=1){
   if(is.null(Esets)){

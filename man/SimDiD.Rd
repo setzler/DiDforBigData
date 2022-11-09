@@ -18,7 +18,8 @@ SimDiD(
   yearvar = 1,
   shockvar = 1,
   time_covars = FALSE,
-  bin_covars = FALSE
+  bin_covars = FALSE,
+  randomNA = FALSE
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ SimDiD(
 \item{time_covars}{Add 2 time-varying covariates, called "X1" and "X2". Default is FALSE.}
 
 \item{bin_covars}{Add 10 randomly assigned bins, with bin-specific shocks. Default is FALSE.}
+
+\item{randomNA}{If TRUE, randomly assign the outcome variable with missing values (NA) in some cases. Default is FALSE.}
 }
 \value{
 A list with two data.tables.
@@ -88,5 +91,8 @@ SimDiD(time_covars=TRUE)
 
 # add covariate "market", which is time-invariant but each market experiences a shock.
 SimDiD(bin_covars=TRUE)
+
+# randomly set 10\% of outcomes to missing.
+SimDiD(randomNA=TRUE)
 
 }
