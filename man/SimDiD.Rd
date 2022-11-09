@@ -19,7 +19,8 @@ SimDiD(
   shockvar = 1,
   time_covars = FALSE,
   bin_covars = FALSE,
-  randomNA = FALSE
+  randomNA = FALSE,
+  missingCohorts = NULL
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ SimDiD(
 \item{bin_covars}{Add 10 randomly assigned bins, with bin-specific shocks. Default is FALSE.}
 
 \item{randomNA}{If TRUE, randomly assign the outcome variable with missing values (NA) in some cases. Default is FALSE.}
+
+\item{missingCohort}{If set to a particular cohort (or vector of cohorts), all of the outcomes for that cohort at event time -1 will be set to missing. Default is NULL.}
 }
 \value{
 A list with two data.tables.
@@ -94,5 +97,8 @@ SimDiD(bin_covars=TRUE)
 
 # randomly set 10\% of outcomes to missing.
 SimDiD(randomNA=TRUE)
+
+# set cohort 2010 outcome to missing at event time -1.
+SimDiD(missingCohorts=2010)$simdata[cohort==2010 & year==2009]
 
 }

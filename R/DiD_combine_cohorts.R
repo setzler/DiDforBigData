@@ -87,7 +87,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
   # take the average across cohorts
   results_cohort[, Ntreated_event := sum(Ntreated), by="EventTime"]
   results_cohort[, cohort_weights := Ntreated/Ntreated_event]
-  results_average = results_cohort[, list(ATTe=sum(cohort_weights * ATTge),
+  results_average = results_cohort[Ntreated > 1 & Ncontrol > 1, list(ATTe=sum(cohort_weights * ATTge),
                                           ATTe_SE_nocorr=sqrt(sum(cohort_weights^2 * ATTge_SE^2)),
                                           Etreated_post=sum(cohort_weights*Etreated_post),
                                           Etreated_pre=sum(cohort_weights*Etreated_pre),
@@ -109,6 +109,13 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 }
 
 DiD_getSEs_EventTime <- function(data_cohort,varnames){
+
+  # check that there are treated and control units available
+  data_cohort[,available_treated := sum(treated), list(Cohort,EventTime)]
+  data_cohort[,available_control := sum(1-treated), list(Cohort,EventTime)]
+  data_cohort = data_cohort[available_treated > 1 & available_control > 1]
+  data_cohort[,available_treated := NULL]
+  data_cohort[,available_control := NULL]
 
   # set up variable names
   time_name = varnames$time_name
@@ -186,6 +193,13 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames){
 
 getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset){
 
+  # check that there are treated and control units available
+  data_cohort[,available_treated := sum(treated), list(Cohort,EventTime)]
+  data_cohort[,available_control := sum(1-treated), list(Cohort,EventTime)]
+  data_cohort = data_cohort[available_treated > 1 & available_control > 1]
+  data_cohort[,available_treated := NULL]
+  data_cohort[,available_control := NULL]
+
   # set up variable names
   time_name = varnames$time_name
   outcome_name = paste0(varnames$outcome_name,"_diff")
@@ -240,6 +254,13 @@ getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset){
 }
 
 getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
+
+  # check that there are treated and control units available
+  data_cohort[,available_treated := sum(treated), list(Cohort,EventTime)]
+  data_cohort[,available_control := sum(1-treated), list(Cohort,EventTime)]
+  data_cohort = data_cohort[available_treated > 1 & available_control > 1]
+  data_cohort[,available_treated := NULL]
+  data_cohort[,available_control := NULL]
 
   # set up variable names
   time_name = varnames$time_name
@@ -342,12 +363,13 @@ getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
 #' # estimate average ATTe in parallel
 #' DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)
 #'
-#' # simulate data with missing values
+#' # simulate data with missing values, re-run estimation
 #' simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, randomNA = TRUE)$simdata
+#' DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3)))
 #'
-#' # make sure DiD still works with missing values
-#' DiD(simdata, varnames, min_event=-4, max_event=6)
-#'
+#' # simulate data with missing cohort, re-run estimation
+#' simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, missingCohorts=2010)$simdata
+#' DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3)))
 #'
 #' # simulate data with time-varying covariates
 #' sim = SimDiD(sample_size=2000,time_covars=TRUE)
@@ -362,10 +384,12 @@ getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
 #' # run estimation that controls for time-varying covariates
 #' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 #'
-#' # simulate data with time-varying covariates and missing values
+#' # simulate data with time-varying covariates and missing values, re-run estimation
 #' simdata = SimDiD(sample_size=2000,time_covars=TRUE,randomNA=TRUE)$simdata
+#' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 #'
-#' # re-run estimation that controls for time-varying covariates, with missing values
+#' # simulate data with time-varying covariates and missing cohort, re-run estimation
+#' simdata = SimDiD(sample_size=2000,time_covars=TRUE,missingCohorts=2010)$simdata
 #' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 #'
 #' @export

@@ -125,11 +125,19 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 
   if(!is.null(covariate_names)){
     OLSformula = paste0(paste0(outcome_name,"_diff"), paste0(" ~ treated + ",paste0(paste0(covariate_names,"_diff"),collapse=" + ")))
-    OLSres = summary(lm(as.formula(OLSformula),data=data_prepost))$coefficients
+    OLSlm = lm(as.formula(OLSformula),data=data_prepost)
+    missing_treated = is.na(as.numeric(OLSlm$coefficients["treated"]))
+    OLSres = summary(OLSlm)$coefficients
     results[, ATTge_nocovars := copy(ATTge)]
     results[, ATTge_SE_nocovars := copy(ATTge_SE)]
-    results[, ATTge := OLSres["treated","Estimate"]]
-    results[, ATTge_SE := OLSres["treated","Std. Error"]]
+    if(!missing_treated){
+      results[, ATTge := OLSres["treated","Estimate"]]
+      results[, ATTge_SE := OLSres["treated","Std. Error"]]
+    }
+    if(missing_treated){
+      results[, ATTge := NA]
+      results[, ATTge_SE := NA]
+    }
     results_variables_order = c(results_variables_order,"ATTge_nocovars","ATTge_SE_nocovars")
   }
 

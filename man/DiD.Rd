@@ -70,12 +70,13 @@ DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3
 # estimate average ATTe in parallel
 DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)
 
-# simulate data with missing values
+# simulate data with missing values, re-run estimation
 simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, randomNA = TRUE)$simdata
+DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3)))
 
-# make sure DiD still works with missing values
-DiD(simdata, varnames, min_event=-4, max_event=6)
-
+# simulate data with missing cohort, re-run estimation
+simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, missingCohorts=2010)$simdata
+DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3)))
 
 # simulate data with time-varying covariates
 sim = SimDiD(sample_size=2000,time_covars=TRUE)
@@ -90,10 +91,12 @@ DiD(simdata, varnames, min_event=1, max_event=2)
 # run estimation that controls for time-varying covariates
 DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 
-# simulate data with time-varying covariates and missing values
+# simulate data with time-varying covariates and missing values, re-run estimation
 simdata = SimDiD(sample_size=2000,time_covars=TRUE,randomNA=TRUE)$simdata
+DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 
-# re-run estimation that controls for time-varying covariates, with missing values
+# simulate data with time-varying covariates and missing cohort, re-run estimation
+simdata = SimDiD(sample_size=2000,time_covars=TRUE,missingCohorts=2010)$simdata
 DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 
 }
