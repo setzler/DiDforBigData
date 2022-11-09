@@ -39,8 +39,8 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
     inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == post_time), .SD, .SDcols=c(id_name,keep_vars)],
     by=c(id_name)
   )
-  names(treated_data_prepost) = gsub(".x","_pre",names(treated_data_prepost))
-  names(treated_data_prepost) = gsub(".y","_post",names(treated_data_prepost))
+  names(treated_data_prepost) = gsub("\\.x","_pre",names(treated_data_prepost))
+  names(treated_data_prepost) = gsub("\\.y","_post",names(treated_data_prepost))
   setnames(treated_data_prepost, paste0(keep_vars,"_pre"), paste0("treated_",keep_vars,"_pre"))
   setnames(treated_data_prepost, paste0(keep_vars,"_post"), paste0("treated_",keep_vars,"_post"))
   treated_data_prepost[, treated := 1.0]
@@ -68,8 +68,8 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
       by=c(id_name)
     )
   }
-  names(control_data_prepost) = gsub(".x","_pre",names(control_data_prepost))
-  names(control_data_prepost) = gsub(".y","_post",names(control_data_prepost))
+  names(control_data_prepost) = gsub("\\.x","_pre",names(control_data_prepost))
+  names(control_data_prepost) = gsub("\\.y","_post",names(control_data_prepost))
   setnames(control_data_prepost, paste0(keep_vars,"_pre"), paste0("control_",keep_vars,"_pre"))
   setnames(control_data_prepost, paste0(keep_vars,"_post"), paste0("control_",keep_vars,"_post"))
   control_data_prepost[, treated := 0.0]
