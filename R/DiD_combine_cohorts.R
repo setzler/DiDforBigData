@@ -1,5 +1,5 @@
 
-DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, return_data=FALSE){
+DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, return_data=FALSE, parallel_cores=1){
 
   # set up variable names
   time_name = varnames$time_name
@@ -39,9 +39,9 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
   }
 
   # cohort-specific estimation
-  results_cohort = data.table()
-  data_cohort = data.table()
-  for(cc in cohorts){
+  get_cohort_results <- function(cc){
+    results_this_cohort = data.table()
+    data_this_cohort = data.table()
     # set up cohort-specific event times
     times_for_cohort = sort(inputdata[get(cohort_name) == cc, unique(get(time_name))])
     times_for_cohort = times_for_cohort[times_for_cohort < upperbound_outcomeyear]
@@ -56,12 +56,32 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
     for(event_postperiod in event_periods){
       res = DiDge(inputdata, cohort_time = cc, event_postperiod = event_postperiod, baseperiod = baseperiod,
                   varnames=varnames, control_group = control_group, return_data=TRUE)
-      results_cohort = rbindlist(list(results_cohort,res$results))
-      data_cohort = rbindlist(list(data_cohort, res$data))
+      results_this_cohort = rbindlist(list(results_this_cohort,res$results))
+      data_this_cohort = rbindlist(list(data_this_cohort, res$data))
     }
+    # finish
+    return(list(results_cohort=results_this_cohort,data_cohort=data_this_cohort))
   }
+
+  # apply the cohort-specific estimation in parallel
+  if(parallel_cores==1){
+    the_results = lapply(cohorts,get_cohort_results)
+  }
+  if(parallel_cores>1){
+    library(parallel)
+    the_results = mclapply(cohorts,get_cohort_results,mc.cores=parallel_cores)
+  }
+
+  # extract the results from the output list
+  extract_results <- function(index_count,subtype){
+    the_results[[index_count]][[subtype]]
+  }
+  results_cohort = rbindlist(lapply(1:length(cohorts), extract_results, subtype="results_cohort"))
+  data_cohort = rbindlist(lapply(1:length(cohorts), extract_results, subtype="data_cohort"))
   results_cohort=results_cohort[order(Cohort,EventTime)]
   data_cohort=data_cohort[order(Cohort,EventTime)]
+
+  # collect the SEs
   ATTe_SEs = DiD_getSEs_EventTime(data_cohort=data_cohort,varnames=varnames)
 
   # take the average across cohorts
@@ -95,7 +115,6 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames){
   outcome_name = paste0(varnames$outcome_name,"_diff")
   cohort_name = varnames$cohort_name
   id_name = varnames$id_name
-
 
   # get the SE
   all_events = data_cohort[,sort(unique(EventTime))]
@@ -153,6 +172,7 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames){
     weight_list[[as.character(event)]] = c(weight_treated/sum(weight_treated), -weight_treated/sum(weight_treated))
   }
 
+  # collect the event-specific ATE SEs
   ATTe_SEs = data.table()
   for(event in all_events){
     covmat_cohort = covmat_list[[as.character(event)]]
@@ -186,7 +206,6 @@ getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset){
   cohortevents_covmat = matrix(0, numce, numce)
   cohortevents_weights = rep(NA,numce/2)
   cohortevents_means = rep(NA,numce)
-
 
   for(cc_row_iter in 1:numce){
     # row
@@ -289,6 +308,7 @@ getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
 #' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @param Esets If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.
+#' @param parallel_cores Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
 #' @examples
 #' # simulate some data
@@ -319,6 +339,9 @@ getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
 #' # estimate average ATTe across sets of events
 #' DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3)))
 #'
+#' # estimate average ATTe in parallel
+#' DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)
+#'
 #' # simulate data with time-varying covariates
 #' sim = SimDiD(sample_size=2000,time_covars=TRUE)
 #' simdata = sim$simdata
@@ -332,13 +355,13 @@ getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
 #' # run estimation that controls for time-varying covariates
 #' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 #' @export
-DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, Esets=NULL){
+DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, Esets=NULL, parallel_cores=1){
   if(is.null(Esets)){
-    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=FALSE)
+    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=FALSE, parallel_cores=parallel_cores)
     return(results)
   }
   if(!is.null(Esets)){
-    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=TRUE)
+    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=TRUE, parallel_cores=parallel_cores)
     data_cohort = results$data_cohort
     results_Esets = data.table()
     for(Eset in Esets){

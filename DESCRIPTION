@@ -14,7 +14,8 @@ Suggests:
     ggplot2,
     knitr,
     rmarkdown,
-    scales
+    scales,
+    parallel
 VignetteBuilder: knitr
 URL: https://github.com/setzler/DiDforBigData
 BugReports: https://github.com/setzler/DiDforBigData/issues
