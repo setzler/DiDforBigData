@@ -89,7 +89,8 @@ following:
     transferred onto servers, via email, etc.
 
 The derivations of the analytical formulas used by `DiDforBigData` are
-available here as a slideshow: [slides](DiDforBigData_theory.pdf).
+available here as a slideshow:
+[slides](vignettes/DiDforBigData_theory.pdf).
 
 # Demonstration
 
@@ -117,14 +118,15 @@ Sample Size refers to the number of unique individuals. Since there are
 10 simulated years of data, and the sample is balanced across years, the
 number of observations is 10 times the number of unique individuals.
 
-A caveat: I only consider contexts in which the data is balanced,
-treatment is permanent once it begins, and the parallel-trends and
-no-anticipation assumptions hold unconditionally for all treatment
-cohorts. Under these assumptions, all of the estimators considered are
-consistent. However, in empirical contexts in which these assumptions do
-not hold, only some of the estimators may be valid. For example, only
-the approach of de Chaisemartin & D’Haultfoeuille (2020) can allow for
-treatments that switch off and on repeatedly for the same individual.
+A caveat: in the following simulations, I consider contexts in which the
+data is balanced, treatment is permanent once it begins, and the
+parallel-trends and no-anticipation assumptions hold unconditionally for
+all treatment cohorts. Under these assumptions, all of the estimators
+considered are consistent. However, in empirical contexts in which these
+assumptions do not hold, only some of the estimators may be valid. For
+example, only the approach of de Chaisemartin & D’Haultfoeuille (2020)
+can allow for treatments that switch off and on repeatedly for the same
+individual.
 
 #### Estimates
 

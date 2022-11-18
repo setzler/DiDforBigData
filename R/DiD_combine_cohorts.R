@@ -68,7 +68,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
     the_results = lapply(cohorts,get_cohort_results)
   }
   if(parallel_cores>1){
-    library(parallel)
+    library(parallel, warn.conflicts = F, quietly = T)
     the_results = mclapply(cohorts,get_cohort_results,mc.cores=parallel_cores)
   }
 

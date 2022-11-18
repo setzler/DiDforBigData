@@ -7,7 +7,9 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   cohort_name = varnames$cohort_name
   id_name = varnames$id_name
   covariate_names = varnames$covariate_names
+  cluster_names = varnames$cluster_names
   keep_vars = c(outcome_name,covariate_names)
+  all_keep_vars = c(outcome_name,covariate_names,cluster_names)
 
   # prepare time periods
   pre_time = cohort_time + baseperiod
@@ -22,7 +24,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 
   # restrict to pre and post time periods of interest, then restrict to observations present in both time periods
   inputdata = inputdata[get(time_name)==pre_time | get(time_name)==post_time]
-  inputdata = inputdata[,.SD,.SDcols=c(id_name, time_name, cohort_name, outcome_name, covariate_names)]
+  inputdata = inputdata[,.SD,.SDcols=c(id_name, time_name, cohort_name, all_keep_vars)]
   nn0 = nrow(inputdata)
   inputdata = na.omit(inputdata) # remove any rows with missing values
   nn1 = nrow(inputdata)
@@ -35,7 +37,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 
   # define treated data and get means
   treated_data_prepost = merge(
-    inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,keep_vars)],
+    inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,all_keep_vars)],
     inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == post_time), .SD, .SDcols=c(id_name,keep_vars)],
     by=c(id_name)
   )
@@ -49,21 +51,21 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   control_data_prepost = NULL
   if(control_group == "all"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,keep_vars)],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,all_keep_vars)],
       inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == post_time), .SD, .SDcols=c(id_name,keep_vars)],
       by=c(id_name)
     )
   }
   if(control_group == "never-treated"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.infinite(get(cohort_name)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,keep_vars)],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.infinite(get(cohort_name)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,all_keep_vars)],
       inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.infinite(get(cohort_name)) & (get(time_name) == post_time), .SD, .SDcols=c(id_name,keep_vars)],
       by=c(id_name)
     )
   }
   if(control_group == "future-treated"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.finite(get(cohort_name)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,keep_vars)],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.finite(get(cohort_name)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,all_keep_vars)],
       inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.finite(get(cohort_name)) & (get(time_name) == post_time), .SD, .SDcols=c(id_name,keep_vars)],
       by=c(id_name)
     )
@@ -113,32 +115,51 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 
   # OLS
   data_prepost = NULL
-  if(!is.null(covariate_names) | return_data){
+  if(!is.null(covariate_names) | !is.null(cluster_names) | return_data){
     names(treated_data_prepost) = gsub("treated_","",names(treated_data_prepost))
     names(control_data_prepost) = gsub("control_","",names(control_data_prepost))
     data_prepost = rbindlist(list(treated_data_prepost,control_data_prepost))
     for(ii in keep_vars){
       data_prepost[, (paste0(ii,"_diff")) := get(paste0(ii,"_post")) - get(paste0(ii,"_pre"))]
     }
-    data_prepost = data_prepost[,.SD,.SDcols=c(id_name,"treated",paste0(keep_vars,"_diff"))]
+    data_prepost = data_prepost[,.SD,.SDcols=c(id_name,"treated",paste0(keep_vars,"_diff"),cluster_names)]
   }
 
-  if(!is.null(covariate_names)){
-    OLSformula = paste0(paste0(outcome_name,"_diff"), paste0(" ~ treated + ",paste0(paste0(covariate_names,"_diff"),collapse=" + ")))
-    OLSlm = lm(as.formula(OLSformula),data=data_prepost)
-    missing_treated = is.na(as.numeric(OLSlm$coefficients["treated"]))
-    OLSres = summary(OLSlm)$coefficients
-    results[, ATTge_nocovars := copy(ATTge)]
-    results[, ATTge_SE_nocovars := copy(ATTge_SE)]
-    if(!missing_treated){
-      results[, ATTge := OLSres["treated","Estimate"]]
-      results[, ATTge_SE := OLSres["treated","Std. Error"]]
+  if(!is.null(covariate_names) | !is.null(cluster_names)){
+    # reg formula, no covariates
+    OLSformula = paste0(paste0(outcome_name,"_diff"), paste0(" ~ treated"))
+    if(!is.null(covariate_names)){
+      # reg formula, with covariates
+      OLSformula = paste0(OLSformula, " + ", paste0(paste0(covariate_names,"_diff"),collapse=" + "))
+      # since covariates change the estimates, keep a copy of the old estimate
+      results[, ATTge_nocovars := copy(ATTge)]
+      results[, ATTge_SE_nocovars := copy(ATTge_SE)]
+      results_variables_order = c(results_variables_order,"ATTge_nocovars","ATTge_SE_nocovars")
     }
-    if(missing_treated){
+    # execute the regression
+    OLSlm = lm(as.formula(OLSformula),data=data_prepost)
+    # check if the treated coefficient is missing
+    newATT = as.numeric(OLSlm$coefficients["treated"])
+    if(!is.na(newATT)){
+      results[, ATTge := newATT]
+      if(is.null(cluster_names)){
+        newATTSE = summary(OLSlm)$coefficients["treated","Std. Error"]
+        results[, ATTge_SE := newATTSE]
+      }
+      if(!is.null(cluster_names)){
+        library(zoo, warn.conflicts = F, quietly = T)
+        library(sandwich, warn.conflicts = F, quietly = T)
+        library(lmtest, warn.conflicts = F, quietly = T)
+        CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
+        CLres = coeftest(OLSlm, vcov = vcovCL, cluster = CLformula, df = Inf)
+        newATTSE = as.matrix(CLres)["treated","Std. Error"]
+        results[, ATTge_SE := newATTSE]
+      }
+    }
+    if(is.na(newATT)){
       results[, ATTge := NA]
       results[, ATTge_SE := NA]
     }
-    results_variables_order = c(results_variables_order,"ATTge_nocovars","ATTge_SE_nocovars")
   }
 
   # combine means into an output table
@@ -250,6 +271,11 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 #'
 #' # now we account for bins:
 #' varnames$bin_name = c("bin")
+#' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
+#'
+#' # now we cluster on bins:
+#' varnames$bin_name = NULL
+#' varnames$cluster_names = c("bin")
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 #'
 #' @export

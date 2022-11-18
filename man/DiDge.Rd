@@ -75,4 +75,9 @@ DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod 
 varnames$bin_name = c("bin")
 DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 
+# now we cluster on bins:
+varnames$bin_name = NULL
+varnames$cluster_names = c("bin")
+DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
+
 }
