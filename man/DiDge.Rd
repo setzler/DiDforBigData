@@ -11,7 +11,8 @@ DiDge(
   event_postperiod,
   baseperiod = -1,
   control_group = "all",
-  return_data = FALSE
+  return_data = FALSE,
+  forceOLS = TRUE
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ DiDge(
 \item{control_group}{There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".}
 
 \item{return_data}{If true, this returns the treated and control differenced data. Default is FALSE.}
+
+\item{forceOLS}{Compute standard errors using OLS, even if analytic expression is available.}
 
 \item{min_event}{This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.}
 

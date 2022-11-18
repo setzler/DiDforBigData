@@ -12,7 +12,8 @@ DiD(
   min_event = NULL,
   max_event = NULL,
   Esets = NULL,
-  parallel_cores = 1
+  parallel_cores = 1,
+  forceOLS = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ DiD(
 \item{Esets}{If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.}
 
 \item{parallel_cores}{Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.}
+
+\item{forceOLS}{Compute standard errors using OLS, even if analytic expression is available.}
 }
 \value{
 A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).

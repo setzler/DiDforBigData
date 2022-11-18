@@ -1,5 +1,5 @@
 Package: DiDforBigData
-Title: A Big Data Implementation of Difference-in-differences (DiD) Estimation with Staggered Treatment.
+Title: A Big Data Implementation of Difference-in-differences Estimation with Staggered Treatment.
 Version: 0.1
 Authors@R: 
     person("Bradley", "Setzler", , "bradley.setzler@gmail.com", role = c("aut", "cre"))
@@ -15,7 +15,9 @@ Suggests:
     knitr,
     rmarkdown,
     scales,
-    parallel
+    parallel,
+    sandwich,
+    zoo
 VignetteBuilder: knitr
 URL: https://github.com/setzler/DiDforBigData
 BugReports: https://github.com/setzler/DiDforBigData/issues

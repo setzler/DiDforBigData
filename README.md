@@ -3,7 +3,8 @@ DiD for Big Data in R
 
 This R package provides a big-data-friendly and memory-efficient
 difference-in-differences (DiD) estimator for staggered (and
-non-staggered) treatment contexts.
+non-staggered) treatment contexts. It supports clustered standard errors
+and controlling for time-varying covariates.
 
 # Motivation
 
@@ -12,12 +13,13 @@ non-staggered) treatment contexts.
 DiD has long been implemented using OLS to estimate a two-way
 fixed-effects (TWFE) regression in which the coefficient on a
 treatment-time interaction term corresponds to the DiD estimate. Over
-the past five years or so, a literature proved that the traditional DiD
+the past few years, a literature proved that the traditional DiD
 estimation strategy is biased and inconsistent if treatment roll-out is
-staggered over time, as it implicitly uses already-treated units as part
-of the control group for recently-treated units. In response, recent
-papers have proposed DiD estimators that are consistent in the presence
-of staggered treatment; see [Roth, Sant’Anna, Bilinksi, and Poe
+staggered over time. Under staggered treatment, TWFE implicitly uses
+already-treated units as part of the control group for newly-treated
+units. In response, recent papers have proposed various DiD estimators
+that are consistent in the presence of staggered treatment; see [Roth,
+Sant’Anna, Bilinksi, and Poe
 (2022)](https://jonathandroth.github.io/assets/files/DiD_Review_Paper.pdf)
 for a literature review.
 
@@ -43,13 +45,13 @@ packages that implement the methods of:
 - [de Chaisemartin & D’Haultfoeuille
   (2020)](https://drive.google.com/file/d/1D93ltJUirR4zIqJZfSTwSLrA-6rSZpTJ/view).
 
-Even using the fast M1 silicon in my 2021 Macbook Pro, I found that only
-the Callaway & Sant’Anna (2021) implementation could successfully
-estimate DiD with 100,000 unique individuals. While many DiD
-applications consider only a small number of unique individuals (e.g. a
-state-level policy roll-out design would typically have only 50 or so
-unique units), DiD designs at the household-level or firm-level using
-administrative data often involve millions of unique individuals.
+Using my fast laptop, I found that only the Callaway & Sant’Anna (2021)
+implementation could successfully estimate DiD with 100,000 unique
+individuals. While many DiD applications consider only a small number of
+unique individuals (e.g. a state-level policy roll-out design would
+typically have only 50 or so unique units), DiD designs at the
+household-level or firm-level using administrative data often involve
+millions of unique individuals.
 
 Estimating DiD with large administrative data poses three challenges:
 
@@ -64,8 +66,8 @@ Estimating DiD with large administrative data poses three challenges:
     stacking).
 3.  **Dependencies:** Administrative data is often stored on secure
     servers on which it is impossible to install software that requires
-    compilation. We need a package that only depends on commonly
-    available software.
+    compilation. We need a package that only depends on
+    commonly-available software.
 
 I wrote this package to address all three issues.
 
@@ -85,8 +87,8 @@ following:
     (see demonstration below).
 3.  **Dependencies:** This package has only *one* dependency,
     `data.table`, which is already installed with most R distributions.
-    This package is also extremely small, so it can easily be
-    transferred onto servers, via email, etc.
+    In case the researcher needs clustered standard errors, another
+    commonly-available package, `sandwich`, is also required.
 
 The derivations of the analytical formulas used by `DiDforBigData` are
 available here as a slideshow:
@@ -163,8 +165,10 @@ large.
 
 Even with 1 million unique individuals (and 10 million observations), it
 is difficult to see `DiDforBigData` in the plot, as estimation requires
-about 20 seconds, versus nearly 1 hour for the implementation of the
-Callaway & Sant’Anna (2021) approach.
+about half of a minute, versus nearly 1 hour for the implementation of
+the Callaway & Sant’Anna (2021) approach. Thus, `DiDforBigData` is
+roughly *two orders of magnitude* faster than the Callaway & Sant’Anna
+(2021) approach when working with a sample of one million individuals.
 
 #### Memory test
 
@@ -181,6 +185,6 @@ approaches all use relatively little memory at these sample sizes.
 
 ![](vignettes/memorytest_large.png)
 
-When considering large samples, we see that `DiDforBigData` uses very
-little memory, while the implementation of the Callaway & Sant’Anna
-(2021) approach uses quite a lot of memory.
+When considering large samples, we see that `DiDforBigData` uses less
+than half of the memory used by the Callaway & Sant’Anna (2021)
+approach.

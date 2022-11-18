@@ -1,11 +1,13 @@
 
-DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, return_data=FALSE, parallel_cores=1){
+DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, return_data=FALSE, parallel_cores=1, forceOLS=TRUE){
 
   # set up variable names
   time_name = varnames$time_name
   outcome_name = varnames$outcome_name
   cohort_name = varnames$cohort_name
   id_name = varnames$id_name
+  covariate_names = varnames$covariate_names
+  cluster_names = varnames$cluster_names
 
   # set up and checks
   cohorts = sort(inputdata[, unique(get(cohort_name))])
@@ -46,6 +48,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
     times_for_cohort = sort(inputdata[get(cohort_name) == cc, unique(get(time_name))])
     times_for_cohort = times_for_cohort[times_for_cohort < upperbound_outcomeyear]
     event_periods = times_for_cohort - cc
+    # drop event times outside of the specified min/max range, for this specific cohort
     if(!is.null(min_event)){
       event_periods = event_periods[event_periods >= min_event]
     }
@@ -55,8 +58,9 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
     # loop DiD over the event times for this cohort
     for(event_postperiod in event_periods){
       res = DiDge(inputdata, cohort_time = cc, event_postperiod = event_postperiod, baseperiod = baseperiod,
-                  varnames=varnames, control_group = control_group, return_data=TRUE)
+                  varnames=varnames, control_group = control_group, return_data=TRUE, forceOLS=forceOLS)
       results_this_cohort = rbindlist(list(results_this_cohort,res$results))
+      # this is key -- collect cohort-event-specific control-treatment-paired data to estimate DiDe later
       data_this_cohort = rbindlist(list(data_this_cohort, res$data))
     }
     # finish
@@ -76,31 +80,47 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
   extract_results <- function(index_count,subtype){
     the_results[[index_count]][[subtype]]
   }
+  # gather the cohort-year DiDge estimates and SEs
   results_cohort = rbindlist(lapply(1:length(cohorts), extract_results, subtype="results_cohort"))
-  data_cohort = rbindlist(lapply(1:length(cohorts), extract_results, subtype="data_cohort"))
   results_cohort = results_cohort[order(Cohort,EventTime)]
+  # gather the cohort-event-specific control-treatment-paired data to estimate DiDe later
+  data_cohort = rbindlist(lapply(1:length(cohorts), extract_results, subtype="data_cohort"))
   data_cohort = data_cohort[order(Cohort,EventTime)]
-
-  # collect the SEs
-  ATTe_SEs = DiD_getSEs_EventTime(data_cohort=data_cohort,varnames=varnames)
 
   # take the average across cohorts
   results_cohort[, Ntreated_event := sum(Ntreated), by="EventTime"]
   results_cohort[, cohort_weights := Ntreated/Ntreated_event]
-  results_average = results_cohort[Ntreated > 1 & Ncontrol > 1, list(ATTe=sum(cohort_weights * ATTge),
-                                          ATTe_SE_nocorr=sqrt(sum(cohort_weights^2 * ATTge_SE^2)),
-                                          Etreated_post=sum(cohort_weights*Etreated_post),
-                                          Etreated_pre=sum(cohort_weights*Etreated_pre),
-                                          Etreated_SE=sqrt(sum(cohort_weights^2*Etreated_SE^2)),
-                                          Econtrol_post=sum(cohort_weights*Econtrol_post),
-                                          Econtrol_pre=sum(cohort_weights*Econtrol_pre),
-                                          Econtrol_SE=sqrt(sum(cohort_weights^2*Econtrol_SE^2)),
-                                          Ntreated=sum(Ntreated),
-                                          Ncontrol=sum(Ncontrol)
-  ), list(EventTime,Baseperiod)][order(EventTime,Baseperiod)]
+  results_average = results_cohort[Ntreated > 1 & Ncontrol > 1,
+                                   list(
+                                     ATTe=sum(cohort_weights * ATTge),
+                                     ATTe_SE_nocorr=sqrt(sum(cohort_weights^2 * ATTge_SE^2)), # these are the SEs if DiDge were uncorrelated across g
+                                     Etreated_post=sum(cohort_weights*Etreated_post),
+                                     Etreated_pre=sum(cohort_weights*Etreated_pre),
+                                     Etreated_SE=sqrt(sum(cohort_weights^2*Etreated_SE^2)),
+                                     Econtrol_post=sum(cohort_weights*Econtrol_post),
+                                     Econtrol_pre=sum(cohort_weights*Econtrol_pre),
+                                     Econtrol_SE=sqrt(sum(cohort_weights^2*Econtrol_SE^2)),
+                                     Ntreated=sum(Ntreated),
+                                     Ncontrol=sum(Ncontrol)
+                                   ),
+                                   list(EventTime,Baseperiod)][order(EventTime,Baseperiod)]
+
+  # collect the SEs that account for correlation in DiDge across g, merge them to the results
+  if(!is.null(covariate_names) | !is.null(cluster_names) | forceOLS){
+    ATTe_SEs = DiD_getSEs_EventTime_OLS(data_cohort=data_cohort,varnames=varnames)
+  }
+  if(is.null(covariate_names) & is.null(cluster_names) & !forceOLS){
+    ATTe_SEs = DiD_getSEs_EventTime_noOLS(data_cohort=data_cohort,varnames=varnames)
+  }
   results_average = merge(results_average, ATTe_SEs, by="EventTime")[order(EventTime,Baseperiod)]
 
-  results_average = results_average[,.SD,.SDcols=c("EventTime","Baseperiod","ATTe","ATTe_SE","ATTe_SE_nocorr","Etreated_post","Etreated_pre","Etreated_SE","Econtrol_post","Econtrol_pre","Econtrol_SE","Ntreated","Ncontrol")]
+  # clean up the results
+  ordered_names = c("EventTime","Baseperiod",
+                    "ATTe","ATTe_SE","ATTe_SE_nocorr",
+                    "Etreated_post","Etreated_pre","Etreated_SE",
+                    "Econtrol_post","Econtrol_pre","Econtrol_SE",
+                    "Ntreated","Ncontrol")
+  results_average = results_average[,.SD,.SDcols=ordered_names]
 
   if(return_data){
     return(list(results_cohort=results_cohort, results_average=results_average, data_cohort=data_cohort))
@@ -108,214 +128,6 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
   return(list(results_cohort=results_cohort, results_average=results_average))
 }
 
-DiD_getSEs_EventTime <- function(data_cohort,varnames){
-
-  # check that there are treated and control units available
-  data_cohort[,available_treated := sum(treated), list(Cohort,EventTime)]
-  data_cohort[,available_control := sum(1-treated), list(Cohort,EventTime)]
-  data_cohort = data_cohort[available_treated > 1 & available_control > 1]
-  data_cohort[,available_treated := NULL]
-  data_cohort[,available_control := NULL]
-
-  # set up variable names
-  time_name = varnames$time_name
-  outcome_name = paste0(varnames$outcome_name,"_diff")
-  cohort_name = varnames$cohort_name
-  id_name = varnames$id_name
-
-  # get the SE
-  all_events = data_cohort[,sort(unique(EventTime))]
-  covmat_list = list()
-  weight_list = list()
-  for(event in all_events){
-    data_event = data_cohort[EventTime==event]
-    cohorts = data_event[,sort(unique(Cohort))]
-    numcc = length(cohorts)
-    covmat_treated_treated = matrix(0,nrow=numcc,ncol=numcc)
-    covmat_control_control = matrix(0,nrow=numcc,ncol=numcc)
-    covmat_control_treated = matrix(0,nrow=numcc,ncol=numcc)
-    covmat_treated_control = matrix(0,nrow=numcc,ncol=numcc)
-    weight_treated = rep(0,numcc)
-    for(cc_row_iter in 1:numcc){
-      cc_row_val = cohorts[cc_row_iter]
-      for(cc_col_iter in 1:numcc){
-        cc_col_val = cohorts[cc_col_iter]
-        if(cc_col_val == cc_row_val){
-          # diagonals
-          covmat_treated_treated[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==1, var(get(outcome_name))/.N]
-          covmat_control_control[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==0, var(get(outcome_name))/.N]
-          weight_treated[cc_row_iter] = data_event[Cohort==cc_row_val & treated==1, .N]
-        }
-        if(cc_col_val < cc_row_val){ # we will make this symmetric at the end
-          # control-control
-          cc_row_control = data_event[Cohort==cc_row_val & treated==0]
-          cc_col_control = data_event[Cohort==cc_col_val & treated==0]
-          cc_row_control_col_control = merge(cc_row_control, cc_col_control, by=id_name)
-          if(nrow(cc_row_control_col_control)){
-            covmat_control_control[cc_row_iter, cc_col_iter] = (cc_row_control_col_control[, cov(get(paste0(outcome_name,".x")), get(paste0(outcome_name,".y")))]/sqrt(cc_row_control[,as.numeric(.N)]))* 1/sqrt(cc_col_control[,as.numeric(.N)])
-          }
-        }
-        if(cc_col_val > cc_row_val){ # no past treated group can appear in the current or any future control group
-          # treated-control
-          cc_row_control = data_event[Cohort==cc_row_val & treated==0]
-          cc_col_treated = data_event[Cohort==cc_col_val & treated==1]
-          cc_row_control_col_treated = merge(cc_row_control, cc_col_treated, by=id_name)
-          if(nrow(cc_row_control_col_treated)){
-            covmat_control_treated[cc_row_iter, cc_col_iter] = (cc_row_control_col_treated[, cov(get(paste0(outcome_name,".x")), get(paste0(outcome_name,".y")))]/sqrt(cc_row_control[,as.numeric(.N)])) * 1/sqrt(cc_col_treated[,as.numeric(.N)])
-          }
-        }
-      }
-    }
-    makeSymm <- function(m) {
-      m[upper.tri(m)] <- t(m)[upper.tri(m)]
-      return(m)
-    }
-    covmat_control_control = makeSymm(covmat_control_control)
-    covmat_cohort = rbind(
-      cbind(covmat_treated_treated, t(covmat_control_treated)),
-      cbind(covmat_control_treated, covmat_control_control)
-    )
-    covmat_list[[as.character(event)]] = covmat_cohort
-    weight_list[[as.character(event)]] = c(weight_treated/sum(weight_treated), -weight_treated/sum(weight_treated))
-  }
-
-  # collect the event-specific ATE SEs
-  ATTe_SEs = data.table()
-  for(event in all_events){
-    covmat_cohort = covmat_list[[as.character(event)]]
-    weight_treated = as.matrix(weight_list[[as.character(event)]])
-    ATTe_SE = sqrt(as.numeric((t(weight_treated) %*% covmat_cohort) %*% weight_treated))
-    ATTe_SEs = rbindlist(list(ATTe_SEs, data.table(EventTime=event, ATTe_SE)))
-  }
-
-  return(ATTe_SEs)
-}
-
-getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset){
-
-  # check that there are treated and control units available
-  data_cohort[,available_treated := sum(treated), list(Cohort,EventTime)]
-  data_cohort[,available_control := sum(1-treated), list(Cohort,EventTime)]
-  data_cohort = data_cohort[available_treated > 1 & available_control > 1]
-  data_cohort[,available_treated := NULL]
-  data_cohort[,available_control := NULL]
-
-  # set up variable names
-  time_name = varnames$time_name
-  outcome_name = paste0(varnames$outcome_name,"_diff")
-  cohort_name = varnames$cohort_name
-  id_name = varnames$id_name
-
-  # get the SE
-  data_cohortevents = data_cohort[EventTime %in% Eset]
-  cohortevents = data.table()
-  for(ee in Eset){
-    cohortevents = rbindlist(list(cohortevents, data.table(cohort=data_cohortevents[EventTime==ee,sort(unique(Cohort))],event=ee)))
-  }
-  cohortevents = cohortevents[order(cohort,event)]
-  cohortevents1 = copy(cohortevents)[, treated := 1]
-  cohortevents0 = copy(cohortevents)[, treated := 0]
-  cohortevents = rbindlist(list(cohortevents1,cohortevents0))
-  numce = nrow(cohortevents)
-  cohortevents_covmat = matrix(0, numce, numce)
-  cohortevents_weights = rep(NA,numce/2)
-  cohortevents_means = rep(NA,numce)
-
-  for(cc_row_iter in 1:numce){
-    # row
-    cohort_row = cohortevents[cc_row_iter]$cohort
-    event_row = cohortevents[cc_row_iter]$event
-    treated_row = cohortevents[cc_row_iter]$treated
-    data_row = data_cohortevents[Cohort == cohort_row & EventTime==event_row & treated==treated_row]
-    # row weight
-    cohortevents_means[cc_row_iter] = data_row[,mean(get(outcome_name))]
-    if(treated_row==1){
-      cohortevents_weights[cc_row_iter] = data_row[, .N]
-    }
-    for(cc_col_iter in 1:numce){
-      # column
-      cohort_col = cohortevents[cc_col_iter]$cohort
-      event_col = cohortevents[cc_col_iter]$event
-      treated_col = cohortevents[cc_col_iter]$treated
-      data_col = data_cohortevents[Cohort == cohort_col & EventTime==event_col & treated==treated_col]
-      # covariance
-      data_rowcol_merge = merge(data_row, data_col, by=id_name)
-      if(nrow(data_rowcol_merge)>0){
-        cohortevents_covmat[cc_row_iter,cc_col_iter] = (data_rowcol_merge[, cov(get(paste0(outcome_name,".x")), get(paste0(outcome_name,".y")))]/sqrt(data_row[,as.numeric(.N)])) * 1/sqrt(data_col[,as.numeric(.N)])
-      }
-    }
-  }
-  cohortevents_weights = cohortevents_weights/sum(cohortevents_weights)
-  cohortevents_weights = c(cohortevents_weights,-1*cohortevents_weights)
-  cohortevents_weights = as.matrix(cohortevents_weights)
-  ATT_Eset = as.numeric(t(cohortevents_weights) %*% cohortevents_means)
-  ATT_Eset_SE = sqrt(as.numeric((t(cohortevents_weights) %*% cohortevents_covmat) %*% (cohortevents_weights)))
-  return(data.table(Eset = paste0(Eset,collapse=","), ATT_Eset=ATT_Eset, ATT_Eset_SE=ATT_Eset_SE))
-}
-
-getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
-
-  # check that there are treated and control units available
-  data_cohort[,available_treated := sum(treated), list(Cohort,EventTime)]
-  data_cohort[,available_control := sum(1-treated), list(Cohort,EventTime)]
-  data_cohort = data_cohort[available_treated > 1 & available_control > 1]
-  data_cohort[,available_treated := NULL]
-  data_cohort[,available_control := NULL]
-
-  # set up variable names
-  time_name = varnames$time_name
-  outcome_name = paste0(varnames$outcome_name,"_diff")
-  cohort_name = varnames$cohort_name
-  id_name = varnames$id_name
-  covariate_names = paste0(varnames$covariate_names,"_diff")
-
-  # get the SE
-  data_cohortevents = data_cohort[EventTime %in% Eset]
-  cohortevents = data.table()
-  for(ee in Eset){
-    cohortevents = rbindlist(list(cohortevents, data.table(cohort=data_cohortevents[EventTime==ee,sort(unique(Cohort))],event=ee)))
-  }
-  cohortevents = cohortevents[order(cohort,event)]
-  numce = nrow(cohortevents)
-  cohortevents_covmat = matrix(0, numce, numce)
-  cohortevents_weights = rep(NA,numce/2)
-  cohortevents_means = rep(NA,numce)
-
-  intercepts = c()
-  treateds = c()
-  covariates = c()
-  treated_weights = c()
-  for(rowiter in 1:numce){
-    cc = cohortevents[rowiter][,cohort]
-    ee = cohortevents[rowiter][,event]
-    intercepts = c(intercepts, sprintf("intercept_%s_%s",cc,ee))
-    treateds = c(treateds, sprintf("treated_%s_%s",cc,ee))
-    data_cohortevents[, (sprintf("intercept_%s_%s",cc,ee)) := (Cohort==cc)*(EventTime==ee)]
-    data_cohortevents[, (sprintf("treated_%s_%s",cc,ee)) := (treated==1)*(Cohort==cc)*(EventTime==ee)]
-    treated_weights = c(treated_weights, data_cohortevents[, sum(get(sprintf("treated_%s_%s",cc,ee))) ] )
-    for(vv in covariate_names){
-      covariates = c(covariates, sprintf("%s_%s_%s",vv,cc,ee))
-      data_cohortevents[, (sprintf("%s_%s_%s",vv,cc,ee)) := (Cohort==cc)*(EventTime==ee)*get(vv)]
-    }
-  }
-
-  OLSformula = paste0(outcome_name," ~ -1 + ",
-                      paste0(treateds, collapse=" + "),
-                      " + ",
-                      paste0(intercepts, collapse=" + "),
-                      " + ",
-                      paste0(covariates, collapse=" + "))
-
-  OLSres = lm(OLSformula, data=data_cohortevents)
-  OLSmeans = summary(OLSres)$coefficients
-  OLSmeans = as.numeric(OLSmeans[treateds,][,"Estimate"])
-  OLSvcov = vcov(OLSres)
-  OLSvcov = OLSvcov[treateds, treateds]
-  treated_weights = treated_weights/sum(treated_weights)
-  ATT_Eset = as.numeric(t(treated_weights) %*% OLSmeans)
-  ATT_Eset_SE = sqrt(as.numeric((t(treated_weights) %*% OLSvcov) %*% treated_weights))
-  return(data.table(Eset = paste0(Eset,collapse=","), ATT_Eset=ATT_Eset, ATT_Eset_SE=ATT_Eset_SE))
-}
 
 #' Combine DiD estimates across cohorts and event times.
 #'
@@ -330,6 +142,7 @@ getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @param Esets If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.
 #' @param parallel_cores Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.
+#' @param forceOLS Compute standard errors using OLS, even if analytic expression is available.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
 #' @examples
 #' # simulate some data
@@ -393,21 +206,21 @@ getSEs_covariates_multipleEventTimes <- function(data_cohort,varnames,Eset){
 #' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 #'
 #' @export
-DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, Esets=NULL, parallel_cores=1){
+DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, Esets=NULL, parallel_cores=1, forceOLS=TRUE){
   if(is.null(Esets)){
-    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=FALSE, parallel_cores=parallel_cores)
+    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=FALSE, parallel_cores=parallel_cores, forceOLS=forceOLS)
     return(results)
   }
   if(!is.null(Esets)){
-    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=TRUE, parallel_cores=parallel_cores)
+    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=TRUE, parallel_cores=parallel_cores, forceOLS=forceOLS)
     data_cohort = results$data_cohort
     results_Esets = data.table()
     for(Eset in Esets){
-      if(is.null(varnames$covariate_names)){
-        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes(data_cohort,varnames,Eset)))
+      if(!is.null(varnames$covariate_names) | !is.null(varnames$cluster_names) | forceOLS){
+        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_OLS(data_cohort,varnames,Eset)))
       }
-      if(!is.null(varnames$covariate_names)){
-        results_Esets = rbindlist(list(results_Esets,getSEs_covariates_multipleEventTimes(data_cohort,varnames,Eset)))
+      if(is.null(varnames$covariate_names) & is.null(varnames$cluster_names) & !forceOLS){
+        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_noOLS(data_cohort,varnames,Eset)))
       }
     }
     results$results_Esets = results_Esets
