@@ -13,7 +13,8 @@ DiD(
   max_event = NULL,
   Esets = NULL,
   parallel_cores = 1,
-  forceOLS = TRUE
+  forceOLS = TRUE,
+  robust = FALSE
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ DiD(
 \item{parallel_cores}{Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.}
 
 \item{forceOLS}{Compute standard errors using OLS, even if analytic expression is available.}
+
+\item{robust}{Compute robust standard errors, using the same "HC1" approach used by the Stata ", robust" option.}
 }
 \value{
 A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).

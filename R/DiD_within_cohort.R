@@ -1,5 +1,5 @@
 
-DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE){
+DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE, robust=FALSE){
 
   # set up variable names
   time_name = varnames$time_name
@@ -142,13 +142,17 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
     # check if the treated coefficient is missing
     if(!is.na(newATT)){
       results[, ATTge := newATT]
-      if(is.null(cluster_names)){
+      if(is.null(cluster_names) & !robust){
         OLSvcov = vcov(OLSlm)
       }
       if(!is.null(cluster_names)){
         library(sandwich, warn.conflicts = F, quietly = T)
         CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
         OLSvcov = vcovCL(OLSlm, cluster = CLformula)
+      }
+      if(is.null(cluster_names) & robust){
+        library(sandwich, warn.conflicts = F, quietly = T)
+        OLSvcov = vcovHC(OLSlm, "HC1")
       }
       OLSvcov = OLSvcov["treated", "treated"]
       newATTSE = sqrt(as.numeric(OLSvcov))
@@ -166,7 +170,8 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   if(return_data){
     data_prepost[, Cohort := cohort_time]
     data_prepost[, EventTime := event_postperiod]
-    data_prepost = data_prepost[,.SD,.SDcols=c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"))]
+    export_vars = c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names)
+    data_prepost = data_prepost[,.SD,.SDcols=export_vars]
     return(list(results=results,data_prepost=data_prepost))
   }
   return(results)
@@ -231,6 +236,7 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @param return_data If true, this returns the treated and control differenced data. Default is FALSE.
 #' @param forceOLS Compute standard errors using OLS, even if analytic expression is available.
+#' @param robust Compute robust standard errors, using the same "HC1" approach used by the Stata ", robust" option.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
 #' @examples
 #' # simulate some data
@@ -278,9 +284,9 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 #'
 #' @export
-DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE){
+DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE, robust=FALSE){
   if(is.null(varnames$bin_name)){
-    return(DiDge_main(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group, return_data=return_data, forceOLS=forceOLS))
+    return(DiDge_main(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group, return_data=return_data, forceOLS=forceOLS, robust=robust))
   }
   if(!is.null(varnames$bin_name)){
     return(DiDge_bins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group))

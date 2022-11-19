@@ -1,5 +1,5 @@
 
-DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, return_data=FALSE, parallel_cores=1, forceOLS=TRUE){
+DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, return_data=FALSE, parallel_cores=1, forceOLS=TRUE, robust=FALSE){
 
   # set up variable names
   time_name = varnames$time_name
@@ -58,7 +58,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
     # loop DiD over the event times for this cohort
     for(event_postperiod in event_periods){
       res = DiDge(inputdata, cohort_time = cc, event_postperiod = event_postperiod, baseperiod = baseperiod,
-                  varnames=varnames, control_group = control_group, return_data=TRUE, forceOLS=forceOLS)
+                  varnames=varnames, control_group = control_group, return_data=TRUE, forceOLS=forceOLS, robust=robust)
       results_this_cohort = rbindlist(list(results_this_cohort,res$results))
       # this is key -- collect cohort-event-specific control-treatment-paired data to estimate DiDe later
       data_this_cohort = rbindlist(list(data_this_cohort, res$data))
@@ -106,10 +106,11 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
                                    list(EventTime,Baseperiod)][order(EventTime,Baseperiod)]
 
   # collect the SEs that account for correlation in DiDge across g, merge them to the results
-  if(!is.null(covariate_names) | !is.null(cluster_names) | forceOLS){
-    ATTe_SEs = DiD_getSEs_EventTime_OLS(data_cohort=data_cohort,varnames=varnames)
+  if(!is.null(covariate_names) | !is.null(cluster_names) | forceOLS | robust){
+    ATTe_SEs = DiD_getSEs_EventTime_OLS(data_cohort=data_cohort,varnames=varnames,robust=robust)
   }
-  if(is.null(covariate_names) & is.null(cluster_names) & !forceOLS){
+  if(is.null(covariate_names) & is.null(cluster_names) & !forceOLS & !robust){
+    warning("When calculating DiDe across cohorts, you are using fast standard errors calculated analytically. Use forceOLS=TRUE to switch to the usual OLS standard errors.")
     ATTe_SEs = DiD_getSEs_EventTime_noOLS(data_cohort=data_cohort,varnames=varnames)
   }
   results_average = merge(results_average, ATTe_SEs, by="EventTime")[order(EventTime,Baseperiod)]
@@ -143,6 +144,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 #' @param Esets If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.
 #' @param parallel_cores Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.
 #' @param forceOLS Compute standard errors using OLS, even if analytic expression is available.
+#' @param robust Compute robust standard errors, using the same "HC1" approach used by the Stata ", robust" option.
 #' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
 #' @examples
 #' # simulate some data
@@ -206,21 +208,21 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 #' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 #'
 #' @export
-DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, Esets=NULL, parallel_cores=1, forceOLS=TRUE){
+DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, Esets=NULL, parallel_cores=1, forceOLS=TRUE, robust=FALSE){
   if(is.null(Esets)){
-    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=FALSE, parallel_cores=parallel_cores, forceOLS=forceOLS)
+    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=FALSE, parallel_cores=parallel_cores, forceOLS=forceOLS, robust=robust)
     return(results)
   }
   if(!is.null(Esets)){
-    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=TRUE, parallel_cores=parallel_cores, forceOLS=forceOLS)
+    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=TRUE, parallel_cores=parallel_cores, forceOLS=forceOLS, robust=robust)
     data_cohort = results$data_cohort
     results_Esets = data.table()
     for(Eset in Esets){
       if(!is.null(varnames$covariate_names) | !is.null(varnames$cluster_names) | forceOLS){
-        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_OLS(data_cohort,varnames,Eset)))
+        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_OLS(data_cohort,varnames,robust,Eset)))
       }
       if(is.null(varnames$covariate_names) & is.null(varnames$cluster_names) & !forceOLS){
-        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_noOLS(data_cohort,varnames,Eset)))
+        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_noOLS(data_cohort,varnames,robust,Eset)))
       }
     }
     results$results_Esets = results_Esets

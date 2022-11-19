@@ -1,5 +1,5 @@
 
-DiD_getSEs_EventTime_OLS <- function(data_cohort,varnames){
+DiD_getSEs_EventTime_OLS <- function(data_cohort,varnames,robust=FALSE){
 
   # check that there are treated and control units available
   data_cohort[,available_treated := sum(treated), list(Cohort,EventTime)]
@@ -53,16 +53,27 @@ DiD_getSEs_EventTime_OLS <- function(data_cohort,varnames){
                           paste0(covariates, collapse=" + "))
     }
 
+    # regression
+    OLSvcov = NULL
     OLSlm = lm(OLSformula, data=data_event)
     OLSmeans = as.numeric(OLSlm$coefficients[treateds])
-    if(is.null(cluster_names)){
+
+    # covariance matrix for errors
+    if(is.null(cluster_names) & !robust){
       OLSvcov = vcov(OLSlm, df = Inf)
     }
     if(!is.null(cluster_names)){
+      data_event <<- copy(data_event) # due to a well-known scoping bug in R's base lm.predict that no one will fix despite years of requests, this redundancy is necessary!
       library(sandwich, warn.conflicts = F, quietly = T)
       CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
       OLSvcov = vcovCL(OLSlm, cluster = CLformula, df = Inf)
     }
+    if(robust & is.null(cluster_names)){
+      library(sandwich, warn.conflicts = F, quietly = T)
+      OLSvcov = vcovHC(OLSlm, "HC1")
+    }
+
+    # finish
     OLSvcov = OLSvcov[treateds, treateds]
     OLSvcov = as.matrix(OLSvcov)
     treated_weights = treated_weights/sum(treated_weights)
@@ -75,7 +86,7 @@ DiD_getSEs_EventTime_OLS <- function(data_cohort,varnames){
 }
 
 
-getSEs_multipleEventTimes_OLS <- function(data_cohort,varnames,Eset){
+getSEs_multipleEventTimes_OLS <- function(data_cohort,varnames,robust=FALSE,Eset){
 
   # check that there are treated and control units available
   data_cohort[,available_treated := sum(treated), list(Cohort,EventTime)]

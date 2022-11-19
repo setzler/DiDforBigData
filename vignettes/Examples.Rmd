@@ -120,11 +120,25 @@ print(simdata)
 ```
 
 
+
 Let's focus on the average ATT across all cohorts. There are two periods of treatment effects prior to treatment, which we can verify by checking the true ATT from the simulation:
 
 ```{r echo=T, eval=T, message=FALSE}
 print(sim$true_ATT[cohort=="Average"])
 ```
+
+
+
+We set up the `varnames` to prepare for estimation:
+
+```{r echo=T, eval=T, message=FALSE}
+varnames = list()
+varnames$time_name = "year" 
+varnames$outcome_name = "Y"
+varnames$cohort_name = "cohort"
+varnames$id_name = "id"
+```
+
 
 If we estimate DiD using the default argument that `baseperiod = -1`, the estimate will be biased and inconsistent:
 
@@ -140,9 +154,7 @@ We now set `baseperiod = -3` to avoid the anticipation at -1 and -2:
 did = DiD(inputdata = simdata, varnames = varnames, 
           baseperiod = -3, min_event = -3, max_event=3)
 
-print(did$results_average)
-print(did$results_cohort)
-print(sim$true_ATT)
+print(did$results_average) 
 ```
 
 We see that the estimate is now close to the true ATT.
@@ -172,12 +184,26 @@ print(simdata)
 print(sim$true_ATT[cohort==2007])
 ```
 
-There are two covariates, X1 and X2. In particular, X2  differs in growth rates across treatment cohorts, which means that it causes violations of parallel trends if not controlled. We now verify that DiD gives the wrong answer for cohort 2007:
+There are two covariates, X1 and X2. In particular, X2  differs in growth rates across treatment cohorts, which means that it causes violations of parallel trends if not controlled. 
+
+
+We set up the `varnames` to prepare for estimation, ignoring the covariates for now:
+
+```{r echo=T, eval=T, message=FALSE}
+varnames = list()
+varnames$time_name = "year" 
+varnames$outcome_name = "Y"
+varnames$cohort_name = "cohort"
+varnames$id_name = "id"
+```
+
+
+We verify that DiD gives the wrong answer for cohort 2007:
 
 ```{r echo=T, eval=T, message=FALSE}
 did = DiD(inputdata = simdata, varnames = varnames, min_event = -3, max_event=5)
 
-print(did$results_cohort[Cohort==2007])
+print(did$results_cohort[Cohort==2007][,1:6])
 ```
 
 
@@ -193,7 +219,96 @@ Now we check DiD with controls for time-variation in X1 and X2:
 ```{r echo=T, eval=T, message=FALSE}
 did = DiD(inputdata = simdata, varnames = varnames, min_event = -3, max_event=5)
 
-print(did$results_cohort[Cohort==2007])
+print(did$results_cohort[Cohort==2007][,1:6])
 ```
 
 We see that the bias has been removed thanks to the control variables.
+
+
+
+
+# 4. Clustered Standard Errors
+ 
+### The `cluster_names` entry
+
+In difference-in-differences applications, it is often the case that treatment is assigned to groups of individuals (e.g., a change in  state-wide policy treats all individuals in a state simultaneously). If those groups are also subject to common shocks, this induces correlation in the estimation errors and the treatment assignment (see the discussion by Abadie, Athey, Imbens, and Wooldrige, 2022, QJE). ]
+
+Fortunately, this is easy to fix: If the groups within which the estimation errors are correlated are known to the research, we just need to cluster standard errors by group. `DiDforBigData` requires only that the list of variable names, `varnames`, is modified to include a `cluster_names` entry. For example, `varnames$cluster_names = c("group1","group2")` tells it to cluster  in a way that accounts for common shocks to each of observable groups, "group1" and "group2".
+
+
+### Example
+
+There is an option in `SimDiD()` to group individuals into bins that are differentially selected for treatment and that also face common shocks within each bin:
+
+```{r echo=T, eval=T, message=FALSE}
+
+sim = SimDiD(sample_size=1000, bin_covars=TRUE)
+simdata = sim$simdata
+print(simdata)
+
+print(sim$true_ATT[cohort=="Average"])
+```
+
+
+We set up the `varnames` to prepare for estimation:
+
+```{r echo=T, eval=T, message=FALSE}
+varnames = list()
+varnames$time_name = "year" 
+varnames$outcome_name = "Y"
+varnames$cohort_name = "cohort"
+varnames$id_name = "id"
+```
+
+
+We check the usual standard errors for cohort 2010:
+
+```{r echo=T, eval=T, message=FALSE}
+did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=1)
+
+print(did$results_average[,1:4])
+
+```
+
+Now, we cluster on the bin variable by adding it to the `varnames` and re-estimating:
+
+
+```{r echo=T, eval=T, message=FALSE}
+
+varnames$cluster_names = "bin" 
+
+did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=1)
+
+print(did$results_average[,1:4])
+
+```
+
+
+
+
+
+
+# 5. Robust Standard Errors
+
+### The `robust` option
+
+If you would like to use robust standard errors to match the ", robust" option from Stata, simply specify `robust=TRUE`.
+
+
+
+### Example
+
+We continue to use the simulated data from the previous example (with bins). We remove the clustering from the varnames. Instead, we set the `robust=TRUE` option:
+
+
+```{r echo=T, eval=T, message=FALSE}
+varnames$cluster_names = NULL
+
+did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=1, robust=TRUE)
+
+print(did$results_average[,1:4])
+
+```
+
+
+

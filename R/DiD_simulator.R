@@ -128,7 +128,7 @@ SimDiD <- function(seed=1,sample_size=100, cohorts=c(2007,2010,2012), ATTat0=1, 
       bin_draws = rbindlist(list(bin_draws,data.table(id=ii,bin=bin_draw)))
     }
     simdata = merge(simdata, bin_draws, by=c("id"))
-    simdata[, bin_shock := rnorm(1), list(bin,year)]
+    simdata[, bin_shock := rnorm(1,sd = 1), list(bin,year)]
     simdata[, Y := Y + bin_shock]
     keep_vars = c(keep_vars, "bin")
   }

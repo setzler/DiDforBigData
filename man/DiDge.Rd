@@ -12,7 +12,8 @@ DiDge(
   baseperiod = -1,
   control_group = "all",
   return_data = FALSE,
-  forceOLS = TRUE
+  forceOLS = TRUE,
+  robust = FALSE
 )
 }
 \arguments{
@@ -27,6 +28,8 @@ DiDge(
 \item{return_data}{If true, this returns the treated and control differenced data. Default is FALSE.}
 
 \item{forceOLS}{Compute standard errors using OLS, even if analytic expression is available.}
+
+\item{robust}{Compute robust standard errors, using the same "HC1" approach used by the Stata ", robust" option.}
 
 \item{min_event}{This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.}
 

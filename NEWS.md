@@ -1,3 +1,7 @@
-# DiDforBigData 0.1
+## DiDforBigData 0.2
 
-* Added a `NEWS.md` file to track changes to the package.
+* Add support for robust/clustered standard errors.
+
+## DiDforBigData 0.1
+
+* Initialize DiD estimation framework.
