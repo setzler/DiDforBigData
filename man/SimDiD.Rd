@@ -19,8 +19,8 @@ SimDiD(
   shockvar = 1,
   indivAR1 = FALSE,
   time_covars = FALSE,
-  bin_covars_nobias = FALSE,
-  bin_covars_bias = FALSE,
+  clusters = FALSE,
+  markets = FALSE,
   randomNA = FALSE,
   missingCohorts = NULL
 )
@@ -54,9 +54,9 @@ SimDiD(
 
 \item{time_covars}{Add 2 time-varying covariates, called "X1" and "X2". Default is FALSE.}
 
-\item{bin_covars_nobias}{Add 10 randomly assigned bins, with bin-specific AR(1) shocks. Default is FALSE.}
+\item{clusters}{Add 10 randomly assigned clusters, with cluster-specific AR(1) shocks. Default is FALSE.}
 
-\item{bin_covars_bias}{Add 10 randomly assigned bins, with bin-specific shocks that are systematically greater for bins that are treated earlier. Default is FALSE.}
+\item{markets}{Add 10 randomly assigned markets, with market-specific shocks that are systematically greater for markets that are treated earlier. Default is FALSE.}
 
 \item{randomNA}{If TRUE, randomly assign the outcome variable with missing values (NA) in some cases. Default is FALSE.}
 

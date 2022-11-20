@@ -1,5 +1,5 @@
 
-DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, return_data=FALSE, parallel_cores=1, forceOLS=TRUE, robust=FALSE){
+DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_event=NULL, max_event=NULL, return_data=FALSE, parallel_cores=1, forceOLS=TRUE, robust=FALSE){
 
   # set up variable names
   time_name = varnames$time_name
@@ -30,9 +30,9 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
     cohorts = cohorts[!(cohorts == max(cohorts))]
   }
 
-  # drop cohorts that are useless since they were treated before the baseperiod
+  # drop cohorts that are useless since they were treated before the base_event
   min_time_actual = inputdata[,min(get(time_name))]
-  too_early_cohorts = cohorts - baseperiod < min_time_actual
+  too_early_cohorts = cohorts - base_event < min_time_actual
   if(sum(too_early_cohorts) > 0){
     warning(sprintf("We cannot provide ATT estimates for cohort %s due to the absence of a base_preperiod in the data.", paste0(cohorts[too_early_cohorts], collapse=",")))
     cohorts_todrop = cohorts[too_early_cohorts]
@@ -57,7 +57,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
     }
     # loop DiD over the event times for this cohort
     for(event_postperiod in event_periods){
-      res = DiDge(inputdata, cohort_time = cc, event_postperiod = event_postperiod, baseperiod = baseperiod,
+      res = DiDge(inputdata, cohort_time = cc, event_postperiod = event_postperiod, base_event = base_event,
                   varnames=varnames, control_group = control_group, return_data=TRUE, forceOLS=forceOLS, robust=robust)
       results_this_cohort = rbindlist(list(results_this_cohort,res$results))
       # this is key -- collect cohort-event-specific control-treatment-paired data to estimate DiDe later
@@ -103,7 +103,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
                                      Ntreated=sum(Ntreated),
                                      Ncontrol=sum(Ncontrol)
                                    ),
-                                   list(EventTime,Baseperiod)][order(EventTime,Baseperiod)]
+                                   list(EventTime,BaseEvent)][order(EventTime,BaseEvent)]
 
   # collect the SEs that account for correlation in DiDge across g, merge them to the results
   if(!is.null(covariate_names) | !is.null(cluster_names) | forceOLS | robust){
@@ -113,10 +113,10 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
     warning("When calculating DiDe across cohorts, you are using fast standard errors calculated analytically. Use forceOLS=TRUE to switch to the usual OLS standard errors.")
     ATTe_SEs = DiD_getSEs_EventTime_noOLS(data_cohort=data_cohort,varnames=varnames)
   }
-  results_average = merge(results_average, ATTe_SEs, by="EventTime")[order(EventTime,Baseperiod)]
+  results_average = merge(results_average, ATTe_SEs, by="EventTime")[order(EventTime,BaseEvent)]
 
   # clean up the results
-  ordered_names = c("EventTime","Baseperiod",
+  ordered_names = c("EventTime","BaseEvent",
                     "ATTe","ATTe_SE","ATTe_SE_nocorr",
                     "Etreated_post","Etreated_pre","Etreated_SE",
                     "Econtrol_post","Econtrol_pre","Econtrol_SE",
@@ -138,7 +138,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 #' @param inputdata A data.table.
 #' @param varnames A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
 #' @param control_group There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".
-#' @param baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.
+#' @param base_event This is the base pre-period that is normalized to zero in the DiD estimation. Default is base_event=-1.
 #' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @param Esets If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.
@@ -161,7 +161,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 #' DiD(simdata, varnames, min_event=1, max_event=1)
 #'
 #' # change the base period to -3
-#' DiD(simdata, varnames, baseperiod=-3, min_event=1, max_event=1)
+#' DiD(simdata, varnames, base_event=-3, min_event=1, max_event=1)
 #'
 #' # check the pre-periods -4 through -2
 #' DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=-2)
@@ -208,13 +208,13 @@ DiDe <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_
 #' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 #'
 #' @export
-DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_event=NULL, max_event=NULL, Esets=NULL, parallel_cores=1, forceOLS=TRUE, robust=FALSE){
+DiD <- function(inputdata, varnames, control_group = "all", base_event=-1, min_event=NULL, max_event=NULL, Esets=NULL, parallel_cores=1, forceOLS=TRUE, robust=FALSE){
   if(is.null(Esets)){
-    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=FALSE, parallel_cores=parallel_cores, forceOLS=forceOLS, robust=robust)
+    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, base_event=base_event, min_event=min_event, max_event=max_event, return_data=FALSE, parallel_cores=parallel_cores, forceOLS=forceOLS, robust=robust)
     return(results)
   }
   if(!is.null(Esets)){
-    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, baseperiod=baseperiod, min_event=min_event, max_event=max_event, return_data=TRUE, parallel_cores=parallel_cores, forceOLS=forceOLS, robust=robust)
+    results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, base_event=base_event, min_event=min_event, max_event=max_event, return_data=TRUE, parallel_cores=parallel_cores, forceOLS=forceOLS, robust=robust)
     data_cohort = results$data_cohort
     results_Esets = data.table()
     for(Eset in Esets){

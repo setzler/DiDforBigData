@@ -67,8 +67,8 @@ PlotDiDge <- function(DiD_results, ci_factor = 1.96, max_jitter=0.05, lower_even
 
   # set up the time variables
   all_events = figdata_temp[, sort(unique(EventTime))]
-  omitted_event_time = figdata_temp[,sort(unique(Baseperiod))]
-  figdata_temp = figdata_temp[EventTime != Baseperiod]
+  omitted_event_time = figdata_temp[,sort(unique(BaseEvent))]
+  figdata_temp = figdata_temp[EventTime != BaseEvent]
   figdata_temp[, EventTime := as.numeric(EventTime)]
   if(!is.null(lower_event)){
     figdata_temp = figdata_temp[EventTime >= lower_event]
@@ -125,8 +125,8 @@ PlotDiDe <- function(DiD_results, ci_factor = 1.96, max_jitter=0.05, lower_event
 
   # set up the time variables
   all_events = figdata_temp[, sort(unique(EventTime))]
-  omitted_event_time = figdata_temp[,sort(unique(Baseperiod))]
-  figdata_temp = figdata_temp[EventTime != Baseperiod]
+  omitted_event_time = figdata_temp[,sort(unique(BaseEvent))]
+  figdata_temp = figdata_temp[EventTime != BaseEvent]
   figdata_temp[, EventTime := as.numeric(EventTime)]
   if(!is.null(lower_event)){
     figdata_temp = figdata_temp[EventTime >= lower_event]
@@ -270,7 +270,7 @@ PlotESe <- function(DiD_results, ci_factor = 1.96, max_jitter=0.05, lower_event=
   figdata_temp = figdata_temp[order(EventTime)]
 
   # the treatment group composition changes across event times, so we renormalize the levels to the omitted event time
-  omitted_event_time = figdata_temp[,sort(unique(Baseperiod))]
+  omitted_event_time = figdata_temp[,sort(unique(BaseEvent))]
   figdata_temp[, Econtrol_pre_init := Econtrol_pre[EventTime==omitted_event_time]]
   figdata_temp[, Etreated_pre_init := Etreated_pre[EventTime==omitted_event_time]]
   figdata_temp[, Econtrol_pre_diff := Econtrol_pre - Econtrol_pre_init ]

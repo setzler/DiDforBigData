@@ -18,8 +18,8 @@
 #' @param shockvar Variance of idiosyncratic shocks (epsilon_it). Default is shockvar=1.
 #' @param indivAR1 Each individual's shocks follow an AR(1) process. Default is FALSE.
 #' @param time_covars Add 2 time-varying covariates, called "X1" and "X2". Default is FALSE.
-#' @param bin_covars_nobias Add 10 randomly assigned bins, with bin-specific AR(1) shocks. Default is FALSE.
-#' @param bin_covars_bias Add 10 randomly assigned bins, with bin-specific shocks that are systematically greater for bins that are treated earlier. Default is FALSE.
+#' @param clusters Add 10 randomly assigned clusters, with cluster-specific AR(1) shocks. Default is FALSE.
+#' @param markets Add 10 randomly assigned markets, with market-specific shocks that are systematically greater for markets that are treated earlier. Default is FALSE.
 #' @param randomNA If TRUE, randomly assign the outcome variable with missing values (NA) in some cases. Default is FALSE.
 #' @param missingCohort If set to a particular cohort (or vector of cohorts), all of the outcomes for that cohort at event time -1 will be set to missing. Default is NULL.
 #' @returns A list with two data.tables.
@@ -63,7 +63,7 @@
 #' SimDiD(missingCohorts=2010)$simdata[cohort==2010 & year==2009]
 #'
 #' @export
-SimDiD <- function(seed=1,sample_size=100, cohorts=c(2007,2010,2012), ATTat0=1, ATTgrowth=1, ATTcohortdiff=0.5, anticipation=0, minyear=2003, maxyear=2013, idvar=1, yearvar=1, shockvar=1, indivAR1=FALSE, time_covars=FALSE, bin_covars_nobias=FALSE, bin_covars_bias=FALSE, randomNA=FALSE, missingCohorts=NULL){
+SimDiD <- function(seed=1,sample_size=100, cohorts=c(2007,2010,2012), ATTat0=1, ATTgrowth=1, ATTcohortdiff=0.5, anticipation=0, minyear=2003, maxyear=2013, idvar=1, yearvar=1, shockvar=1, indivAR1=FALSE, time_covars=FALSE, clusters=FALSE, markets=FALSE, randomNA=FALSE, missingCohorts=NULL){
   # seed=1; sample_size=1000; cohorts=c(2007,2010,2012); ATTat0=1; ATTgrowth=1; ATTcohortdiff=0.5; anticipation=0; minyear=2003; maxyear=2013; idvar=1; yearvar=1; shockvar=1; indivAR1=FALSE; time_covars=FALSE; bin_covars_nobias=FALSE; bin_covars_bias=FALSE
   set.seed(seed)
 
@@ -115,7 +115,7 @@ SimDiD <- function(seed=1,sample_size=100, cohorts=c(2007,2010,2012), ATTat0=1, 
     simdata[, Y := Y + covariate_term]
     keep_vars = c(keep_vars, "X1", "X2")
   }
-  if(bin_covars_nobias | bin_covars_bias){
+  if(clusters | markets){
     simdata[, cohort_counter := 0.0]
     for(ii in 1:length(cohorts)){
       simdata[cohort==cohorts[ii], cohort_counter := (1+length(cohorts)-ii)]
@@ -138,20 +138,23 @@ SimDiD <- function(seed=1,sample_size=100, cohorts=c(2007,2010,2012), ATTat0=1, 
       bin_draws = rbindlist(list(bin_draws,data.table(id=ii,bin=bin_draw)))
     }
     simdata = merge(simdata, bin_draws, by=c("id"))
-    if(bin_covars_nobias){
+    if(clusters){
       # the shocks are randomly assigned to the bin-years, so they do not induce bias
       numyears = simdata[,length(unique(year))]
       binyears = unique(simdata[,list(bin,year)])[order(bin,year)]
       binyears[, bin_shock := 0.0]
       binyears[, bin_shock := arima.sim(list(order=c(1,0,0), ar=.5), n=numyears), list(bin)] # each bin gets an AR(1) process with persistence 0.5
       simdata = merge(simdata, binyears, by=c("bin","year"))
+      keep_vars = c(keep_vars, "cluster")
+      setnames(simdata,'bin','cluster')
     }
-    if(bin_covars_bias){
+    if(markets){
       # the shocks are systematically more positive for bins that are treated earlier
       simdata[, bin_shock := - cohort_counter*bin/10 ]
+      keep_vars = c(keep_vars, "market")
+      setnames(simdata,'bin','market')
     }
     simdata[, Y := Y + bin_shock]
-    keep_vars = c(keep_vars, "bin")
   }
   if(randomNA){
     simdata[, change_to_NA := runif(nrow(simdata)) < 0.1] # 10% selected randomly

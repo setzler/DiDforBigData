@@ -17,9 +17,9 @@ the past few years, a literature proved that the traditional DiD
 estimation strategy is biased and inconsistent if treatment roll-out is
 staggered over time. Under staggered treatment, TWFE implicitly uses
 already-treated units as part of the control group for newly-treated
-units. In response, recent papers have proposed various DiD estimators
-that are consistent in the presence of staggered treatment; see [Roth,
-Sant’Anna, Bilinksi, and Poe
+units, resulting in invalid comparisons. In response, recent papers have
+proposed various DiD estimators that are consistent in the presence of
+staggered treatment; see [Roth, Sant’Anna, Bilinksi, and Poe
 (2022)](https://jonathandroth.github.io/assets/files/DiD_Review_Paper.pdf)
 for a literature review.
 
@@ -45,11 +45,11 @@ packages that implement the methods of:
 - [de Chaisemartin & D’Haultfoeuille
   (2020)](https://drive.google.com/file/d/1D93ltJUirR4zIqJZfSTwSLrA-6rSZpTJ/view).
 
-Using my fast laptop, I found that only the Callaway & Sant’Anna (2021)
-implementation could successfully estimate DiD with 100,000 unique
-individuals. While many DiD applications consider only a small number of
-unique individuals (e.g. a state-level policy roll-out design would
-typically have only 50 or so unique units), DiD designs at the
+I found that only the Callaway & Sant’Anna (2021) implementation could
+successfully estimate DiD with 100,000 unique individuals. While many
+DiD applications consider only a small number of unique individuals
+(e.g. effects of a state-level policy on state-level aggregate outcomes
+would typically have only 50 or so unique units), DiD designs at the
 household-level or firm-level using administrative data often involve
 millions of unique individuals.
 
@@ -73,18 +73,19 @@ I wrote this package to address all three issues.
 
 #### DiD for Big Data:
 
-This package provides a very efficient implementation of DiD in the
-presence of staggered treatment. In particular, it achieves the
+This package provides a fast and memory-efficient implementation of DiD
+in the presence of staggered treatment. In particular, it achieves the
 following:
 
 1.  **Speed:** This package estimates DiD with millions of observations
     and staggered treatment in less than 1 minute using analytical
     solutions only. It is free from bootstrapping and free from
-    fixed-effect regressions.
+    fixed-effect regressions. It is orders of magnitude faster than
+    other available software when the sample size is large (see
+    demonstration below).
 2.  **Memory:** This package avoids memory-intensive activities like
-    matrix-inversion and data-stacking. In fact, this package is
-    entirely free of OLS. It uses much less memory than other packages
-    (see demonstration below).
+    matrix-inversion and data-stacking. It uses much less memory than
+    other available software (see demonstration below).
 3.  **Dependencies:** This package has only *one* dependency,
     `data.table`, which is already installed with most R distributions.
     In case the researcher needs clustered standard errors, another
@@ -101,8 +102,8 @@ estimators for staggered treatment contexts:
 
 1.  The implementation of the Borusyak, Jaravel, and Spiess (2022)
     approach in R package `didimputation`;
-2.  The implementation of the baseline Callaway & Sant’Anna (2021)
-    approach in R package `did`;
+2.  The implementation of the Callaway & Sant’Anna (2021) approach in R
+    package `did`;
 3.  The implementation of the de Chaisemartin & D’Haultfoeuille (2020)
     approach in R package `DIDmultiplegt` using 40 bootstrap draws for
     standard errors (`brep=40`); and,
@@ -140,6 +141,11 @@ verify that two-way fixed-effects OLS estimation would find an effect of
 about 5.5 at event time +1 when the sample is large.
 
 ![](vignettes/estimates_small.png)
+
+A caveat: The Callaway and Sant’Anna (2021) estimators provide standard
+errors that correspond to *multiple hypothesis testing* and will thus
+tend to be wider. The researcher should be clear on whether they are
+interested in single or multiple hypothesis testing.
 
 #### Speed test
 

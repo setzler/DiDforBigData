@@ -8,7 +8,7 @@ DiD(
   inputdata,
   varnames,
   control_group = "all",
-  baseperiod = -1,
+  base_event = -1,
   min_event = NULL,
   max_event = NULL,
   Esets = NULL,
@@ -24,7 +24,7 @@ DiD(
 
 \item{control_group}{There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".}
 
-\item{baseperiod}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.}
+\item{base_event}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is base_event=-1.}
 
 \item{min_event}{This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.}
 
@@ -59,7 +59,7 @@ varnames$id_name = "id"
 DiD(simdata, varnames, min_event=1, max_event=1)
 
 # change the base period to -3
-DiD(simdata, varnames, baseperiod=-3, min_event=1, max_event=1)
+DiD(simdata, varnames, base_event=-3, min_event=1, max_event=1)
 
 # check the pre-periods -4 through -2
 DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=-2)

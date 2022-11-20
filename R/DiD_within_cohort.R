@@ -1,5 +1,5 @@
 
-DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE, robust=FALSE){
+DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE, robust=FALSE){
 
   # set up variable names
   time_name = varnames$time_name
@@ -12,11 +12,11 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   all_keep_vars = c(outcome_name,covariate_names,cluster_names)
 
   # prepare time periods
-  pre_time = cohort_time + baseperiod
+  pre_time = cohort_time + base_event
   post_time = cohort_time + event_postperiod
   time_set = sort(inputdata[get(cohort_name) == cohort_time, unique(get(time_name))])
   if(!(pre_time %in% time_set)){
-    stop(print(sprintf("error: for cohort %s, preperiod %s is unavailable.",cohort_time,baseperiod)))
+    stop(print(sprintf("error: for cohort %s, preperiod %s is unavailable.",cohort_time,base_event)))
   }
   if(!(post_time %in% time_set)){
     stop(print(sprintf("error: for cohort %s, postperiod %s is unavailable.",cohort_time,event_postperiod)))
@@ -100,7 +100,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   results[, Cohort := cohort_time]
   results[, Preperiod := pre_time]
   results[, CalendarTime := post_time]
-  results[, Baseperiod := baseperiod]
+  results[, BaseEvent := base_event]
   results[, EventTime := event_postperiod]
   results[, Econtrol_SE := sqrt(Econtrol_var/(Ncontrol-1))]
   results[, Etreated_SE := sqrt(Etreated_var/(Ntreated-1))]
@@ -108,7 +108,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   results[, ATTge := (Etreated_post - pred_Etreated_post)]
   results[, ATTge_SE := sqrt(treated_diff_var/(Ntreated-1) + control_diff_var/(Ncontrol-1))]
 
-  results_variables_order = c("Cohort","EventTime","Baseperiod","CalendarTime","ATTge","ATTge_SE",
+  results_variables_order = c("Cohort","EventTime","BaseEvent","CalendarTime","ATTge","ATTge_SE",
                               "Econtrol_pre","Econtrol_post","Econtrol_SE",
                               "Etreated_pre","Etreated_post","Etreated_SE","pred_Etreated_post",
                               "Ncontrol","Ntreated")
@@ -177,7 +177,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   return(results)
 }
 
-DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", forceOLS=TRUE, robust=FALSE){
+DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", forceOLS=TRUE, robust=FALSE){
 
   # set up variable names
   time_name = varnames$time_name
@@ -187,7 +187,7 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   bin_name = varnames$bin_name
 
   # get bins
-  pre_time = cohort_time + baseperiod
+  pre_time = cohort_time + base_event
   post_time = cohort_time + event_postperiod
   bin_set_treated_pre = inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time)][,.N,bin][N>1][,sort(bin)]
   bin_set_treated_post = inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time)][,.N,bin][N>1][,sort(bin)]
@@ -198,7 +198,7 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   # loop DiD over bins
   results_bins = NULL
   for(binval in bin_set){
-    res = DiDge_main(inputdata[get(bin_name)==binval], cohort_time = cohort_time, event_postperiod = event_postperiod, baseperiod = baseperiod,
+    res = DiDge_main(inputdata[get(bin_name)==binval], cohort_time = cohort_time, event_postperiod = event_postperiod, base_event = base_event,
                      varnames=varnames, control_group = control_group, forceOLS=forceOLS, robust=robust)
     res[, (bin_name) := binval]
     results_bins = rbindlist(list(results_bins,res))
@@ -207,7 +207,7 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   # take the average across bins
   original_names = names(results_bins)
   original_names = original_names[original_names != bin_name] # to avoid taking an average across the "bin" variable
-  results_bins[, Ntreated_bin := sum(Ntreated), list(Cohort,EventTime,Baseperiod,CalendarTime)]
+  results_bins[, Ntreated_bin := sum(Ntreated), list(Cohort,EventTime,BaseEvent,CalendarTime)]
   results_bins[, bin_weights := Ntreated/Ntreated_bin]
   results_average = results_bins[, list(ATTge=sum(bin_weights * ATTge),
                                         ATTge_SE=sqrt(sum(bin_weights^2 * ATTge_SE^2)),
@@ -220,7 +220,7 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
                                         pred_Etreated_post=sum(bin_weights*pred_Etreated_post),
                                         Ntreated=sum(Ntreated),
                                         Ncontrol=sum(Ncontrol)
-  ), list(Cohort,EventTime,Baseperiod,CalendarTime)][order(Cohort,EventTime)]
+  ), list(Cohort,EventTime,BaseEvent,CalendarTime)][order(Cohort,EventTime)]
   results_average = results_average[,.SD,.SDcols=original_names]
   return(results_average)
 }
@@ -231,7 +231,7 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 #' @param inputdata A data.table.
 #' @param varnames A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
 #' @param control_group There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".
-#' @param baseperiod This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.
+#' @param base_event This is the base pre-period that is normalized to zero in the DiD estimation. Default is base_event=-1.
 #' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
 #' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @param return_data If true, this returns the treated and control differenced data. Default is FALSE.
@@ -253,7 +253,7 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 #' DiDge(simdata, varnames, cohort_time=2007, event_postperiod=1)
 #'
 #' # change the base period to -3
-#' DiDge(simdata, varnames, baseperiod=-3, cohort_time=2007, event_postperiod=1)
+#' DiDge(simdata, varnames, base_event=-3, cohort_time=2007, event_postperiod=1)
 #'
 #' # use only the never-treated control group
 #' DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
@@ -284,12 +284,12 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 #'
 #' @export
-DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE, robust=FALSE){
+DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE, robust=FALSE){
   if(is.null(varnames$bin_name)){
-    return(DiDge_main(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group, return_data=return_data, forceOLS=forceOLS, robust=robust))
+    return(DiDge_main(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, base_event=base_event, control_group = control_group, return_data=return_data, forceOLS=forceOLS, robust=robust))
   }
   if(!is.null(varnames$bin_name)){
-    return(DiDge_bins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, baseperiod=baseperiod, control_group = control_group))
+    return(DiDge_bins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, base_event=base_event, control_group = control_group))
   }
 }
 

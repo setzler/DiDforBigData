@@ -9,7 +9,7 @@ DiDge(
   varnames,
   cohort_time,
   event_postperiod,
-  baseperiod = -1,
+  base_event = -1,
   control_group = "all",
   return_data = FALSE,
   forceOLS = TRUE,
@@ -21,7 +21,7 @@ DiDge(
 
 \item{varnames}{A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.}
 
-\item{baseperiod}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is baseperiod=-1.}
+\item{base_event}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is base_event=-1.}
 
 \item{control_group}{There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".}
 
@@ -56,7 +56,7 @@ varnames$id_name = "id"
 DiDge(simdata, varnames, cohort_time=2007, event_postperiod=1)
 
 # change the base period to -3
-DiDge(simdata, varnames, baseperiod=-3, cohort_time=2007, event_postperiod=1)
+DiDge(simdata, varnames, base_event=-3, cohort_time=2007, event_postperiod=1)
 
 # use only the never-treated control group
 DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
