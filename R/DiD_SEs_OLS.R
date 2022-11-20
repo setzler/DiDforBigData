@@ -60,13 +60,13 @@ DiD_getSEs_EventTime_OLS <- function(data_cohort,varnames,robust=FALSE){
 
     # covariance matrix for errors
     if(is.null(cluster_names) & !robust){
-      OLSvcov = vcov(OLSlm, df = Inf)
+      OLSvcov = vcov(OLSlm)
     }
     if(!is.null(cluster_names)){
-      data_event <<- copy(data_event) # due to a well-known scoping bug in R's base lm.predict that no one will fix despite years of requests, this redundancy is necessary!
       library(sandwich, warn.conflicts = F, quietly = T)
+      data_event <<- copy(data_event) # due to a well-known scoping bug in R's base lm.predict that no one will fix despite years of requests, this redundancy is necessary!
       CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
-      OLSvcov = vcovCL(OLSlm, cluster = CLformula, df = Inf)
+      OLSvcov = vcovCL(OLSlm, cluster = CLformula)
     }
     if(robust & is.null(cluster_names)){
       library(sandwich, warn.conflicts = F, quietly = T)
@@ -107,10 +107,10 @@ getSEs_multipleEventTimes_OLS <- function(data_cohort,varnames,robust=FALSE,Eset
   }
 
   # get the SE
-  data_cohortevents = data_cohort[EventTime %in% Eset]
+  data_event = data_cohort[EventTime %in% Eset]
   cohortevents = data.table()
   for(ee in Eset){
-    cohortevents = rbindlist(list(cohortevents, data.table(cohort=data_cohortevents[EventTime==ee,sort(unique(Cohort))],event=ee)))
+    cohortevents = rbindlist(list(cohortevents, data.table(cohort=data_event[EventTime==ee,sort(unique(Cohort))],event=ee)))
   }
   cohortevents = cohortevents[order(cohort,event)]
   numce = nrow(cohortevents)
@@ -127,13 +127,13 @@ getSEs_multipleEventTimes_OLS <- function(data_cohort,varnames,robust=FALSE,Eset
     ee = cohortevents[rowiter][,event]
     intercepts = c(intercepts, sprintf("intercept_%s_%s",cc,ee))
     treateds = c(treateds, sprintf("treated_%s_%s",cc,ee))
-    data_cohortevents[, (sprintf("intercept_%s_%s",cc,ee)) := (Cohort==cc)*(EventTime==ee)]
-    data_cohortevents[, (sprintf("treated_%s_%s",cc,ee)) := (treated==1)*(Cohort==cc)*(EventTime==ee)]
-    treated_weights = c(treated_weights, data_cohortevents[, sum(get(sprintf("treated_%s_%s",cc,ee))) ] )
+    data_event[, (sprintf("intercept_%s_%s",cc,ee)) := (Cohort==cc)*(EventTime==ee)]
+    data_event[, (sprintf("treated_%s_%s",cc,ee)) := (treated==1)*(Cohort==cc)*(EventTime==ee)]
+    treated_weights = c(treated_weights, data_event[, sum(get(sprintf("treated_%s_%s",cc,ee))) ] )
     if(!is.null(covariate_names)){
       for(vv in covariate_names){
         covariates = c(covariates, sprintf("%s_%s_%s",vv,cc,ee))
-        data_cohortevents[, (sprintf("%s_%s_%s",vv,cc,ee)) := (Cohort==cc)*(EventTime==ee)*get(vv)]
+        data_event[, (sprintf("%s_%s_%s",vv,cc,ee)) := (Cohort==cc)*(EventTime==ee)*get(vv)]
       }
     }
   }
@@ -148,17 +148,26 @@ getSEs_multipleEventTimes_OLS <- function(data_cohort,varnames,robust=FALSE,Eset
                         paste0(covariates, collapse=" + "))
   }
 
-
-  OLSlm = lm(OLSformula, data=data_cohortevents)
+  # regression
+  OLSvcov = NULL
+  OLSlm = lm(OLSformula, data=data_event)
   OLSmeans = as.numeric(OLSlm$coefficients[treateds])
-  if(is.null(cluster_names)){
-    OLSvcov = vcov(OLSlm, df = Inf)
+
+  # covariance matrix for errors
+  if(is.null(cluster_names) & !robust){
+    OLSvcov = vcov(OLSlm)
   }
   if(!is.null(cluster_names)){
     library(sandwich, warn.conflicts = F, quietly = T)
+    data_event <<- copy(data_event) # due to a well-known scoping bug in R's base lm.predict that no one will fix despite years of requests, this redundancy is necessary!
     CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
-    OLSvcov = vcovCL(OLSlm, cluster = CLformula, df = Inf)
+    OLSvcov = vcovCL(OLSlm, cluster = CLformula)
   }
+  if(robust & is.null(cluster_names)){
+    library(sandwich, warn.conflicts = F, quietly = T)
+    OLSvcov = vcovHC(OLSlm, "HC1")
+  }
+
   OLSvcov = OLSvcov[treateds, treateds]
   treated_weights = treated_weights/sum(treated_weights)
   ATT_Eset = as.numeric(t(treated_weights) %*% OLSmeans)

@@ -17,8 +17,10 @@ SimDiD(
   idvar = 1,
   yearvar = 1,
   shockvar = 1,
+  indivAR1 = FALSE,
   time_covars = FALSE,
-  bin_covars = FALSE,
+  bin_covars_nobias = FALSE,
+  bin_covars_bias = FALSE,
   randomNA = FALSE,
   missingCohorts = NULL
 )
@@ -48,9 +50,13 @@ SimDiD(
 
 \item{shockvar}{Variance of idiosyncratic shocks (epsilon_it). Default is shockvar=1.}
 
+\item{indivAR1}{Each individual's shocks follow an AR(1) process. Default is FALSE.}
+
 \item{time_covars}{Add 2 time-varying covariates, called "X1" and "X2". Default is FALSE.}
 
-\item{bin_covars}{Add 10 randomly assigned bins, with bin-specific shocks. Default is FALSE.}
+\item{bin_covars_nobias}{Add 10 randomly assigned bins, with bin-specific AR(1) shocks. Default is FALSE.}
+
+\item{bin_covars_bias}{Add 10 randomly assigned bins, with bin-specific shocks that are systematically greater for bins that are treated earlier. Default is FALSE.}
 
 \item{randomNA}{If TRUE, randomly assign the outcome variable with missing values (NA) in some cases. Default is FALSE.}
 
@@ -92,8 +98,11 @@ SimDiD(anticipation=2)
 # add covariates "X1" and "X2", which vary over time differentially by cohort.
 SimDiD(time_covars=TRUE)
 
-# add covariate "market", which is time-invariant but each market experiences a shock.
-SimDiD(bin_covars=TRUE)
+# add covariate "bin", which is time-invariant but each bin experiences a common shock. In this case, shocks are randomly assigned to bins, so parallel trends is not violated.
+SimDiD(bin_covars_nobias=TRUE)
+
+# add covariate "bin", which is time-invariant but each bin experiences a common shock. In this case, bins that are treated earlier also receive systematically better shocks, so parallel trends is violated.
+SimDiD(bin_covars_bias=TRUE)
 
 # randomly set 10\% of outcomes to missing.
 SimDiD(randomNA=TRUE)

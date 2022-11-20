@@ -177,7 +177,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   return(results)
 }
 
-DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all"){
+DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, baseperiod = -1, control_group = "all", forceOLS=TRUE, robust=FALSE){
 
   # set up variable names
   time_name = varnames$time_name
@@ -199,14 +199,14 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, basep
   results_bins = NULL
   for(binval in bin_set){
     res = DiDge_main(inputdata[get(bin_name)==binval], cohort_time = cohort_time, event_postperiod = event_postperiod, baseperiod = baseperiod,
-                     varnames=varnames, control_group = control_group)
+                     varnames=varnames, control_group = control_group, forceOLS=forceOLS, robust=robust)
     res[, (bin_name) := binval]
     results_bins = rbindlist(list(results_bins,res))
   }
 
   # take the average across bins
   original_names = names(results_bins)
-  original_names = original_names[original_names != bin_name]
+  original_names = original_names[original_names != bin_name] # to avoid taking an average across the "bin" variable
   results_bins[, Ntreated_bin := sum(Ntreated), list(Cohort,EventTime,Baseperiod,CalendarTime)]
   results_bins[, bin_weights := Ntreated/Ntreated_bin]
   results_average = results_bins[, list(ATTge=sum(bin_weights * ATTge),

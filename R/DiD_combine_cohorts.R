@@ -219,10 +219,10 @@ DiD <- function(inputdata, varnames, control_group = "all", baseperiod=-1, min_e
     results_Esets = data.table()
     for(Eset in Esets){
       if(!is.null(varnames$covariate_names) | !is.null(varnames$cluster_names) | forceOLS){
-        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_OLS(data_cohort,varnames,robust,Eset)))
+        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_OLS(data_cohort,varnames,robust=robust,Eset=Eset)))
       }
       if(is.null(varnames$covariate_names) & is.null(varnames$cluster_names) & !forceOLS){
-        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_noOLS(data_cohort,varnames,robust,Eset)))
+        results_Esets = rbindlist(list(results_Esets,getSEs_multipleEventTimes_noOLS(data_cohort,varnames,Eset=Eset)))
       }
     }
     results$results_Esets = results_Esets

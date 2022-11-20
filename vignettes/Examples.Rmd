@@ -227,13 +227,15 @@ We see that the bias has been removed thanks to the control variables.
 
 
 
-# 4. Clustered Standard Errors
+# 4. Robust and Clustered Standard Errors
  
-### The `cluster_names` entry
+### The `robust=TRUE` option and the `cluster_names` entry
 
-In difference-in-differences applications, it is often the case that treatment is assigned to groups of individuals (e.g., a change in  state-wide policy treats all individuals in a state simultaneously). If those groups are also subject to common shocks, this induces correlation in the estimation errors and the treatment assignment (see the discussion by Abadie, Athey, Imbens, and Wooldrige, 2022, QJE). ]
+In difference-in-differences applications, it is often the case that treatment is assigned to groups of individuals (e.g., a change in  state-wide policy treats all individuals in a state simultaneously). If those groups are also subject to common shocks, this induces correlation in the estimation errors, and standard errors will tend to be too small.
 
 Fortunately, this is easy to fix: If the groups within which the estimation errors are correlated are known to the research, we just need to cluster standard errors by group. `DiDforBigData` requires only that the list of variable names, `varnames`, is modified to include a `cluster_names` entry. For example, `varnames$cluster_names = c("group1","group2")` tells it to cluster  in a way that accounts for common shocks to each of observable groups, "group1" and "group2".
+
+A related issue is allowing for the idiosyncratic errors to have difference variances for different individuals. We implement the equivalent of the ", robust" option from Stata using the option `robust=TRUE`.
 
 
 ### Example
@@ -242,7 +244,7 @@ There is an option in `SimDiD()` to group individuals into bins that are differe
 
 ```{r echo=T, eval=T, message=FALSE}
 
-sim = SimDiD(sample_size=1000, bin_covars=TRUE)
+sim = SimDiD(sample_size=1000, bin_covars_nobias = TRUE)
 simdata = sim$simdata
 print(simdata)
 
@@ -261,23 +263,34 @@ varnames$id_name = "id"
 ```
 
 
-We check the usual standard errors for cohort 2010:
+We check the usual standard errors:
 
 ```{r echo=T, eval=T, message=FALSE}
-did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=1)
+did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=3)
 
 print(did$results_average[,1:4])
 
 ```
 
-Now, we cluster on the bin variable by adding it to the `varnames` and re-estimating:
 
+Next, we try robust standard errors by adding the `robust=TRUE` option:
+
+
+```{r echo=T, eval=T, message=FALSE}
+did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=3, robust=TRUE)
+
+print(did$results_average[,1:4])
+
+```
+
+
+Finally, we cluster on the bin variable by adding it to the `varnames` and re-estimating:
 
 ```{r echo=T, eval=T, message=FALSE}
 
 varnames$cluster_names = "bin" 
 
-did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=1)
+did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=3)
 
 print(did$results_average[,1:4])
 
@@ -286,29 +299,4 @@ print(did$results_average[,1:4])
 
 
 
-
-
-# 5. Robust Standard Errors
-
-### The `robust` option
-
-If you would like to use robust standard errors to match the ", robust" option from Stata, simply specify `robust=TRUE`.
-
-
-
-### Example
-
-We continue to use the simulated data from the previous example (with bins). We remove the clustering from the varnames. Instead, we set the `robust=TRUE` option:
-
-
-```{r echo=T, eval=T, message=FALSE}
-varnames$cluster_names = NULL
-
-did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=1, robust=TRUE)
-
-print(did$results_average[,1:4])
-
-```
-
-
-
+ 
