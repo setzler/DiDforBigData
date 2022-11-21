@@ -33,8 +33,8 @@ DiD_getSEs_EventTime_noOLS <- function(data_cohort,varnames){
         cc_col_val = cohorts[cc_col_iter]
         if(cc_col_val == cc_row_val){
           # diagonals
-          covmat_treated_treated[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==1, var(get(outcome_name))/(.N-1)]
-          covmat_control_control[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==0, var(get(outcome_name))/(.N-1)]
+          covmat_treated_treated[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==1, var(get(outcome_name))/(.N)]
+          covmat_control_control[cc_row_iter, cc_col_iter] = data_event[Cohort==cc_row_val & treated==0, var(get(outcome_name))/(.N)]
           weight_treated[cc_row_iter] = data_event[Cohort==cc_row_val & treated==1, .N]
         }
         if(cc_col_val < cc_row_val){ # we will make this symmetric at the end
@@ -43,7 +43,7 @@ DiD_getSEs_EventTime_noOLS <- function(data_cohort,varnames){
           cc_col_control = data_event[Cohort==cc_col_val & treated==0]
           cc_row_control_col_control = merge(cc_row_control, cc_col_control, by=id_name)
           if(nrow(cc_row_control_col_control)){
-            covmat_control_control[cc_row_iter, cc_col_iter] = (cc_row_control_col_control[, cov(get(paste0(outcome_name,".x")), get(paste0(outcome_name,".y")))]/sqrt(cc_row_control[,as.numeric(.N)-1]))* 1/sqrt(cc_col_control[,as.numeric(.N)-1])
+            covmat_control_control[cc_row_iter, cc_col_iter] = (cc_row_control_col_control[, cov(get(paste0(outcome_name,".x")), get(paste0(outcome_name,".y")))]/sqrt(cc_row_control[,as.numeric(.N)]))* 1/sqrt(cc_col_control[,as.numeric(.N)])
           }
         }
         if(cc_col_val > cc_row_val){ # no past treated group can appear in the current or any future control group

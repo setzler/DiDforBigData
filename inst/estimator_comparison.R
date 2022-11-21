@@ -1,10 +1,11 @@
 setwd("~/github/DiDforBigData")
-library(stringr)
-library(didimputation)
-library(did)
-library(DIDmultiplegt)
-library(DiDforBigData)
-library(profmem)
+library(stringr, warn.conflicts = F, quietly = T)
+library(didimputation, warn.conflicts = F, quietly = T)
+library(did, warn.conflicts = F, quietly = T)
+library(DIDmultiplegt, warn.conflicts = F, quietly = T)
+library(DiDforBigData, warn.conflicts = F, quietly = T)
+library(profmem, warn.conflicts = F, quietly = T)
+library(fixest, warn.conflicts = F, quietly = T)
 # library(parallel)
 
 # didimputation
@@ -71,55 +72,6 @@ stackedES <- function(inputdata, varnames){
 }
 
 
-# Compare to OLS
-saturatedOLS <- function(inputdata){
-  # set up variable names
-  time_name = varnames$time_name
-  outcome_name = varnames$outcome_name
-  cohort_name = varnames$cohort_name
-  id_name = varnames$id_name
-  # rename
-  setnames(inputdata,cohort_name,"cohort")
-  setnames(inputdata,time_name,"year")
-  setnames(inputdata,outcome_name,"Y")
-  setnames(inputdata,id_name,"id")
-  # cohort and year sets
-  Gset = inputdata[,unique(cohort)]
-  Gset = Gset[is.finite(Gset)]
-  Gset = sort(Gset)
-  Tset = inputdata[,unique(year)]
-  Tset = sort(Tset)
-  # construct the cohort dummies and cohort-time interactions
-  cohort_names = c()
-  int_names = c()
-  for(GG in Gset){
-    for(TT in Tset){
-      if(!(TT - GG == -2)){
-        int_names = c(int_names, paste0("intTT",TT,"GG",GG))
-        inputdata[, (paste0("intTT",TT,"GG",GG)) := as.numeric(year==TT & cohort==GG)]
-      }
-    }
-  }
-  for(GG in Gset){
-    cohort_names = c(cohort_names, paste0("cohortGG",GG))
-    inputdata[, (paste0("cohortGG",GG)) := as.numeric(cohort==GG)]
-  }
-  # run OLS
-  DiD_formula = paste0("Y ~ -1 + factor(year) + ",paste0(cohort_names, collapse=" + ")," + ",paste0(int_names, collapse=" + "))
-  DiD_model = lm(DiD_formula, data=inputdata)
-  # extract coefficients
-  OLS_mat = data.table(summary(DiD_model)$coefficients)
-  OLS_mat$rownames = rownames(summary(DiD_model)$coefficients)
-  OLS_mat = OLS_mat[14:nrow(OLS_mat)]
-  OLS_mat[, CalendarTime := substr(rownames, 6,9)]
-  OLS_mat[, Cohort := substr(rownames, 12,15)]
-  setnames(OLS_mat,c("Estimate","Std. Error"),c("OLS","OLS_SE"))
-  OLS_mat = OLS_mat[,list(CalendarTime=as.integer(CalendarTime),Cohort=as.integer(Cohort),OLS, OLS_SE)]
-  return(OLS_mat)
-
-}
-
-
 ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5), reps=3){
 
   # prepare variable names
@@ -131,14 +83,14 @@ ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5)
 
   # define speed tester
   speed_tester <- function(sample_size,reps){
-    if(sample_size >= 2e4){
+    if(sample_size > 2e4){
       reps = 1
     }
     all_res = data.table()
     for(seed in 1:reps){
       this_res = data.table()
       # simulate
-      inputdata = SimDiD(sample_size = sample_size, seed =1000+seed, ATTcohortdiff = 2, minyear=2004, maxyear=2013)$simdata
+      inputdata = SimDiD(sample_size = sample_size, seed =1+seed, ATTcohortdiff = 2, minyear=2004, maxyear=2013)$simdata
       # my package
       if(str_detect(estimator,"DiDforBigData")){
         time0 = proc.time()[3]
@@ -237,7 +189,7 @@ ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5)
     print(sprintf("sample %s done",nn))
   }
 
-  file = sprintf("inst/speed_test_%s.csv",estimator)
+  file = sprintf("inst/speed_tests/speed_test_%s.csv",estimator)
   write.csv(all_speeds, file=file, row.names = FALSE)
 
   return(all_speeds)
@@ -246,19 +198,19 @@ ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5)
 
 
 plot_results <- function(output_dir="docs/articles"){
-  library(ggplot2)
-  library(scales)
-  library(data.table)
+  suppressMessages(library(ggplot2, warn.conflicts = F, quietly = T))
+  suppressMessages(library(scales, warn.conflicts = F, quietly = T))
+  suppressMessages(library(data.table, warn.conflicts = F, quietly = T))
 
   testresults = rbindlist(list(
-    setDT(read.csv(file="inst/speed_test_DiDforBigData.csv")),
-    setDT(read.csv(file="inst/speed_test_CSdr.csv")),
-    setDT(read.csv(file="inst/speed_test_CSbs.csv")),
-    setDT(read.csv(file="inst/speed_test_CH1.csv")),
-    setDT(read.csv(file="inst/speed_test_CH5.csv")),
-    setDT(read.csv(file="inst/speed_test_CH10.csv")),
-    setDT(read.csv(file="inst/speed_test_CH20.csv")),
-    setDT(read.csv(file="inst/speed_test_BJS.csv"))
+    setDT(read.csv(file="inst/speed_tests/speed_test_DiDforBigData.csv")),
+    setDT(read.csv(file="inst/speed_tests/speed_test_CSdr.csv")),
+    setDT(read.csv(file="inst/speed_tests/speed_test_CSbs.csv")),
+    setDT(read.csv(file="inst/speed_tests/speed_test_CH1.csv")),
+    setDT(read.csv(file="inst/speed_tests/speed_test_CH5.csv")),
+    setDT(read.csv(file="inst/speed_tests/speed_test_CH10.csv")),
+    setDT(read.csv(file="inst/speed_tests/speed_test_CH20.csv")),
+    setDT(read.csv(file="inst/speed_tests/speed_test_BJS.csv"))
     # setDT(read.csv(file="inst/speed_test_CSreg.csv"))
   ))
   testresults = testresults[sample_size <= 2e4]
@@ -321,9 +273,9 @@ plot_results <- function(output_dir="docs/articles"){
 
 
   testresults = rbindlist(list(
-    setDT(read.csv(file="inst/speed_test_DiDforBigData.csv")),
-    setDT(read.csv(file="inst/speed_test_CSdr.csv")),
-    setDT(read.csv(file="inst/speed_test_CSbs.csv"))
+    setDT(read.csv(file="inst/speed_tests/speed_test_DiDforBigData.csv")),
+    setDT(read.csv(file="inst/speed_tests/speed_test_CSdr.csv")),
+    setDT(read.csv(file="inst/speed_tests/speed_test_CSbs.csv"))
   ))
   testresults = testresults[sample_size > 2e4]
   testresults[method=="CSreg", variable := "Callaway &\nSant'Anna\ndid using reg"]
@@ -354,7 +306,7 @@ plot_results <- function(output_dir="docs/articles"){
 
 
 # speedtest = ValidateDiD(estimator = "DiDforBigData", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
-# speedtest = ValidateDiD(estimator = "DiDforBigDataMils", sample_sizes=c(5e6), reps=1)
+# speedtest = ValidateDiD(estimator = "DiDforBigDataMils", sample_sizes=c(8e6), reps=1)
 # speedtest = ValidateDiD(estimator = "CSreg", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
 # speedtest = ValidateDiD(estimator = "CSdr", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
 # speedtest = ValidateDiD(estimator = "CSbs", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)

@@ -11,9 +11,7 @@ DiDge(
   event_postperiod,
   base_event = -1,
   control_group = "all",
-  return_data = FALSE,
-  forceOLS = TRUE,
-  robust = FALSE
+  return_data = FALSE
 )
 }
 \arguments{
@@ -21,22 +19,18 @@ DiDge(
 
 \item{varnames}{A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.}
 
+\item{cohort_time}{The treatment cohort of reference.}
+
+\item{event_postperiod}{Number of time periods after the cohort time at which to estimate the DiD.}
+
 \item{base_event}{This is the base pre-period that is normalized to zero in the DiD estimation. Default is base_event=-1.}
 
 \item{control_group}{There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".}
 
 \item{return_data}{If true, this returns the treated and control differenced data. Default is FALSE.}
-
-\item{forceOLS}{Compute standard errors using OLS, even if analytic expression is available.}
-
-\item{robust}{Compute robust standard errors, using the same "HC1" approach used by the Stata ", robust" option.}
-
-\item{min_event}{This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.}
-
-\item{max_event}{This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.}
 }
 \value{
-A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
+A single-row data.table() containing the estimates and various statistics such as sample size. If \code{return_data=TRUE}, it instead returns a list in which the \code{data_prepost} entry is the previously-mentioned single-row data.table(), and the other argument \code{data_prepost}  contains the constructed data that should be provided to OLS.
 }
 \description{
 Estimate DiD for a single cohort (g) and a single event time (e).
@@ -61,29 +55,19 @@ DiDge(simdata, varnames, base_event=-3, cohort_time=2007, event_postperiod=1)
 # use only the never-treated control group
 DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
 
-# use only the never-treated control group
+# use only the future-treated control group
 DiDge(simdata, varnames, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
 
 # simulate some data with covariates, add the covariates to the varnames, update the estimates
 sim = SimDiD(sample_size=200,time_covars=TRUE)
 varnames$covariate_names = c("X1","X2")
 DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-
 varnames$covariate_names = NULL # we are done with this example
 
-# simulate some data with bins, add the bins to the varnames, update the estimates
-sim = SimDiD(sample_size=3000, bin_covars=TRUE)
-
-# if we do not add the bin_name to varnames, it will ignore bins and give biased estimates:
+# simulate some data with clusters, add the clusters to the varnames, update the estimates
+sim = SimDiD(sample_size=3000, clusters=TRUE)
 DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-
-# now we account for bins:
-varnames$bin_name = c("bin")
-DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-
-# now we cluster on bins:
-varnames$bin_name = NULL
-varnames$cluster_names = c("bin")
+varnames$cluster_names = c("cluster") # now we cluster the standard errors:
 DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 
 }

@@ -78,7 +78,7 @@
 
  
 
-\begin{frame}{Notation and Identification (1/4)}
+\begin{frame}{Notation and Parameters of Interest (1/2)}
  
 \vspace{-0.1cm}
 
@@ -131,16 +131,14 @@
 \end{frame}
 
 
-\begin{frame}{Notation and Identification (2/4)}
+\begin{frame}{Notation and Parameters of Interest (2/2)}
 
 \textbf{Goal: Identify ATT at an event time.} We assume throughout that the goal is to identify the average treatment effect on the treated (ATT) at event time $e$. Formally, we seek to identify,
 \begin{equation} \notag
 \textrm{ATT}_{e} \equiv   \mathbb{E}[Y_{i,t}({\color{blue} g}) - Y_{i,t}({\color{red} \infty}) | {\color{blue}E_{i,t}=e}]  
 \end{equation}
 The identification challenge is that $\mathbb{E}[ Y_{i,t}({\color{red}\infty}) | {\color{blue}E_{i,t}=e}] $ is a counterfactual object -- it is the average outcome that \textit{would have been experienced} by those receiving treatment for $e$ years  \textit{if they had not received treatment}.
-
-
-
+ 
 
 \textbf{Decomposition into cohort-specific ATTs.} Define,
 \begin{equation} \notag
@@ -158,7 +156,7 @@ Thus, given $e$, it is sufficient to identify  $\textrm{ATT}_{g,e}$, $\forall g 
 \end{frame}
 
 
-\begin{frame}{Notation and Identification (3/4)}
+\begin{frame}{Identification (1/2)}
 
 \textbf{Control Group:} Define a control group membership indicator ${\color{red} \mathcal{C}_{g,e}(G_i)}$. At a minimum,   $ {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1} \implies G_i > (g+e)$. We may further restrict ${\color{red} \mathcal{C}}$ based on context, e.g., some  consider the never-treated control group, ${\color{red} \mathcal{C}_{g,e}(G_i)}  {=}  1\{G_i  {=}  \infty\}$.
 
@@ -166,7 +164,7 @@ Thus, given $e$, it is sufficient to identify  $\textrm{ATT}_{g,e}$, $\forall g 
 \begin{equation} \notag
 \begin{aligned}
  \exists b<0 \; \text{s.t.} &\quad \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
-\\ &\quad = \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{blue}G_i = g}], \; \forall e \geq 0
+\\ &\quad = \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{blue}G_i = g}] 
 \end{aligned}
 \end{equation}
 This restricts the relationship between the treated group ${\color{blue}G_i = g}$ and the control group ${\color{red} \mathcal{C}_{g,e}(G_i) {=} 1}$: the change in average outcome for the treated group \textit{would have been the same in the absence of treatment} as that of the control group.
@@ -183,34 +181,37 @@ This restricts \textit{when} the treated cohorts respond to treatment.
 
 
 
-\begin{frame}{Notation and Identification (4/4)}
+\begin{frame}{Identification (2/2)}
 
-\textbf{Difference-in-differences:} Define the population estimator,
+\textbf{Difference-in-differences:} Define the sample DiD estimator s.t.,
 \begin{equation} \notag 
-\text{DiD}_{g,e} {\equiv}  \mathbb{E}[Y_{i,g+e} {-} Y_{i,g+b} | {\color{blue} G_i = g }] {-}
+\text{DiD}_{g,e} {\rightarrow}  \mathbb{E}[Y_{i,g+e} {-} Y_{i,g+b} | {\color{blue} G_i = g }] {-}
 \mathbb{E}[Y_{i,g+e} {-} Y_{i,g+b} | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}]
 \end{equation}
-It depends only on observed outcomes, not counterfactuals.
+It is defined in terms of observable outcomes, not counterfactuals.
 
 \textbf{Impose parallel trends:}  By the parallel-trends assumption, we can replace the second expectation as follows:
 \begin{equation} \notag 
-\text{DiD}_{g,e} {\equiv}  \mathbb{E}[Y_{i,g+e} {-} Y_{i,g+b} | {\color{blue} G_i = g }] {-}
+\text{DiD}_{g,e} \rightarrow  \mathbb{E}[Y_{i,g+e} {-} Y_{i,g+b} | {\color{blue} G_i = g }] {-}
 \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{blue}G_i = g}]
 \end{equation}
 
 \textbf{Impose no anticipation:} By the no-anticipation assumption, we can cancel out the two terms involving $Y_{i,g+b}$:
 \begin{equation} \notag 
-\text{DiD}_{g,e} \equiv  \mathbb{E}[Y_{i,g+e}  | {\color{blue} G_i = g }] -
+\text{DiD}_{g,e} \rightarrow  \mathbb{E}[Y_{i,g+e}  | {\color{blue} G_i = g }] -
 \mathbb{E}[Y_{i,g+e}({\color{red} \infty})  | {\color{blue}G_i = g}]
-=
+\equiv
 \text{ATT}_{g,e}
 \end{equation}
 
 \vspace{-0.05cm}
 
-Thus, we have proven that $\text{DiD}_{g,e}=\text{ATT}_{g,e}$ if the parallel-trends and no-anticipation assumptions hold for the pair $(g,e)$. 
+\textbf{Identification:} Thus, $\text{DiD}_{g,e} \rightarrow \text{ATT}_{g,e}$ if the parallel-trends and no-anticipation assumptions hold for the pair $(g,e)$. 
 
-\textbf{Result:} If  parallel-trends and no-anticipation hold $\forall g \; \text{s.t.} \; \omega_{g,e}>0$, $$\text{ATT}_{e} = \sum_{g:\; w_{g,e}>0} \omega_{g,e} \text{DiD}_{g,e} $$
+\textbf{Identification for the event-time average:} If  parallel-trends and no-anticipation hold $\forall g \; \text{s.t.} \; \omega_{g,e}>0$, the above results imply,
+\begin{equation} \notag 
+\sum_{g:\; w_{g,e}>0} \omega_{g,e} \text{DiD}_{g,e} \; \rightarrow \; \sum_{g:\; w_{g,e}>0} \omega_{g,e} \text{ATT}_{g,e} =  \text{ATT}_{e}  
+\end{equation}
 
 \vspace{-0.05cm}
 
@@ -219,7 +220,7 @@ Thus, we have proven that $\text{DiD}_{g,e}=\text{ATT}_{g,e}$ if the parallel-tr
 
  
 
-\begin{frame}{Estimator used by DiD for Big Data (1/4)}
+\begin{frame}{Estimation and Inference (1/3)}
 
 
 
@@ -240,7 +241,7 @@ Thus, we have proven that $\text{DiD}_{g,e}=\text{ATT}_{g,e}$ if the parallel-tr
  
 \vspace{-0.2cm}
 
-where, following Callaway and Sant'Anna (2021), we require that parallel-trends and no-anticipation holds for one of these 3 possible control groups:
+where  we require that parallel-trends and no-anticipation holds for one of these 3 possible control groups:
 \begin{equation} \notag
 \begin{aligned}
 \text{``all"} & \quad {\color{red} \mathcal{C}_{g,e}(G_i)} = 
@@ -271,7 +272,7 @@ where, following Callaway and Sant'Anna (2021), we require that parallel-trends 
 
 
 
-\begin{frame}{Estimator used by DiD for Big Data (2/4)}
+\begin{frame}{Estimation and Inference (2/3)}
 
 Fix some $(e,b)$. Consider testing $\text{ATT}_{g,e} =0$.
 
@@ -309,11 +310,9 @@ Thus,  $\text{SE}(\text{DiD}_{g,e}) = \sqrt{{\color{blue}\sigma^2_{A,g}}/N_{A,g}
 
 
 
-\begin{frame}{Estimator used by DiD for Big Data (3/4)}
+\begin{frame}{Estimation and Inference (3/3)}
 
 \vspace{-0.1cm}
-
-Rather than the ATT for a specific cohort $g$, we often are interested in the event time $e$ ATT averaged across cohorts.
 
 \textbf{Average Effects by Event Time.} Let  $\omega_g \equiv \mathbb{E}[G_i =g | G_i < \infty]$ denote the share of treated units in cohort $g$.  We can define,
 
@@ -328,44 +327,264 @@ Rather than the ATT for a specific cohort $g$, we often are interested in the ev
 
 \textbf{Recall:} For a given $(g,e)$, the treated and control group are mutually exclusive. Thus, independence across $i$ ensures that $\text{Cov}({\color{blue}\overline{A}_g}, {\color{red}\overline{B}_g})=0$. We used this result on the previous slide to obtain simple SEs with no covariance terms for $\text{DiD}_{g,e} = {\color{blue}\overline{A}_g} - {\color{red}\overline{B}_g} $.
 
-\textbf{Repeated $i$ in the event time average.} Unlike $\text{DiD}_{g,e}$, $\text{DiD}_e$ depends on both ${\color{red}\overline{B}_g}$ and ${\color{red}\overline{B}_{g'}}$ for different cohorts $g,g'$. The same individual $i$ often appears in multiple control groups (e.g. never-treated units can appear in all control groups). Thus, it is typically true that $\text{Cov}({\color{red}\overline{B}_g}, {\color{red}\overline{B}_{g'}}) \neq 0$, so we cannot ignore covariance terms when calculating the SE for $\text{DiD}_e$. Similarly, if $g<g'$, we often have $\text{Cov}({\color{red}\overline{B}_g}, {\color{blue}\overline{A}_{g'}}) \neq 0$, since some members $i$ of the control group at $g$ later enter the treated group $g'$.
+\textbf{Repeated $i$ in the event time average.} Unlike $\text{DiD}_{g,e}$, $\text{DiD}_e$ depends on both ${\color{red}\overline{B}_g}$ and ${\color{red}\overline{B}_{g'}}$ for different cohorts $g,g'$. The same individual $i$ often appears in multiple control groups (e.g. never-treated units), implying $\text{Cov}({\color{red}\overline{B}_g}, {\color{red}\overline{B}_{g'}}) \neq 0$, so we cannot ignore covariance terms when calculating the SE for $\text{DiD}_e$. Similarly, if $g<g'$, we often have $\text{Cov}({\color{red}\overline{B}_g}, {\color{blue}\overline{A}_{g'}}) \neq 0$, since some members $i$ of the control group at $g$ later enter the treated  $g'$.
+
+\vspace{-0.05cm}
+
+\textbf{Delta Method:} Stacking the various ${\color{blue}\overline{A}_g}$ and ${\color{red}\overline{B}_g}$ terms used by $\text{DiD}_{e}$, we apply the delta-method to obtain a simple matrix algebra representation of the standard error w.r.t. their covariance matrix.
 
 \end{frame}
 
 
 
 
+\begin{frame}{Regression Representation (1/4)}
 
+\textbf{Recall: Hypothesis Testing for a single cohort-event pair:}  Above, we showed inference on $\text{DiD}_{g,e}$ using,
 
+\vspace{-0.7cm}
 
-\begin{frame}{Estimator used by DiD for Big Data (4/4)}
+\begin{equation} \notag
+\text{Test statistic:} \;\; \text{DiD}_{g,e} = {\color{blue}\overline{A}_g} - {\color{red}\overline{B}_g} , \quad \text{Null} \;\; H_0:   {\color{blue}\mu_{A,g}} - {\color{red}\mu_{B,g}} = 0
+\end{equation}
+
+\vspace{-0.8cm}
+
+\begin{equation} \notag
+\implies  \text{DiD}_{g,e} = \left(  {\color{blue}\overline{A}_g} - {\color{red}\overline{B}_g} \right) \sim_d  \mathcal{N}\left( 0 , \;  {\color{blue}\sigma^2_{A,g}}/N_{A,g}  + {\color{red}\sigma^2_{B,g}}/N_{B,g}   \right)
+\end{equation}
+
+\vspace{-0.1cm}
+
+\textbf{Vector notation:} Define the following: 
+\vspace{-0.1cm}
+\begin{itemize}
+\item[$\bullet$] Treatment and control group corresponding to $(g,e)$ is  $\mathcal{H}_{g,e} \equiv \{i\; :\; G_i = g \text{ or } \mathcal{C}_{g,e}(G_i)=1 \}$.
+\item[$\bullet$] Difference relative to $b$: $Y^{\Delta(b)}_{i,g+e} \equiv (Y_{i,g+e} - Y_{i,g+b})$
+\item[$\bullet$] Vector of outcomes: $\tilde{Y}^{\Delta(b)}_{g+e} = ( Y^{\Delta(b)}_{i,g+e} )_{i \in \mathcal{H}_{g,e}}$. 
+\item[$\bullet$] Vector of treatments: $\tilde{D}_{g,e} = ( 1\{ G_i = g \} )_{i \in \mathcal{H}_{g,e}}$
+\item[$\bullet$] Vector of errors: $\tilde{\epsilon}^{\Delta(b)}_{g+e} = ( \tilde{\epsilon}^{\Delta(b)}_{i,g+e} )_{i \in \mathcal{H}_{g,e}}$
+\end{itemize}
 
  
-\textbf{Event study parameters:} For $\mathcal{H} \in \{ \mathcal{T} , \mathcal{C} \}$, one may wish to plot averages across event times:
+
+\textbf{Vector regression representation:} We can write,  
+
+\vspace{-0.4cm}
+
 \begin{equation} \notag
-\bar{Y}^\mathcal{H}_{g,e} = \sum_{i \in \mathcal{H}_g}Y_{i,g+e} , \;
-\text{SE}(\bar{Y}^\mathcal{H}_{g,e}) = \sqrt{\frac{\sigma^2_{\mathcal{H},g,e}}{|\mathcal{H}_g|}},  \; \sigma^2_{\mathcal{H},g,e} = \text{Var}[Y_{i,g+e} | i \in \mathcal{H}_g]
-\end{equation} 
+\tilde{Y}^{\Delta(b)}_{g+e} 
+= 
+\tilde{\mu}_{g,e} + 
+\tilde{D}_{g,e} \delta_{g,e} + 
+\tilde{\epsilon}^{\Delta(b)}_{g+e}
+\end{equation}
+
+\vspace{-0.3cm}
+ 
+Applying OLS to the regression, $\delta^{\text{OLS}}_{g,e} = \text{DiD}_{g,e}$ holds numerically, and the standard error estimate is also the same. Note:  Robust (Huber) SEs are required in OLS to replicate the SEs above.
+ 
+
+\end{frame}
+
+
+
+\begin{frame}{Regression Representation (2/4)}
+
+\vspace{-0.05cm}
+
+\textbf{Comment 1: Avoids unit fixed-effects.}  
+\vspace{-0.11cm}
+\begin{itemize}
+\item[$\bullet$] Implementations of DiD using OLS often control for unit fixed-effects to control for composition differences. 
+\item[$\bullet$] My approach sidesteps this issue by working with the differences $(Y_{i,g+e} - Y_{i,g+b})$ and a single $(g,e)$ pair at a time, which mechanically removes fixed-effects.
+\end{itemize}
+
+\vspace{-0.08cm}
+
+\textbf{Comment 2: Avoids clustering on unit.}  
+\vspace{-0.11cm}
+\begin{itemize}
+\item[$\bullet$] Implementations of DiD using OLS typically have to cluster on $i$ because the same individual $i$ appears on multiple rows of the regression (a pre-period and a post-period $Y_{i,t}$).
+\item[$\bullet$] My approach sidesteps this issue by working with the differences $(Y_{i,g+e} - Y_{i,g+b})$ and a single $(g,e)$ pair at a time, which implies that each individual appears on at most one row -- there is no repeated $i$ to cluster on.
+\end{itemize}
+
+\vspace{-0.08cm}
+
+\textbf{Comment 3: Avoids issues with unbalanced panels.}  
+\vspace{-0.11cm}
+\begin{itemize}
+\item[$\bullet$] Some DiD implementations include $i$ that are missing in the base period, or require $i$ to be non-missing in all periods.
+\item[$\bullet$] My approach avoids these two extremes: $(Y_{i,g+e} - Y_{i,g+b})$ is exactly the contribution of unit $i$ to $\text{DiD}_{g,e}$, so $i$ should be included if and only if $Y_{i,g+e}$ and $Y_{i,g+b}$ are observed.
+\end{itemize}
+
+\vspace{-0.05cm}
+
+\end{frame}
+
+
+
+\begin{frame}{Regression Representation (3/4)}
+ 
+\textbf{Stacked Notation:}  For a given $e$, we can stack the vectors defined on the previous slide across cohorts $g$:
+\vspace{-0.1cm}
+\begin{itemize}
+\item[$\bullet$] Define $\mathcal{G}_e \equiv \{g \; : \; \omega_{g,e} > 0\}$, which are all the treatment cohorts $g$ for which we observe the outcome at event time $e$.
+\item[$\bullet$] $\overline{Y}^{\Delta(b)}_{e} \equiv (\tilde{Y}^{\Delta(b)}_{g+e})_{g \in \mathcal{G}_e}$, $\overline{\epsilon}^{\Delta(b)}_{e} \equiv (\tilde{\epsilon}^{\Delta(b)}_{g+e})_{g \in \mathcal{G}_e}$, $\overline{D}_{e} \equiv (\tilde{D}_{g,e})_{g \in \mathcal{G}_e}$. Note that these vectors can re-use the same individual $i$ on multiple rows (but at different points in time for $i$).
+\item[$\bullet$] Let $H(g)$ be an indicator that is 1 for the set of rows in $\overline{D}_{e}$ that correspond to the treatment and control groups for treated cohort $g$, and zero otherwise.
+\end{itemize} 
+
+\textbf{Stacked Regression for Multiple DiD:}   Given this notation,  
+\vspace{-0.15cm}
 \begin{equation} \notag
-\bar{Y}^\mathcal{H}_{e} = \sum_{g \in \mathcal{G}}
-\omega_g \bar{Y}^\mathcal{H}_{g,e}
- , \;
-\text{SE}(\bar{Y}^\mathcal{H}_{g,e}) = \sqrt{\sum_g \omega_g^2 \text{Var}(\bar{Y}^\mathcal{H}_{g,e})},
-\end{equation} 
+\overline{Y}^{\Delta(b)}_{e} 
+= 
+\sum_{g \in \mathcal{G}_e} H(g) \overline{\mu}_{e} + 
+\sum_{g \in \mathcal{G}_e} H(g) \overline{D}_{e} \overline{\delta}_{e} + 
+\overline{\epsilon}^{\Delta(b)}_{e}
+\end{equation}
 
-The package provides these means and SEs by default.
+\vspace{-0.5cm}
+ 
+where $\overline{\delta}_{e} \equiv (\delta_{g,e})_{g \in \mathcal{G}_e}$, $\overline{\mu}_{e} \equiv (\tilde\mu_{g,e})_{g \in \mathcal{G}_e}$. Applying OLS to the regression, $\overline{\delta}^{\text{OLS}}_{e} = (\delta^{\text{OLS}}_{g,e} )_{g \in \mathcal{G}_e} = (\text{DiD}_{g,e})_{g \in \mathcal{G}_e}$ holds numerically. 
 
-\vspace{0.5cm}
-
-\textbf{Plots:} The package also provides automated plots, both for presenting the event study parameters and for presenting the ATT estimates. These can be plotted by $(g,e)$ or by $e$ (average over $g$).
 
 \end{frame}
 
 
 
 
+\begin{frame}{Regression Representation (4/4)}
 
-\begin{frame}{Accounting for Covariates (1/4)}
+
+\vspace{-0.05cm}
+
+
+\textbf{Recall: Stacked Regression for Multiple DiD:}  
+\vspace{-0.15cm}
+\begin{equation} \notag
+\overline{Y}^{\Delta(b)}_{e} 
+= 
+\sum_{g \in \mathcal{G}_e} H(g) \overline{\mu}_{e} + 
+\sum_{g \in \mathcal{G}_e} H(g) \overline{D}_{e} \overline{\delta}_{e} + 
+\overline{\epsilon}^{\Delta(b)}_{e}
+\end{equation}
+
+\vspace{-0.4cm}
+
+Applying OLS, $\overline{\delta}^{\text{OLS}}_{e} = (\delta^{\text{OLS}}_{g,e} )_{g \in \mathcal{G}_e} = (\text{DiD}_{g,e})_{g \in \mathcal{G}_e}$. 
+
+
+\vspace{-0.05cm}
+
+\textbf{Variance-covariance matrix:} Let $\Omega_e \equiv \text{Var}(\overline{\delta}^{\text{OLS}}_{e})$ denote the variance-covariance matrix for the vector of estimates $\overline{\delta}_{e}$. 
+
+Since each observation used in the stacked regression is sampled independently across $i$, the only rows that can be correlated are the rows that correspond to the same unit $i$. 
+
+This satisfies the standard Liang-Zeger assumptions, so we should generally use clustered standard errors on the unit identifier $i$.
+
+
+\vspace{-0.05cm}
+
+\textbf{Test Statistic and Inference:} Let $\omega_e = (\omega_{g,e})_{g \in \mathcal{G}_e}$, which satisfies $\omega_e'\textbf{1} = 1$. The test statistic of interest and its variance are,
+\begin{equation} \notag
+\text{DiD}_e = \omega_e'\overline{\delta}_{e}, 
+\quad
+\text{Var}(\text{DiD}_e) =  \omega_e'\Omega_e \omega_e
+\end{equation}
+where we replace $\Omega_e$ with its (clustered) OLS estimate in practice.
+
+
+
+\end{frame}
+
+
+
+
+\begin{frame}{Accounting for Time-varying Covariates (1/2)}
+ 
+\vspace{-0.1cm}
+
+\textbf{Recall: Definition of parallel trends.} 
+\vspace{-0.1cm}
+\begin{equation} \notag
+\begin{aligned}
+ \exists b<0 \; \text{s.t.} &\quad \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+\\ &\quad = \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{blue}G_i = g}]
+\end{aligned}
+\end{equation}
+
+\vspace{-0.1cm}
+
+
+\textbf{Time-varying Covariates Model:} Suppose that there are covariates $X$ that vary over time and affect the potential outcome through a time-invariant coefficient $\beta$: 
+\begin{equation} \notag
+Y_{it}(\infty) = \alpha_i + \mu_t + {\color{ForestGreen} X_{it} }\beta + \epsilon_{it}
+\end{equation}
+
+\vspace{-0.1cm}
+
+\textbf{Is parallel trends violated?} Plugging this model into the definition above,  parallel trends requires,
+\begin{equation} \notag
+ \mathbb{E}[ ({\color{ForestGreen} X_{i,g+e}} {-} {\color{ForestGreen}X_{i,g+b}}) \beta | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+=
+\mathbb{E}[ ({\color{ForestGreen} X_{i,g+e}} {-} {\color{ForestGreen}X_{i,g+b}}) \beta | {\color{blue}G_i = g}]  
+\end{equation}
+
+Thus, we only need to control for time-varying covariates that evolve differentially for the treated and control groups. 
+
+For example, age changes the same for all $i$, so it doesn't make sense to control for age.
+
+\end{frame}
+
+
+
+\begin{frame}{Accounting for Time-varying Covariates (2/2)}
+ 
+\vspace{-0.3cm}
+
+\textbf{Recall: Parallel trends violation:} 
+\begin{equation} \notag
+ \mathbb{E}[ ({\color{ForestGreen} X_{i,g+e}} {-} {\color{ForestGreen}X_{i,g+b}}) \beta | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+\neq
+\mathbb{E}[ ({\color{ForestGreen} X_{i,g+e}} {-} {\color{ForestGreen}X_{i,g+b}}) \beta | {\color{blue}G_i = g}]  
+\end{equation}
+
+\vspace{-0.1cm}
+
+\textbf{Regression Correction for a Single DiD:} Define the vector $\tilde{X}^{\Delta(b)}_{g,e} \equiv (X_{i,g+e} - X_{i,g+b})_{i \in \mathcal{H}_{g,e}}$. To control for these time-varying covariates, we can modify the vector regression as follows:
+\begin{equation} \notag
+\tilde{Y}^{\Delta(b)}_{g+e} 
+= 
+\tilde{\mu}_{g,e} + 
+\tilde{D}_{g,e} \delta_{g,e} + 
+\tilde{X}^{\Delta(b)}_{g,e}\beta_{g,e} + 
+\tilde{\epsilon}^{\Delta(b)}_{g+e}
+\end{equation}
+This controls directly for the parallel-trends violation. We allow for $\beta_{g,e}$ to be cohort-event-specific, which is very flexible.
+
+\vspace{0.1cm}
+
+\textbf{Regression Correction for a Multiple DiD:} Define the stacked terms $\overline{X}^{\Delta(b)}_{e} \equiv (\tilde{X}^{\Delta(b)}_{g+e})_{g \in \mathcal{G}_e}$, $\overline{\beta}_e = (\beta_{g+e})_{g \in \mathcal{G}_e}$. The correction is,
+\vspace{-0.15cm}
+\begin{equation} \notag
+\overline{Y}^{\Delta(b)}_{e} 
+= 
+\sum_{g \in \mathcal{G}_e} H(g) \overline{\mu}_{e} + 
+\sum_{g \in \mathcal{G}_e} H(g) \overline{D}_{e} \overline{\delta}_{e} + 
+\sum_{g \in \mathcal{G}_e} H(g) \overline{X}^{\Delta(b)}_{e} \overline{\beta}_e  
++ 
+\overline{\epsilon}^{\Delta(b)}_{e}
+\end{equation}
+ 
+\vspace{-0.5cm}
+
+\end{frame}
+
+
+
+
+\begin{frame}{Accounting for Common Group Shocks (1/2)}
 
 \vspace{-0.1cm}
 
@@ -374,27 +593,38 @@ The package provides these means and SEs by default.
 \begin{equation} \notag
 \begin{aligned}
  \exists b<0 \; \text{s.t.} &\quad \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
-\\ &\quad = \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{blue}G_i = g}], \; \forall e \geq 0
+\\ &\quad = \mathbb{E}[Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty}) | {\color{blue}G_i = g}]
 \end{aligned}
 \end{equation}
 
-\textbf{Time-invariant Covariate:} Suppose potential outcomes in the case with no-treatment are given by the model,
- $$Y_{i,t}(\infty) = \alpha_i + \mu_t + X_i{\color{ForestGreen}\beta_t} + \epsilon_{i,t}$$
+\vspace{-0.1cm}
 
-Is the parallel-trends condition violated? Note that,
-$$Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) = (\mu_{g+e} - \mu_{g+b}) + X_i({\color{ForestGreen}\beta_{g+e}} - {\color{ForestGreen}\beta_{g+b}})$$
+\textbf{Time-invariant Group:} Suppose potential outcomes in the case with no-treatment are given by the model,
+ $$Y_{i,t}(\infty) = \alpha_i + \mu_t + X_i{\color{ForestGreen}\xi_t} + \epsilon_{i,t}$$
+ 
+\vspace{-0.15cm}
 
-Plugging this into the expectations above, we see that:
-\begin{itemize}
-\item[1.] If $\beta_{g+e} = \beta_{g+b}$, then  parallel trends holds, as $X_i$ cancels out in $Y_{i,g+e}({\color{red} \infty}) - Y_{i,g+b}({\color{red} \infty})$.
-\vspace{0.05cm}
-\item[2.] If ${\color{ForestGreen}\beta_{g+e}} \neq {\color{ForestGreen}\beta_{g+b}}$, then parallel trends holds only if,
+where $X_i$ is a $N \times K$ matrix of indicators for membership in group $k=1,...,K$, and $\xi$ is a $K$-length vector of group-specific shocks.
+
+\textbf{Group Shocks:}  Is the parallel-trends assumption violated? 
 \begin{equation} \notag
- \mathbb{E}[ X_i  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
-=
-\mathbb{E}[ X_i  | {\color{blue}G_i = g}]  
+Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) = (\mu_{g+e} - \mu_{g+b}) + X_i({\color{ForestGreen}\xi_{g+e}} - {\color{ForestGreen}\xi_{g+b}})
 \end{equation}
-\end{itemize}
+
+\vspace{-0.15cm}
+
+Plugging this into the expectations,  parallel trends requires,
+\begin{equation} \notag
+ \mathbb{E}[ X_i ({\color{ForestGreen}\xi_{g+e}} {-} {\color{ForestGreen}\xi_{g+b}})  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+=
+\mathbb{E}[ X_i ({\color{ForestGreen}\xi_{g+e}} {-} {\color{ForestGreen}\xi_{g+b}})  | {\color{blue}G_i = g}]  
+\end{equation}
+
+\vspace{-0.15cm}
+
+\textbf{Group Shock Bias:} If $X_i$ and $({\color{ForestGreen}\xi_{g+e}} {-} {\color{ForestGreen}\xi_{g+b}}) $ are independent conditional on treatment/control status, parallel trends still holds. 
+
+However, if certain $X_i$ are selected for treatment status based on their unobserved growth  $({\color{ForestGreen}\xi_{g+e}} {-} {\color{ForestGreen}\xi_{g+b}}) $, parallel trends fails.
  
 \vspace{-0.1cm}
 
@@ -402,113 +632,34 @@ Plugging this into the expectations above, we see that:
 
 
 
-\begin{frame}{Accounting for Covariates (2/4)}
+\begin{frame}{Accounting for Common Group Shocks (2/2)}
 
 \vspace{-0.1cm}
 
-\textbf{Recap:} If $Y_{i,t}(\infty) = \alpha_i + \mu_t + X_i{\color{ForestGreen}\beta_t} + \epsilon_{i,t}$ and ${\color{ForestGreen}\beta_{g+e}} \neq {\color{ForestGreen}\beta_{g+b}}$, then parallel trends holds only if,
-\begin{equation} \notag
- \mathbb{E}[ X_i  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
+\textbf{Recap:} If $Y_{i,t}(\infty) = \alpha_i + \mu_t + X_i{\color{ForestGreen}\xi_t} + \epsilon_{i,t}$, parallel trends requires $
+ \mathbb{E}[ X_i ({\color{ForestGreen}\xi_{g+e}} {-} {\color{ForestGreen}\xi_{g+b}})  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
 =
-\mathbb{E}[ X_i  | {\color{blue} G_i=g} ]  
-\end{equation}
-
-\textbf{``Bin" correction:} If $X_i \in \mathcal{X}$ is discrete, parallel trends holds if we condition on treatment and control groups with the same $X_i$ bin:
-$$
- \mathbb{E}[ X_i  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1} \; \& \; X_i=x] 
--
-\mathbb{E}[ X_i  | {\color{blue} G_i=g}  \; \& \; X_i=x] 
-= x-x =0 
-$$
-Parallel trends must hold in this model when conditioning on treatment and control groups within the same $X_i=x$ bin.
+\mathbb{E}[ X_i ({\color{ForestGreen}\xi_{g+e}} {-} {\color{ForestGreen}\xi_{g+b}})  | {\color{blue}G_i = g}]  $.
 
 \vspace{0.1cm}
 
-\textbf{Testing:} Define $\text{DiD}_{g,e}(x)$ as follows:
-\vspace{-0.05cm}
-\begin{equation} \notag
-\mathbb{E}[Y_{i,g+e} - Y_{i,g+b}  | {\color{blue} G_i {=} g}  \; \& \; X_i {=} x ] {-}
- \mathbb{E}[Y_{i,g+e} - Y_{i,g+b} | {\color{red} \mathcal{C}_{g,e}(G_i) {=} 1}  \; \& \; X_i {=} x]
-\end{equation}
-Then, we can test that  $\text{ATT}_{g,e}$ is zero using,
-\vspace{-0.05cm}
-\begin{equation} \notag
-\text{DiD}_{g,e} =   \sum_\mathcal{X} \omega_g(x) \text{DiD}_{g,e}(x),  
-\quad
-\omega_g(x) = \mathbb{E}[X_i = x | G_i =g]
-\end{equation} 
-\vspace{-0.4cm}
-\begin{equation} \notag
-\text{SE}\left( \text{DiD}_{g,e} \right) =  
-\sqrt{
-\sum_{x \in \mathcal{X}} (\omega_g(x))^2 \text{SE}(\text{DiD}_{g,e}(x))^2
-}
-\end{equation} 
-\vspace{-0.05cm}
-There are no covariances because each $i$ has only one $X_i=x$ bin.
+\textbf{Clustered SEs for group shocks:} If parallel-trends holds, then, DiD is consistent, but the i.i.d. assumption fails for the errors due to the common group shock. 
 
-\end{frame}
-
-
-
-\begin{frame}{Accounting for Covariates (3/4)}
-
-\vspace{-0.1cm}
-
-
-\textbf{Time-varying Covariates:} Suppose that it is the covariates $X$ rather than the coefficient $\beta$ that varies over time: 
-\begin{equation} \notag
-Y_{i,t}(\infty) = \alpha_i + \mu_t + {\color{ForestGreen} X_{i,t} }\beta + \epsilon_{i,t}
-\end{equation}
-
-\vspace{-0.1cm}
-
-Is parallel trends violated? Note that,
-$$Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) = (\mu_{g+e} - \mu_{g+b}) + \left({\color{ForestGreen}X_{i,g+e}} - {\color{ForestGreen}X_{i,g+b}}\right)\beta $$
-
-Plugging this into the expectations above, parallel trends requires
-\begin{equation} \notag
- \mathbb{E}[ X_{i,g+e} - X_{i,g+b}  | {\color{red} \mathcal{C}_{g,e}(G_i)  {=} 1}] 
-=
-\mathbb{E}[ X_{i,g+e} - X_{i,g+b}  | {\color{blue}G_i = g}]  
-\end{equation} 
-Though this will not hold in general, it holds if $X$ is age or time, as  $X_{i,g+e} - X_{i,g+b}=(e-b)$ is the same for  $G_i = g$ and $\mathcal{C}$.
-
-\textbf{Discrete correction for time-varying covariates:} Suppose $X \in \mathcal{X}$ is discrete. Then, the difference  $\tilde{X}_i \equiv X_{i,g+e} - X_{i,g+b}$ is also discrete. We can condition on $\tilde{X}_i=x$ and use the same approach we used for time-invariant covariates above.
-
-\vspace{-0.1cm}
-
-
-\end{frame}
-
-
-
-
-\begin{frame}{Accounting for Covariates (4/4)}
-
-\vspace{-0.1cm}
-
-\textbf{Recall:} We consider the case in which $X$ varies over time:
-\begin{equation} \notag
-Y_{i,t}(\infty) = \alpha_i + \mu_t + {\color{ForestGreen} X_{i,t} }\beta + \epsilon_{i,t}
-\end{equation}
+This is easy to correct by using clustered (Liang-Zeger) standard errors based on the group membership $X$.
 
 \vspace{0.1cm}
 
-\textbf{Regression representation:} Let $\mathcal{H}_{g,e}$ denote the union of the treated and control group for a particular $(g,e)$ pair. Then, 
-\begin{equation} \notag
-\begin{aligned}
-(Y_{i,g+e} - Y_{i,g+b}) &= \tilde{\mu} + 1\{G_i=g\}(Y_{i,g+e}(g) - Y_{i,g+e}(\infty)) \\
-& + (X_{i,g+e} - X_{i,g+b})\beta + \tilde{\epsilon},\quad \forall i \in \mathcal{H}_{g,e}
-\end{aligned}
-\end{equation}
-which is a regression equation \textit{with no fixed effects} that can be estimated separately for each $g,e$ pair. In particular, the coefficient on $1\{G_i=g\}$ recovers $\mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+e}(\infty) | G_i =g]$.
+\textbf{Controlling for group shocks:} If parallel-trends fails due to the common group shocks, we need to control for the group shocks. 
 
-\vspace{0.3cm}
+This can be done by forming the high-dimensional matrix that fully interacts $X$ with event-time, then controlling for this in the stacked regression with time-varying covariates defined above. 
 
-\textbf{OLS:} Thus, we can apply OLS to regress $Y_{i,g+e} - Y_{i,g+b}$ on $1\{G_i=g\}$ and  $X_{i,g+e} - X_{i,g+b}$, using the standard OLS point estimate and SE for the coefficient on $1\{G_i=g\}$. Note that this OLS formulation accommodates both discrete and continuous $X_{i,t}$. Importantly, no fixed effects have to be estimated, even in the case with continuous time-varying covariates -- the regression just has a few regressors, remaining computationally fast and efficient.
+Because this is a high-dimension fixed-effects regression, it deviates from our no-fixed-effect philosophy. However, it seems unavoidable in the presence of treatment-correlated group-specific shocks.
 
+\vspace{-0.1cm}
+ 
 \end{frame}
+
+
 
 
 

@@ -12,9 +12,7 @@ DiD(
   min_event = NULL,
   max_event = NULL,
   Esets = NULL,
-  parallel_cores = 1,
-  forceOLS = TRUE,
-  robust = FALSE
+  parallel_cores = 1
 )
 }
 \arguments{
@@ -33,10 +31,6 @@ DiD(
 \item{Esets}{If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.}
 
 \item{parallel_cores}{Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.}
-
-\item{forceOLS}{Compute standard errors using OLS, even if analytic expression is available.}
-
-\item{robust}{Compute robust standard errors, using the same "HC1" approach used by the Stata ", robust" option.}
 }
 \value{
 A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
@@ -71,18 +65,19 @@ DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=
 DiD(simdata, varnames, control_group = "future-treated", min_event=-4, max_event=1)
 
 # estimate average ATTe across sets of events
-DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3)))
+DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
 
 # estimate average ATTe in parallel
-DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)
+# not run:
+# DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)
 
 # simulate data with missing values, re-run estimation
 simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, randomNA = TRUE)$simdata
-DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3)))
+DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
 
 # simulate data with missing cohort, re-run estimation
 simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, missingCohorts=2010)$simdata
-DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-3,-2,-1),c(1,2,3)))
+DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
 
 # simulate data with time-varying covariates
 sim = SimDiD(sample_size=2000,time_covars=TRUE)

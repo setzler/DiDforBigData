@@ -21,7 +21,7 @@
 #' @param clusters Add 10 randomly assigned clusters, with cluster-specific AR(1) shocks. Default is FALSE.
 #' @param markets Add 10 randomly assigned markets, with market-specific shocks that are systematically greater for markets that are treated earlier. Default is FALSE.
 #' @param randomNA If TRUE, randomly assign the outcome variable with missing values (NA) in some cases. Default is FALSE.
-#' @param missingCohort If set to a particular cohort (or vector of cohorts), all of the outcomes for that cohort at event time -1 will be set to missing. Default is NULL.
+#' @param missingCohorts If set to a particular cohort (or vector of cohorts), all of the outcomes for that cohort at event time -1 will be set to missing. Default is NULL.
 #' @returns A list with two data.tables.
 #' The first data.table is simulated data with variables (id, year, cohort, Y), where Y is the outcome variable.
 #' The second data.table contains the true ATT values, both at the (event,cohort) level and by event averaging across cohorts.
@@ -38,7 +38,8 @@
 #' # increase the initial ATT for the first treated cohort
 #' SimDiD(ATTat0=2)
 #'
-#' # change cross-time and cross-cohort ATT variation, where the formula is ATTat0 + EventTime*ATTgrowth
+#' # change cross-time and cross-cohort ATT variation
+#' # note: the formula is ATTat0 + EventTime*ATTgrowth
 #' SimDiD(ATTgrowth=2,ATTcohortdiff=3)
 #'
 #' # change the range of years considered and treatment cohorts
@@ -50,11 +51,13 @@
 #' # add covariates "X1" and "X2", which vary over time differentially by cohort.
 #' SimDiD(time_covars=TRUE)
 #'
-#' # add covariate "bin", which is time-invariant but each bin experiences a common shock. In this case, shocks are randomly assigned to bins, so parallel trends is not violated.
-#' SimDiD(bin_covars_nobias=TRUE)
+#' # add clusters called "cluster", which are time-invariant and subject to common shocks.
+#' # note: shocks are randomly assigned to clusters, so parallel trends is not violated.
+#' SimDiD(clusters=TRUE)
 #'
-#' # add covariate "bin", which is time-invariant but each bin experiences a common shock. In this case, bins that are treated earlier also receive systematically better shocks, so parallel trends is violated.
-#' SimDiD(bin_covars_bias=TRUE)
+#' # add clusters called "market", which are time-invariant and subject to common shocks.
+#' # note: earlier-treated markets tend to get better shocks, which violates parallel trends.
+#' SimDiD(markets=TRUE)
 #'
 #' # randomly set 10% of outcomes to missing.
 #' SimDiD(randomNA=TRUE)

@@ -3,8 +3,11 @@ DiD for Big Data in R
 
 This R package provides a big-data-friendly and memory-efficient
 difference-in-differences (DiD) estimator for staggered (and
-non-staggered) treatment contexts. It supports clustered standard errors
-and controlling for time-varying covariates.
+non-staggered) treatment contexts. It supports controlling for
+time-varying covariates, heteroskedasticity-robust standard errors, and
+(single and multi-way) clustered standard errors. The theory behind
+`DiDforBigData` is available here as a slide deck:
+[slides](vignettes/DiDforBigData_theory.pdf).
 
 # Motivation
 
@@ -86,14 +89,9 @@ following:
 2.  **Memory:** This package avoids memory-intensive activities like
     matrix-inversion and data-stacking. It uses much less memory than
     other available software (see demonstration below).
-3.  **Dependencies:** This package has only *one* dependency,
-    `data.table`, which is already installed with most R distributions.
-    In case the researcher needs clustered standard errors, another
-    commonly-available package, `sandwich`, is also required.
-
-The derivations of the analytical formulas used by `DiDforBigData` are
-available here as a slideshow:
-[slides](vignettes/DiDforBigData_theory.pdf).
+3.  **Dependencies:** This package has only *two* dependencies,
+    `data.table` and `sandwich`, which are already installed with most R
+    distributions.
 
 # Demonstration
 
@@ -110,10 +108,10 @@ estimators for staggered treatment contexts:
 4.  My R package `DiDforBigData`.
 
 Regarding Callaway & Sant’Anna (2021), there are many options available
-in this package, so I compare three: the default; the estimation method
-`est_method = "reg"` (not shown below since it gives nearly identical
-results as the default); and the case in which standard errors are
-computed analytically rather than by bootstrap (`bstrap=F`).
+in this package, so I compare three: the default (doubly-robust); the
+estimation method `est_method = "reg"` (not shown below since it gives
+nearly identical results as the default); and the case in which standard
+errors are computed analytically rather than by bootstrap (`bstrap=F`).
 
 Below, I draw the simulated data 3 times per sample size, and apply each
 estimator. Results are presented for the median across those 3 draws.
@@ -121,15 +119,13 @@ Sample Size refers to the number of unique individuals. Since there are
 10 simulated years of data, and the sample is balanced across years, the
 number of observations is 10 times the number of unique individuals.
 
-A caveat: in the following simulations, I consider contexts in which the
-data is balanced, treatment is permanent once it begins, and the
-parallel-trends and no-anticipation assumptions hold unconditionally for
-all treatment cohorts. Under these assumptions, all of the estimators
-considered are consistent. However, in empirical contexts in which these
-assumptions do not hold, only some of the estimators may be valid. For
-example, only the approach of de Chaisemartin & D’Haultfoeuille (2020)
-can allow for treatments that switch off and on repeatedly for the same
-individual.
+A caveat: in the following simulations, I consider contexts in which all
+of the usual assumptions are satisfied. Under these assumptions, all of
+the estimators considered are consistent. However, in empirical contexts
+in which these assumptions do not hold, only some of the estimators may
+be valid. For example, only the approach of de Chaisemartin &
+D’Haultfoeuille (2020) can allow for treatments that switch off and on
+repeatedly for the same individual.
 
 #### Estimates
 
@@ -143,9 +139,10 @@ about 5.5 at event time +1 when the sample is large.
 ![](vignettes/estimates_small.png)
 
 A caveat: The Callaway and Sant’Anna (2021) estimators provide standard
-errors that correspond to *multiple hypothesis testing* and will thus
-tend to be wider. The researcher should be clear on whether they are
-interested in single or multiple hypothesis testing.
+errors that correspond to *multiple-hypothesis testing* and will thus
+tend to be wider. My package provides the usual single-hypothesis
+testing, consistent with the standard errors usually reported on
+regression coefficients.
 
 #### Speed test
 

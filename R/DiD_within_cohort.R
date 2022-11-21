@@ -1,5 +1,5 @@
 
-DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE, robust=FALSE){
+DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", return_data=FALSE){
 
   # set up variable names
   time_name = varnames$time_name
@@ -8,12 +8,25 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   id_name = varnames$id_name
   covariate_names = varnames$covariate_names
   cluster_names = varnames$cluster_names
+  fixedeffect_names = varnames$fixedeffect_names
   keep_vars = c(outcome_name,covariate_names)
-  all_keep_vars = c(outcome_name,covariate_names,cluster_names)
+  all_keep_vars = c(outcome_name,covariate_names,cluster_names,fixedeffect_names)
+  all_keep_vars = all_keep_vars[all_keep_vars != id_name]
+
+  # check if fixest is available
+  check_fixest = require("fixest", quietly=TRUE, warn.conflicts = FALSE)
+  if(!is.null(fixedeffect_names)){
+    if(!check_fixest){
+      stop("Since varnames$fixedeffect_names is non-missing, you must install the 'fixest' package, which estimates fixed-effects.")
+    }
+  }
 
   # prepare time periods
   pre_time = cohort_time + base_event
   post_time = cohort_time + event_postperiod
+  if(pre_time==post_time){
+    return(NULL)
+  }
   time_set = sort(inputdata[get(cohort_name) == cohort_time, unique(get(time_name))])
   if(!(pre_time %in% time_set)){
     stop(print(sprintf("error: for cohort %s, preperiod %s is unavailable.",cohort_time,base_event)))
@@ -102,66 +115,72 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   results[, CalendarTime := post_time]
   results[, BaseEvent := base_event]
   results[, EventTime := event_postperiod]
-  results[, Econtrol_SE := sqrt(Econtrol_var/(Ncontrol-1))]
-  results[, Etreated_SE := sqrt(Etreated_var/(Ntreated-1))]
+  results[, Econtrol_SE := sqrt(Econtrol_var/(Ncontrol))]
+  results[, Etreated_SE := sqrt(Etreated_var/(Ntreated))]
   results[, pred_Etreated_post := Etreated_pre + (Econtrol_post - Econtrol_pre)]
-  results[, ATTge := (Etreated_post - pred_Etreated_post)]
-  results[, ATTge_SE := sqrt(treated_diff_var/(Ntreated-1) + control_diff_var/(Ncontrol-1))]
+  results[, ATTge_simple := (Etreated_post - pred_Etreated_post)]
+  results[, ATTge_SE_simple := sqrt(treated_diff_var/(Ntreated) + control_diff_var/(Ncontrol))]
 
-  results_variables_order = c("Cohort","EventTime","BaseEvent","CalendarTime","ATTge","ATTge_SE",
+  results_variables_order = c("Cohort","EventTime","BaseEvent","CalendarTime",
+                              "ATTge","ATTge_SE","ATTge_simple","ATTge_SE_simple",
                               "Econtrol_pre","Econtrol_post","Econtrol_SE",
-                              "Etreated_pre","Etreated_post","Etreated_SE","pred_Etreated_post",
+                              "Etreated_pre","Etreated_post","Etreated_SE",
                               "Ncontrol","Ntreated")
 
-  # OLS
+  # set up differences
   data_prepost = NULL
-  if(!is.null(covariate_names) | !is.null(cluster_names) | return_data | forceOLS){
-    names(treated_data_prepost) = gsub("treated_","",names(treated_data_prepost))
-    names(control_data_prepost) = gsub("control_","",names(control_data_prepost))
-    data_prepost = rbindlist(list(treated_data_prepost,control_data_prepost))
-    for(ii in keep_vars){
-      data_prepost[, (paste0(ii,"_diff")) := get(paste0(ii,"_post")) - get(paste0(ii,"_pre"))]
+  names(treated_data_prepost) = gsub("treated_","",names(treated_data_prepost))
+  names(control_data_prepost) = gsub("control_","",names(control_data_prepost))
+  data_prepost = rbindlist(list(treated_data_prepost,control_data_prepost))
+  for(ii in keep_vars){
+    data_prepost[, (paste0(ii,"_diff")) := get(paste0(ii,"_post")) - get(paste0(ii,"_pre"))]
+  }
+  data_prepost = data_prepost[,.SD,.SDcols=c(id_name,"treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names)]
+
+  # execute the regression
+  OLSlm = NULL
+  if(is.null(fixedeffect_names)){
+    OLSformula = paste0(paste0(outcome_name,"_diff"), paste0(" ~ treated"))
+    if(!is.null(covariate_names)){ # reg formula, with covariates
+      OLSformula = paste0(OLSformula, " + ", paste0(paste0(covariate_names,"_diff"),collapse=" + "))
     }
-    data_prepost = data_prepost[,.SD,.SDcols=c(id_name,"treated",paste0(keep_vars,"_diff"),cluster_names)]
+    if(check_fixest){ # prefer feols() if installed
+      OLSlm = feols(as.formula(OLSformula),data=data_prepost)
+    }
+    if(!check_fixest){ # use lm() if feols() not installed
+      OLSlm = lm(as.formula(OLSformula),data=data_prepost)
+    }
+  }
+  if(!is.null(fixedeffect_names)){ # fixed effects
+    OLSformula = paste0(paste0(outcome_name,"_diff"), paste0(" ~ -1 + treated"))
+    if(!is.null(covariate_names)){ # reg formula, with covariates
+      OLSformula = paste0(OLSformula, " + ", paste0(paste0(covariate_names,"_diff"),collapse=" + "))
+    }
+    OLSformula = paste0(OLSformula, " | ", paste0(fixedeffect_names, collapse=" + "))
+    OLSlm = feols(as.formula(OLSformula),data=data_prepost)
+  }
+  newATT = as.numeric(OLSlm$coefficients["treated"])
+
+  # check if the treated coefficient is missing
+  if(is.na(newATT)){
+    results[, ATTge := NA]
+    results[, ATTge_SE := NA]
   }
 
-  if(!is.null(covariate_names) | !is.null(cluster_names) | forceOLS){
-    # reg formula, no covariates
-    OLSformula = paste0(paste0(outcome_name,"_diff"), paste0(" ~ treated"))
-    if(!is.null(covariate_names)){
-      # reg formula, with covariates
-      OLSformula = paste0(OLSformula, " + ", paste0(paste0(covariate_names,"_diff"),collapse=" + "))
-      # since covariates change the estimates, keep a copy of the old estimate
-      results[, ATTge_nocovars := copy(ATTge)]
-      results[, ATTge_SE_nocovars := copy(ATTge_SE)]
-      results_variables_order = c(results_variables_order,"ATTge_nocovars","ATTge_SE_nocovars")
+  # if non-missing ATT, get standard error
+  if(!is.na(newATT)){
+    results[, ATTge := newATT]
+    if(!is.null(cluster_names)){
+      data_prepost <<- copy(data_prepost) # due to a well-known scoping bug in R's base lm.predict that no one will fix despite years of requests, this redundancy is necessary!
+      CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
+      OLSvcov = vcovCL(OLSlm, cluster = CLformula, type = "HC1")
     }
-    # execute the regression
-    OLSlm = lm(as.formula(OLSformula),data=data_prepost)
-    newATT = as.numeric(OLSlm$coefficients["treated"])
-    # check if the treated coefficient is missing
-    if(!is.na(newATT)){
-      results[, ATTge := newATT]
-      if(is.null(cluster_names) & !robust){
-        OLSvcov = vcov(OLSlm)
-      }
-      if(!is.null(cluster_names)){
-        library(sandwich, warn.conflicts = F, quietly = T)
-        CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
-        OLSvcov = vcovCL(OLSlm, cluster = CLformula)
-      }
-      if(is.null(cluster_names) & robust){
-        library(sandwich, warn.conflicts = F, quietly = T)
-        OLSvcov = vcovHC(OLSlm, "HC1")
-      }
-      OLSvcov = OLSvcov["treated", "treated"]
-      newATTSE = sqrt(as.numeric(OLSvcov))
-      results[, ATTge_SE := newATTSE]
+    if(is.null(cluster_names)){
+      OLSvcov = vcovHC(OLSlm, type = "HC1")
     }
-    if(is.na(newATT)){
-      results[, ATTge := NA]
-      results[, ATTge_SE := NA]
-    }
+    OLSvcov = OLSvcov["treated", "treated"]
+    newATTSE = sqrt(as.numeric(OLSvcov))
+    results[, ATTge_SE := newATTSE]
   }
 
   # combine means into an output table
@@ -177,67 +196,16 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   return(results)
 }
 
-DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", forceOLS=TRUE, robust=FALSE){
-
-  # set up variable names
-  time_name = varnames$time_name
-  outcome_name = varnames$outcome_name
-  cohort_name = varnames$cohort_name
-  id_name = varnames$id_name
-  bin_name = varnames$bin_name
-
-  # get bins
-  pre_time = cohort_time + base_event
-  post_time = cohort_time + event_postperiod
-  bin_set_treated_pre = inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time)][,.N,bin][N>1][,sort(bin)]
-  bin_set_treated_post = inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time)][,.N,bin][N>1][,sort(bin)]
-  bin_set_control_pre = inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == pre_time)][,.N,bin][N>1][,sort(bin)]
-  bin_set_control_post = inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == post_time)][,.N,bin][N>1][,sort(bin)]
-  bin_set = Reduce(intersect, list(bin_set_treated_pre,bin_set_treated_post,bin_set_control_pre,bin_set_control_post))
-
-  # loop DiD over bins
-  results_bins = NULL
-  for(binval in bin_set){
-    res = DiDge_main(inputdata[get(bin_name)==binval], cohort_time = cohort_time, event_postperiod = event_postperiod, base_event = base_event,
-                     varnames=varnames, control_group = control_group, forceOLS=forceOLS, robust=robust)
-    res[, (bin_name) := binval]
-    results_bins = rbindlist(list(results_bins,res))
-  }
-
-  # take the average across bins
-  original_names = names(results_bins)
-  original_names = original_names[original_names != bin_name] # to avoid taking an average across the "bin" variable
-  results_bins[, Ntreated_bin := sum(Ntreated), list(Cohort,EventTime,BaseEvent,CalendarTime)]
-  results_bins[, bin_weights := Ntreated/Ntreated_bin]
-  results_average = results_bins[, list(ATTge=sum(bin_weights * ATTge),
-                                        ATTge_SE=sqrt(sum(bin_weights^2 * ATTge_SE^2)),
-                                        Etreated_post=sum(bin_weights*Etreated_post),
-                                        Etreated_pre=sum(bin_weights*Etreated_pre),
-                                        Etreated_SE=sqrt(sum(bin_weights^2*Etreated_SE^2)),
-                                        Econtrol_post=sum(bin_weights*Econtrol_post),
-                                        Econtrol_pre=sum(bin_weights*Econtrol_pre),
-                                        Econtrol_SE=sqrt(sum(bin_weights^2*Econtrol_SE^2)),
-                                        pred_Etreated_post=sum(bin_weights*pred_Etreated_post),
-                                        Ntreated=sum(Ntreated),
-                                        Ncontrol=sum(Ncontrol)
-  ), list(Cohort,EventTime,BaseEvent,CalendarTime)][order(Cohort,EventTime)]
-  results_average = results_average[,.SD,.SDcols=original_names]
-  return(results_average)
-}
-
-
 #' Estimate DiD for a single cohort (g) and a single event time (e).
 #'
 #' @param inputdata A data.table.
 #' @param varnames A list of the form varnames = list(id_name, time_name, outcome_name, cohort_name), where all four arguments of the list must be a character that corresponds to a variable name in inputdata.
+#' @param cohort_time The treatment cohort of reference.
+#' @param event_postperiod Number of time periods after the cohort time at which to estimate the DiD.
 #' @param control_group There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".
 #' @param base_event This is the base pre-period that is normalized to zero in the DiD estimation. Default is base_event=-1.
-#' @param min_event This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.
-#' @param max_event This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.
 #' @param return_data If true, this returns the treated and control differenced data. Default is FALSE.
-#' @param forceOLS Compute standard errors using OLS, even if analytic expression is available.
-#' @param robust Compute robust standard errors, using the same "HC1" approach used by the Stata ", robust" option.
-#' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
+#' @returns A single-row data.table() containing the estimates and various statistics such as sample size. If `return_data=TRUE`, it instead returns a list in which the `data_prepost` entry is the previously-mentioned single-row data.table(), and the other argument `data_prepost`  contains the constructed data that should be provided to OLS.
 #' @examples
 #' # simulate some data
 #' simdata = SimDiD(sample_size=200)$simdata
@@ -258,38 +226,23 @@ DiDge_bins <- function(inputdata, varnames, cohort_time, event_postperiod, base_
 #' # use only the never-treated control group
 #' DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
 #'
-#' # use only the never-treated control group
+#' # use only the future-treated control group
 #' DiDge(simdata, varnames, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
 #'
 #' # simulate some data with covariates, add the covariates to the varnames, update the estimates
 #' sim = SimDiD(sample_size=200,time_covars=TRUE)
 #' varnames$covariate_names = c("X1","X2")
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-#'
 #' varnames$covariate_names = NULL # we are done with this example
 #'
-#' # simulate some data with bins, add the bins to the varnames, update the estimates
-#' sim = SimDiD(sample_size=3000, bin_covars=TRUE)
-#'
-#' # if we do not add the bin_name to varnames, it will ignore bins and give biased estimates:
+#' # simulate some data with clusters, add the clusters to the varnames, update the estimates
+#' sim = SimDiD(sample_size=3000, clusters=TRUE)
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-#'
-#' # now we account for bins:
-#' varnames$bin_name = c("bin")
-#' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-#'
-#' # now we cluster on bins:
-#' varnames$bin_name = NULL
-#' varnames$cluster_names = c("bin")
+#' varnames$cluster_names = c("cluster") # now we cluster the standard errors:
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 #'
 #' @export
-DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", return_data=FALSE, forceOLS=TRUE, robust=FALSE){
-  if(is.null(varnames$bin_name)){
-    return(DiDge_main(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, base_event=base_event, control_group = control_group, return_data=return_data, forceOLS=forceOLS, robust=robust))
-  }
-  if(!is.null(varnames$bin_name)){
-    return(DiDge_bins(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, base_event=base_event, control_group = control_group))
-  }
+DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", return_data=FALSE){
+  DiDge_main(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, base_event=base_event, control_group = control_group, return_data=return_data)
 }
 

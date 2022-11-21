@@ -32,7 +32,7 @@ library(DiDforBigData)
 
 ### The `control_group` argument
 
-Callaway & Sant'Anna (2021) emphasize that, depending on empirical context, the parallel-trends assumption may only hold for one of these possible control groups:
+Depending on empirical context, the parallel-trends assumption may only hold for one of these possible control groups:
 
 - `"never-treated"`: These are the control units that are never observed receiving the treatment within the sampling time frame.
 - `"future-treated"`: These are the control units that are observed receiving the treatment within the sampling time frame.
@@ -249,13 +249,15 @@ We see that the bias has been removed thanks to the control variables.
 
 # 4. Robust and Clustered Standard Errors
  
-### The `robust=TRUE` option and the `cluster_names` entry
+### The  `cluster_names` entry
 
-In difference-in-differences applications, it is often the case that treatment is assigned to groups of individuals (e.g., a change in  state-wide policy treats all individuals in a state simultaneously). If those groups are also subject to common shocks, this induces correlation in the estimation errors, and standard errors will tend to be too small.
+By default, this package always provides heteroskedasticity-robust standard errors. However, in difference-in-differences applications, it is often the case that treatment is assigned to groups of individuals (e.g., a change in  state-wide policy treats all individuals in a state simultaneously). If those groups are also subject to common shocks, this induces correlation in the estimation errors within cluster, and standard errors will tend to be too small.
 
-Fortunately, this is easy to fix: If the groups within which the estimation errors are correlated are known to the research, we just need to cluster standard errors by group. `DiDforBigData` requires only that the list of variable names, `varnames`, is modified to include a `cluster_names` entry. For example, `varnames$cluster_names = c("group1","group2")` tells it to cluster  in a way that accounts for common shocks to each of observable groups, "group1" and "group2".
+Fortunately, this is easy to fix: If the groups within which the estimation errors are correlated are known to the researcher, we just need to cluster standard errors by group. `DiDforBigData` requires only that the list of variable names, `varnames`, is modified to include a `cluster_names` entry. For example, `varnames$cluster_names = c("group1","group2")` tells it to use multi-way clustering in a way that accounts for common shocks to each of observable groups, "group1" and "group2".
 
-A related issue is allowing for the individual-year errors to have different variances for different individuals. We implement the equivalent of the ", robust" option from Stata using the option `robust=TRUE`.
+Note: When estimating a regression that combines multiple treatment cohorts and/or multiple event times, it is necessary to always cluster on unit (individual). `DiDforBigData` adds this clustering by default.
+
+
 
 
 ### Example
@@ -283,7 +285,7 @@ varnames$id_name = "id"
 ```
 
 
-We check the usual standard errors:
+We check the usual standard errors, which are clustered on unit based on `varnames$id_name` by default:
 
 ```{r echo=T, eval=T, message=FALSE}
 did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=3)
@@ -292,25 +294,13 @@ print(did$results_average[,1:4])
 
 ```
 
-
-Next, we try robust standard errors by adding the `robust=TRUE` option:
-
-
-```{r echo=T, eval=T, message=FALSE}
-did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=3, robust=TRUE)
-
-print(did$results_average[,1:4])
-
-```
-
-
-Finally, we cluster on the bin variable by adding it to the `varnames` and re-estimating:
+Next, we cluster on the "cluster" variable by adding it to the `varnames` and re-estimating:
 
 ```{r echo=T, eval=T, message=FALSE}
 
 varnames$cluster_names = "cluster" 
 
-did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=3)
+did = DiD(inputdata = copy(simdata), varnames = varnames, min_event = -1, max_event=3)
 
 print(did$results_average[,1:4])
 

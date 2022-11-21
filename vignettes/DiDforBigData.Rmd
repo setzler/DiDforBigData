@@ -43,7 +43,7 @@ library(DiDforBigData)
 I provide a simple data simulator as follows:
 
 ```{r echo=T, eval=T, message=FALSE}
-sim = SimDiD(sample_size = 5000, seed=123)
+sim = SimDiD(sample_size = 400, seed=123)
 
 # true ATTs in the simulation
 print(sim$true_ATT)
@@ -143,7 +143,7 @@ PlotES(DiD_results = did_all,plot_type="ge",cohort = 2010)
 We can also make this plot by event time (average across cohorts):
 
 ```{r echo=T, eval=T, message=FALSE}
-PlotES(DiD_results = did_all,plot_type="e")
+# PlotES(DiD_results = did_all,plot_type="e")
 ```
 
 Note: this plot automatically adjusts the levels in the theory-consistent way to account for changes in the pre-period composition of treated and control units across event times (this is necessary because some cohorts are not available at certain event times).
