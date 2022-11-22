@@ -14,9 +14,9 @@ This R package provides a big-data-friendly and memory-efficient difference-in-d
 
 #### Background:
 
-DiD has long been implemented using OLS to estimate a two-way fixed-effects (TWFE) regression in which the coefficient on a treatment-time interaction term corresponds to the DiD estimate. Over the past few years, a literature proved that the traditional DiD estimation strategy is biased and inconsistent if treatment roll-out is staggered over time. Under staggered treatment, TWFE implicitly uses already-treated units as part of the control group for newly-treated units, resulting in invalid comparisons. In response, recent papers have proposed various DiD estimators that are consistent in the presence of staggered treatment; see [Roth, Sant'Anna, Bilinksi, and Poe (2022)](https://jonathandroth.github.io/assets/files/DiD_Review_Paper.pdf) for a literature review.
+DiD has long been implemented using OLS to estimate a two-way fixed-effects (TWFE) regression in which the coefficient on a treatment-time interaction term corresponds to the DiD estimate. Over the past few years, a literature proved that the traditional DiD estimation strategy is generally biased and inconsistent if treatment roll-out is staggered over time. Under staggered treatment, TWFE implicitly uses already-treated units as part of the control group for newly-treated units, resulting in invalid comparisons. 
 
-Despite the wide-spread knowledge that TWFE estimation of DiD is biased and inconsistent if treatment is staggered, I have repeatedly seen authors use TWFE at recent (2022) seminars and conferences. When asked about this, the authors readily acknowledged that they *should* use estimators that account for staggered treatment, but their data was too large to perform the estimation using available software.
+In response, recent papers have proposed various DiD estimators that are consistent in the presence of staggered treatment; see [Roth, Sant'Anna, Bilinksi, and Poe (2022)](https://jonathandroth.github.io/assets/files/DiD_Review_Paper.pdf) for a literature review. Despite the wide-spread knowledge that TWFE estimation of DiD is biased and inconsistent if treatment is staggered, I have repeatedly seen authors use TWFE at recent (2022) seminars and conferences. When asked about this, the authors readily acknowledged that they *should* use estimators that account for staggered treatment, but their data was too large to perform the estimation using available software.
 
 
 #### Big Data Challenge:
@@ -31,19 +31,30 @@ I found that only the Callaway & Sant'Anna (2021) implementation could successfu
 
 Estimating DiD with large administrative data poses three challenges:
 
-1. **Speed:** If there are millions of observations, DiD is infeasible or extremely slow to estimate with available software. We need software that can handle large sample sizes. It needs to avoid slow operations such as bootstrapping standard errors or estimating fixed-effect regressions.
+1. **Speed:** If there are millions of observations, DiD is infeasible or extremely slow to estimate with available software. We need software that can handle large sample sizes. It needs to avoid slow operations such as bootstrapping standard errors or estimating fixed-effects.
 2. **Memory:** Administrative data is often stored on crowded servers with limited memory available for researchers to use. We need to avoid memory-intensive operations (e.g. matrix inversion, data stacking).
 3. **Dependencies:** Administrative data is often stored on secure servers on which it is impossible to install software that requires compilation. We need a package that only depends on commonly-available software.
 
 I wrote this package to address all three issues.
 
-#### DiD for Big Data:
+# DiD for Big Data
 
-This package provides a fast and memory-efficient implementation of DiD in the presence of staggered treatment. In particular, it achieves the following:
+#### Philosophy:
 
-1. **Speed:** This package estimates DiD with millions of observations and staggered treatment in less than 1 minute using analytical solutions only. It is free from bootstrapping and free from fixed-effect regressions. It is orders of magnitude faster than other available software when the sample size is large (see demonstration below).
-2. **Memory:** This package avoids memory-intensive activities like matrix-inversion and data-stacking. It uses much less memory than other available software (see demonstration below).
-3. **Dependencies:** This package has only *two* dependencies, `data.table` and `sandwich`, which are already installed with most R distributions. 
+There are 4 guiding principles behind  `DiDforBigData`:
+
+1. **Separability:** The main achievement of this package is to leverage the inherent separability of DiD contexts: the DiD estimate for one (treatment cohort, event time) pair does not depend on the DiD estimate for any other (treatment cohort, event time) pair; see the Theory section for details. The full dataset can thus be split into many tiny subsets defined by each (treatment cohort, event time) pair, with DiD estimated separately on each. Estimating 1-parameter each on K tiny datasets is much faster than estimating K-parameters on one large dataset. Furthermore, each of the small problems can be solved simultaneously using parallel processing, yielding even greater gains in speed.
+2. **Pre-differencing:** Within each of these tiny datasets, there is an observation from the event time of interest as well as an observation from the base period. By defintion, only the *difference* between the event time and the base period contributes to the DiD estimate. Thus, there is no reason to provide the two observations (base period and outcome period) separately to the regression. Instead, we can take the difference between the two observations and provide the difference to the regression, thus reducing the sample size in half that is provided to the regression. 
+3. **No fixed-effects:** An individual is informative about a DiD estimate if and only if that individual is observed for both the base period and the outcome period of interest; see the Theory section for details. An individual can be informative about some (treatment cohort, event time) DiDs while being uninformative about others depending on the pattern of missing observations. To remove the partially-missing observations, a common solution is to include unit fixed-effects, which is extremely computationally intensive. Instead, this package focuses on one (treatment cohort, event time) tiny dataset, pre-differences within the tiny dataset, and drops those units for which the difference is missing. This solves the problem of unbalancedness without fixed-effects while maximizing the sample size used to estimate each DiD.
+4. **Analytic standard errors:** Heteroskedasticity-robust standard errors as well as clustered standard errors are straightforward to derive for each of the (treatment cohort, event time) DiD estimates using the pre-differenced representation, as well as for averages across DiD estimates; see the Theory section for details. This avoids bootstrapping, which is extremely computationally intensive.
+
+#### Result:
+
+Using this philosophy, `DiDforBigData` provides a fast and memory-efficient implementation of DiD in the presence of staggered treatment:
+
+1. **Speed:** This package provides estimation and inference for DiD with millions of observations and staggered treatment in less than 1 minute. Breaking the large problem into a series of small problems, none of which includes fixed-effects, makes the estimation orders of magnitude faster (see demonstration below).
+2. **Memory:** This package avoids memory-intensive activities like matrix-inversion, fixed-effect estimation,  data-stacking, and bootstrapping. As a result, it uses much less memory than other available software (see demonstration below).
+3. **Dependencies:** This package has only *two* dependencies, `data.table` for big data management and `sandwich` for robust standard error estimation, which are already installed with most R distributions. This package will also use `fixest` to speed up the estimation if `fixest` is installed on your system, and estimation can be run in parallel if the `parallel` package is available, but these are optional.
 
 
 

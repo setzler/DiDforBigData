@@ -89,6 +89,9 @@ ValidateDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5)
     all_res = data.table()
     for(seed in 1:reps){
       this_res = data.table()
+      if(estimator=="CH20"){
+        seed = 2
+      }
       # simulate
       inputdata = SimDiD(sample_size = sample_size, seed =1+seed, ATTcohortdiff = 2, minyear=2004, maxyear=2013)$simdata
       # my package
@@ -314,7 +317,7 @@ plot_results <- function(output_dir="docs/articles"){
 # speedtest = ValidateDiD(estimator = "CH1", sample_sizes=c(1e3), reps=3)
 # speedtest = ValidateDiD(estimator = "CH5", sample_sizes=c(5e3), reps=3)
 # speedtest = ValidateDiD(estimator = "CH10", sample_sizes=c(1e4), reps=3)
-# speedtest = ValidateDiD(estimator = "CH20", sample_sizes=c(2e4), reps=1)
-# plot_results(output_dir="vignettes")
-# plot_results()
+speedtest = ValidateDiD(estimator = "CH20", sample_sizes=c(2e4), reps=1)
+plot_results(output_dir="vignettes")
+plot_results()
 
