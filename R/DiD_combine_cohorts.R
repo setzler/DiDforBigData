@@ -106,7 +106,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
                                    list(EventTime,BaseEvent)][order(EventTime,BaseEvent)]
 
   # collect the SEs that account for correlation in DiDge across g, merge them to the results
-  ATTe_SEs = DiD_getSEs_EventTime(data_cohort=data_cohort,varnames=varnames)
+  ATTe_SEs = DiD_getSEs_EventTime(data_cohort=data_cohort,varnames=varnames,base_event=base_event)
 
   results_average = merge(results_average, ATTe_SEs, by="EventTime")[order(EventTime,BaseEvent)]
 
@@ -214,7 +214,7 @@ DiD <- function(inputdata, varnames, control_group = "all", base_event=-1, min_e
     for(Eset in Esets){
       results_Esets = rbindlist(list(
         results_Esets,
-        DiD_getSEs_multipleEventTimes(data_cohort,varnames,Eset=Eset)
+        DiD_getSEs_multipleEventTimes(data_cohort,varnames,Eset=Eset,min_event=min_event,max_event=max_event)
       ))
     }
     results$results_Esets = results_Esets

@@ -1,5 +1,5 @@
 
-DiD_getSEs_EventTime <- function(data_cohort,varnames){
+DiD_getSEs_EventTime <- function(data_cohort,varnames,base_event){
 
   # one should always cluster on id_name in a stacked regression in which the same unit can appear multiple times
   varnames$cluster_names = unique(c(varnames$cluster_names, varnames$id_name))
@@ -35,6 +35,10 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames){
   all_events = data_cohort[,sort(unique(EventTime))]
   ATTe_SEs = data.table()
   for(ee in all_events){
+    if(ee==base_event){
+      ATTe_SEs = rbindlist(list(ATTe_SEs, data.table(EventTime=ee, ATTe=0.0, ATTe_SE=0.0)))
+      next
+    }
     intercepts = NULL
     treateds = NULL
     treated_weights = NULL
@@ -107,7 +111,15 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames){
 }
 
 
-DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset){
+DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,max_event){
+
+  if(max(Eset) > max_event){
+    stop(sprintf("The largest value in Eset is %s. The max_event is %s. Eset should be within the range of events [min_event, max_event].",max(Eset),max_event))
+  }
+  if(min(Eset) < min_event){
+    stop(sprintf("The smallest value in Eset is %s. The max_event is %s. Eset should be within the range of events [min_event, max_event].",min(Eset),min_event))
+  }
+
 
   # one should always cluster on id_name in a stacked regression in which the same unit can appear multiple times
   varnames$cluster_names = unique(c(varnames$cluster_names, varnames$id_name))

@@ -24,9 +24,6 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   # prepare time periods
   pre_time = cohort_time + base_event
   post_time = cohort_time + event_postperiod
-  if(pre_time==post_time){
-    return(NULL)
-  }
   time_set = sort(inputdata[get(cohort_name) == cohort_time, unique(get(time_name))])
   if(!(pre_time %in% time_set)){
     stop(print(sprintf("error: for cohort %s, preperiod %s is unavailable.",cohort_time,base_event)))
@@ -136,6 +133,29 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
     data_prepost[, (paste0(ii,"_diff")) := get(paste0(ii,"_post")) - get(paste0(ii,"_pre"))]
   }
   data_prepost = data_prepost[,.SD,.SDcols=c(id_name,"treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names)]
+
+
+  # the case in which ATT is mechanically 0
+  if(pre_time==post_time){
+    results[, ATTge := NA]
+    results[, ATTge_SE := NA]
+    if(results$Ntreated > 0 & results$Ncontrol > 0){
+      results[, ATTge := 0.0]
+      results[, ATTge_SE := 0.0]
+    }
+    results = results[,.SD,.SDcols=results_variables_order]
+    results = results[order(Cohort,EventTime)]
+    if(!return_data){
+      return(results)
+    }
+    if(return_data){
+      data_prepost[, Cohort := cohort_time]
+      data_prepost[, EventTime := event_postperiod]
+      export_vars = c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names)
+      data_prepost = data_prepost[,.SD,.SDcols=export_vars]
+      return(list(results=results,data_prepost=data_prepost))
+    }
+  }
 
   # execute the regression
   OLSlm = NULL
