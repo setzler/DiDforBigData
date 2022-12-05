@@ -92,10 +92,20 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames,base_event){
     if(!is.null(cluster_names)){
       data_event <<- copy(data_event) # due to a well-known scoping bug in R's base lm.predict that no one will fix despite years of requests, this redundancy is necessary!
       CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
-      OLSvcov = vcovCL(OLSlm, cluster = CLformula, type = "HC1")
+      if(!check_fixest){
+        OLSvcov = vcovCL(OLSlm, cluster = CLformula, type = "HC1")
+      }
+      if(check_fixest){
+        OLSvcov = vcov(OLSlm, cluster = cluster_names, type = "HC1")
+      }
     }
     if(is.null(cluster_names)){
-      OLSvcov = vcovHC(OLSlm, type = "HC1")
+      if(!check_fixest){
+        OLSvcov = vcovHC(OLSlm, type = "HC1")
+      }
+      if(check_fixest){
+        OLSvcov = vcov(OLSlm, vcov="hetero")
+      }
     }
 
     # finish
@@ -221,10 +231,20 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
   if(!is.null(cluster_names)){
     data_event <<- copy(data_event) # due to a well-known scoping bug in R's base lm.predict that no one will fix despite years of requests, this redundancy is necessary!
     CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
-    OLSvcov = vcovCL(OLSlm, cluster = CLformula, type = "HC1")
+    if(!check_fixest){
+      OLSvcov = vcovCL(OLSlm, cluster = CLformula, type = "HC1")
+    }
+    if(check_fixest){
+      OLSvcov = vcov(OLSlm, cluster = cluster_names, type = "HC1")
+    }
   }
   if(is.null(cluster_names)){
-    OLSvcov = vcovHC(OLSlm, type = "HC1")
+    if(!check_fixest){
+      OLSvcov = vcovHC(OLSlm, type = "HC1")
+    }
+    if(check_fixest){
+      OLSvcov = vcov(OLSlm, vcov="hetero")
+    }
   }
 
   # standard errors

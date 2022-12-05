@@ -100,4 +100,18 @@ DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 simdata = SimDiD(sample_size=2000,time_covars=TRUE,missingCohorts=2010)$simdata
 DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 
+# simulate data with clusters
+simdata = SimDiD(sample_size=2000,clusters=TRUE)$simdata
+varnames = list()
+varnames$time_name = "year"
+varnames$outcome_name = "Y"
+varnames$cohort_name = "cohort"
+varnames$id_name = "id"
+DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
+
+# cluster SEs on the "cluster" variable
+# note: it always clusters on id_name, including when clustering on other variables
+varnames$cluster_names = "cluster"
+DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
+
 }

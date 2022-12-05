@@ -193,10 +193,20 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
     if(!is.null(cluster_names)){
       data_prepost <<- copy(data_prepost) # due to a well-known scoping bug in R's base lm.predict that no one will fix despite years of requests, this redundancy is necessary!
       CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
-      OLSvcov = vcovCL(OLSlm, cluster = CLformula, type = "HC1")
+      if(!check_fixest){
+        OLSvcov = vcovCL(OLSlm, cluster = CLformula, type = "HC1")
+      }
+      if(check_fixest){
+        OLSvcov = vcov(OLSlm, cluster = cluster_names, type = "HC1")
+      }
     }
     if(is.null(cluster_names)){
-      OLSvcov = vcovHC(OLSlm, type = "HC1")
+      if(!check_fixest){
+        OLSvcov = vcovHC(OLSlm, type = "HC1")
+      }
+      if(check_fixest){
+        OLSvcov = vcov(OLSlm, vcov="hetero")
+      }
     }
     OLSvcov = OLSvcov["treated", "treated"]
     newATTSE = sqrt(as.numeric(OLSvcov))
@@ -209,7 +219,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   if(return_data){
     data_prepost[, Cohort := cohort_time]
     data_prepost[, EventTime := event_postperiod]
-    export_vars = c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names)
+    export_vars = unique(c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names))
     data_prepost = data_prepost[,.SD,.SDcols=export_vars]
     return(list(results=results,data_prepost=data_prepost))
   }
