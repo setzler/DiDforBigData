@@ -14,11 +14,11 @@ for background on staggered DiD.
 
 Recently, I noticed a pattern at seminars and conferences: presenters
 would acknowledge that they *should* use a staggered DiD estimator, but
-doing so was *infeasible* due to sample sizes being too large for
-existing software. To verify, I wrote a simple panel data simulator with
-staggered treatment roll-out and heterogeneous treatment effects. I
-simulated it with different numbers of individuals and applied these
-popular R packages:
+would say that doing so is *infeasible* in their context due to large
+sample size. To check, I wrote a simple panel data simulator with
+staggered treatment roll-out and heterogeneous treatment effects,
+simulated large samples, and applied these popular R packages for
+staggered DiD estimation:
 
 - `didimputation` for implementing the approach of [Borusyak, Jaravel,
   and Spiess
@@ -54,7 +54,9 @@ large administrative datasets:
     management and `sandwich` for robust standard error estimation,
     which are already installed with most R distributions. Optionally,
     it will use the `fixest` package to speed up the estimation if it is
-    installed.
+    installed. If the `progress` package is installed, it will also
+    provide a progress bar so you know how much longer the estimation
+    will take.
 4.  **Parallelization:** Administrative servers often have a large
     number of available processors, but each processor may be slow, so
     it is important to parallelize. `DiDforBigData` makes
@@ -164,7 +166,9 @@ DiDge(inputdata = yourdata, varnames = varnames,
 ```
 
 A detailed manual explaining the various features available in `DiDge`
-is available when you run:
+is available
+[here](https://setzler.github.io/DiDforBigData/reference/index.html) or
+by running this command:
 
 ``` r
 ?DiDge
@@ -179,7 +183,9 @@ DiD(inputdata = yourdata, varnames = varnames,
 ```
 
 A detailed manual explaining the various features available in `DiD` is
-available when you run:
+available
+[here](https://setzler.github.io/DiDforBigData/reference/index.html) or
+by running this command:
 
 ``` r
 ?DiD

@@ -1,5 +1,7 @@
 ## DiDforBigData 0.3
 
+* First public release.
+* Add progress bar to predict how long the estimation will take.
 * Simplify package to only 3 functions: DiD, DiDge, and SimDiD.
 
 ## DiDforBigData 0.2

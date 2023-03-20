@@ -10,6 +10,10 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
   cluster_names = varnames$cluster_names
   fixedeffect_names = varnames$fixedeffect_names
 
+  # check packages
+  check_parallel = require("parallel", quietly=TRUE, warn.conflicts = FALSE)
+  check_progress = require("progress", quietly=TRUE, warn.conflicts = FALSE)
+
   # set up and checks
   cohorts = sort(inputdata[, unique(get(cohort_name))])
   nevertreated_exist = sum(is.infinite(cohorts))>0
@@ -69,11 +73,16 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
   }
 
   # apply the cohort-specific estimation in parallel
-  if(parallel_cores==1){
+  if(!check_parallel){
     the_results = lapply(cohorts,get_cohort_results)
   }
-  if(parallel_cores>1){
-    the_results = parallel::mclapply(cohorts,get_cohort_results,mc.cores=parallel_cores)
+  if(check_parallel){
+    if(!check_progress){
+      the_results = parallel::mclapply(cohorts,get_cohort_results,mc.cores=parallel_cores)
+    }
+    if(check_progress){
+      the_results = Errorhandle.mclapply(cohorts,get_cohort_results,mc.cores=parallel_cores)
+    }
   }
 
   # extract the results from the output list

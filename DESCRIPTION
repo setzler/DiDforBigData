@@ -17,8 +17,8 @@ Suggests:
     rmarkdown,
     scales,
     parallel,
-    fixest
+    fixest,
+    progress
 VignetteBuilder: knitr
-URL: https://github.com/setzler/DiDforBigData,
-    https://setzler.github.io/DiDforBigData/
+URL: https://setzler.github.io/DiDforBigData/
 BugReports: https://github.com/setzler/DiDforBigData/issues
