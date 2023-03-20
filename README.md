@@ -13,15 +13,12 @@ for background on staggered DiD.
 ## 1. Why do we need a staggered DiD package for big data?
 
 Recently, I noticed a pattern at seminars and conferences: presenters
-would acknowledge that they *should* use a staggered DiD estimator in
-their context. However, they could not implement staggered DiD due to
-the sample size being too large for existing software.
-
-To verify that large sample size is an issue with existing software, I
-wrote a simple panel data simulator with staggered treatment roll-out
-and heterogeneous treatment effects. I simulated it with different
-numbers of individuals and applied the available R packages that
-implement the methods of:
+would acknowledge that they *should* use a staggered DiD estimator, but
+doing so was *infeasible* due to sample sizes being too large for
+existing software. To verify, I wrote a simple panel data simulator with
+staggered treatment roll-out and heterogeneous treatment effects. I
+simulated it with different numbers of individuals and applied these
+popular R packages:
 
 - `didimputation` for implementing the approach of [Borusyak, Jaravel,
   and Spiess
@@ -56,38 +53,23 @@ large administrative datasets:
     package has only *two* dependencies, `data.table` for big data
     management and `sandwich` for robust standard error estimation,
     which are already installed with most R distributions. Optionally,
-    it will use `fixest` to speed up the estimation if available.
+    it will use the `fixest` package to speed up the estimation if it is
+    installed.
 4.  **Parallelization:** Administrative servers often have a large
     number of available processors, but each processor may be slow, so
     it is important to parallelize. `DiDforBigData` makes
-    parallelization trivial as long as the `parallel` package is
-    installed.
+    parallelization easy as long as the `parallel` package is installed.
 
 ## 3. Demonstration
 
-This section will compare the following implementations of DiD
-estimators for staggered treatment contexts:
-
-1.  The implementation of the Borusyak, Jaravel, and Spiess (2022)
-    approach in R package `didimputation`;
-2.  The implementation of the Callaway & Sant’Anna (2021) approach in R
-    package `did`;
-3.  The implementation of the de Chaisemartin & D’Haultfoeuille (2020)
-    approach in R package `DIDmultiplegt` using 40 bootstrap draws for
-    standard errors (`brep=40`); and,
-4.  My R package `DiDforBigData`.
-
-Regarding `did`, there are many options available in this package, so I
-compare three: the default (doubly-robust); the estimation method
-`est_method = "reg"` (not shown below since it gives nearly identical
-results to the default); and the case in which standard errors are
-computed analytically rather than by bootstrap (`bstrap=F`).
-
-Below, I draw the simulated data 3 times per sample size, and apply each
-estimator. Results are presented for the median across those 3 draws.
-Sample Size refers to the number of unique individuals. Since there are
-10 simulated years of data, and the sample is balanced across years, the
-number of observations is 10 times the number of unique individuals.
+This section will compare `didimputation`, `did` (using the default
+option as well as the `bstrap=F` option), `DIDmultiplegt` (with option
+`brep=40`), and `DiDforBigData` in R. I draw the simulated data 3 times
+per sample size, and apply each estimator. Results are presented for the
+median across those 3 draws. Sample Size refers to the number of unique
+individuals. Since there are 10 simulated years of data, and the sample
+is balanced across years, the number of observations is 10 times the
+number of unique individuals.
 
 ### 3.1 Point estimates
 
@@ -149,7 +131,7 @@ these sample sizes.
 When considering large samples, we see that `DiDforBigData` uses less
 than half of the memory used by `did`.
 
-## 4. Getting Started
+## 4. Using `DiDforBigData`
 
 To install the package:
 
@@ -163,7 +145,7 @@ To use the package after it is installed:
 library(DiDforBigData)
 ```
 
-Set up your list of variable names. Here is an example:
+Set up a variable list with the names of your variables:
 
 ``` r
 varnames = list()
@@ -203,6 +185,11 @@ available when you run:
 ?DiD
 ```
 
-Use the links at the top of this page for more information on Getting
-Started, or see the article called Examples for detailed examples of the
-capabilities of the commands.
+For more information, read the following articles:
+
+- [Get
+  Started](https://setzler.github.io/DiDforBigData/articles/DiDforBigData.html)
+- [Function
+  Documentation](https://setzler.github.io/DiDforBigData/reference/index.html)
+- [Detailed
+  Examples](https://setzler.github.io/DiDforBigData/articles/Examples.html)
