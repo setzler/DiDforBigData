@@ -11,8 +11,8 @@ DiD(
   base_event = -1,
   min_event = NULL,
   max_event = NULL,
-  return_ATTs_only = TRUE,
   Esets = NULL,
+  return_ATTs_only,
   parallel_cores = 1
 )
 }
@@ -29,9 +29,9 @@ DiD(
 
 \item{max_event}{This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.}
 
-\item{return_ATTs_only}{Return only the ATT estimates and sample sizes. Default is TRUE.}
-
 \item{Esets}{If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.}
+
+\item{return_ATTs_only}{Return only the ATT estimates and sample sizes. Default is TRUE.}
 
 \item{parallel_cores}{Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.}
 }
