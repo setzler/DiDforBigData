@@ -12,7 +12,7 @@ DiD(
   min_event = NULL,
   max_event = NULL,
   Esets = NULL,
-  return_ATTs_only,
+  return_ATTs_only = TRUE,
   parallel_cores = 1
 )
 }

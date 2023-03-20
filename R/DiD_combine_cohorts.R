@@ -223,7 +223,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
 #' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 #'
 #' @export
-DiD <- function(inputdata, varnames, control_group = "all", base_event=-1, min_event=NULL, max_event=NULL, Esets=NULL, return_ATTs_only, parallel_cores=1){
+DiD <- function(inputdata, varnames, control_group = "all", base_event=-1, min_event=NULL, max_event=NULL, Esets=NULL, return_ATTs_only=TRUE, parallel_cores=1){
   if(is.null(Esets)){
     results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, base_event=base_event, min_event=min_event, max_event=max_event, return_data=FALSE, return_ATTs_only=return_ATTs_only, parallel_cores=parallel_cores)
     return(results)
