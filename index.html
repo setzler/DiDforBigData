@@ -119,27 +119,27 @@
 <h3 id="id_31-point-estimates">3.1 Point estimates<a class="anchor" aria-label="anchor" href="#id_31-point-estimates"></a>
 </h3>
 <p>I verify that all of the estimators provide similar point estimates and standard errors. Here, I show the point estimates and 95% confidence intervals (using +/- 1.96*SE) for the DiD estimate at event time +1 (averaging across cohorts). The true ATT is 4 at event time +1. I also verify that two-way fixed-effects OLS estimation would find an effect of about 5.5 at event time +1 when the sample is large.</p>
-<p><img src="articles/estimates_small.png"></p>
+<p><img src="https://github.com/setzler/DiDforBigData/raw/main/vignettes/estimates_small.png"></p>
 <p>A caveat: The Callaway and Sant’Anna (2021) estimators provide standard errors that correspond to <em>multiple-hypothesis testing</em> and will thus tend to be wider. My package provides the usual single-hypothesis testing, consistent with the standard errors usually reported on regression coefficients.</p>
 </div>
 <div class="section level3">
 <h3 id="id_32-speed-test">3.2 Speed test<a class="anchor" aria-label="anchor" href="#id_32-speed-test"></a>
 </h3>
 <p><strong>Small Samples:</strong> Here is the run-time required to complete the DiD estimation using each package:</p>
-<p><img src="articles/speedtest_small.png"></p>
+<p><img src="https://github.com/setzler/DiDforBigData/raw/main/vignettes/speedtest_small.png"></p>
 <p>We see that, with 20,000 unique individuals, <code>didimpute</code> and <code>DIDmultiplegt</code> have become very slow. I could not get either approach to run successfully with 100,000 unique individuals, as they both crash R. By contrast, <code>did</code> and <code>DiDforBigData</code> are so fast that they can barely be seen in the plot.</p>
 <p><strong>Large samples:</strong> Given the failure of <code>didimpute</code> and <code>DIDmultiplegt</code> with 100,000 observations, we now restrict attention to <code>did</code> and <code>DiDforBigData</code>. We consider much larger samples:</p>
-<p><img src="articles/speedtest_large.png"></p>
+<p><img src="https://github.com/setzler/DiDforBigData/raw/main/vignettes/speedtest_large.png"></p>
 <p>Even with 1 million unique individuals (and 10 million observations), it is difficult to see <code>DiDforBigData</code> in the plot, as estimation requires about half of a minute, versus nearly 1 hour for <code>did</code>. Thus, <code>DiDforBigData</code> is roughly <em>two orders of magnitude</em> faster than <code>did</code> when working with a sample of one million individuals.</p>
 </div>
 <div class="section level3">
 <h3 id="id_33-memory-test">3.3 Memory test<a class="anchor" aria-label="anchor" href="#id_33-memory-test"></a>
 </h3>
 <p><strong>Small Samples:</strong> Here is the memory used to complete the DiD estimation by each package:</p>
-<p><img src="articles/memorytest_small.png"></p>
+<p><img src="https://github.com/setzler/DiDforBigData/raw/main/vignettes/memorytest_small.png"></p>
 <p>We see that <code>DIDmultiplegt</code> uses much more memory than the other approaches. The other approaches all use relatively little memory at these sample sizes.</p>
 <p><strong>Large Samples:</strong></p>
-<p><img src="articles/memorytest_large.png"></p>
+<p><img src="https://github.com/setzler/DiDforBigData/raw/main/vignettes/memorytest_large.png"></p>
 <p>When considering large samples, we see that <code>DiDforBigData</code> uses less than half of the memory used by <code>did</code>.</p>
 </div>
 </div>
