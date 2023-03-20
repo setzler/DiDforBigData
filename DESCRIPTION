@@ -1,13 +1,13 @@
 Package: DiDforBigData
 Title: A Big Data Implementation of Difference-in-differences Estimation with Staggered Treatment
-Version: 0.2
+Version: 0.3
 Authors@R: 
     person("Bradley", "Setzler", , "bradley.setzler@gmail.com", role = c("aut", "cre"))
 Description: This package provides a simple and efficient implementation of difference-in-differences estimation that scales to big data.
 License: MIT 
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Depends: 
     data.table,
     sandwich
@@ -19,5 +19,6 @@ Suggests:
     parallel,
     fixest
 VignetteBuilder: knitr
-URL: https://github.com/setzler/DiDforBigData
+URL: https://github.com/setzler/DiDforBigData,
+    https://setzler.github.io/DiDforBigData/
 BugReports: https://github.com/setzler/DiDforBigData/issues

@@ -11,6 +11,7 @@ DiD(
   base_event = -1,
   min_event = NULL,
   max_event = NULL,
+  return_ATTs_only = TRUE,
   Esets = NULL,
   parallel_cores = 1
 )
@@ -27,6 +28,8 @@ DiD(
 \item{min_event}{This is the minimum event time (e) to estimate. Default is NULL, in which case, no minimum is imposed.}
 
 \item{max_event}{This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.}
+
+\item{return_ATTs_only}{Return only the ATT estimates and sample sizes. Default is TRUE.}
 
 \item{Esets}{If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.}
 

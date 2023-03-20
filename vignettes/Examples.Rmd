@@ -152,7 +152,7 @@ If we estimate DiD using the default argument that `base_event = -1`, the estima
 ```{r echo=T, eval=T, message=FALSE}
 did = DiD(inputdata = simdata, varnames = varnames, min_event = -3, max_event=3)
 
-print(did$results_average[,1:4])
+print(did$results_average)
 ```
 
 We now set `base_event = -3` to avoid the anticipation at -1 and -2:
@@ -161,7 +161,7 @@ We now set `base_event = -3` to avoid the anticipation at -1 and -2:
 did = DiD(inputdata = simdata, varnames = varnames, 
           base_event = -3, min_event = -3, max_event=3)
 
-print(did$results_average[,1:4]) 
+print(did$results_average) 
 ```
 
 We see that the estimate is now close to the true ATT.
@@ -218,7 +218,7 @@ We verify that DiD gives the wrong answer for cohort 2007:
 ```{r echo=T, eval=T, message=FALSE}
 did = DiD(inputdata = simdata, varnames = varnames, min_event = -3, max_event=5)
 
-print(did$results_cohort[Cohort==2007][,1:6])
+print(did$results_cohort[Cohort==2007])
 ```
 
 
@@ -234,7 +234,7 @@ Now we check DiD with controls for time-variation in X1 and X2:
 ```{r echo=T, eval=T, message=FALSE}
 did = DiD(inputdata = simdata, varnames = varnames, min_event = -3, max_event=5)
 
-print(did$results_cohort[Cohort==2007][,1:6])
+print(did$results_cohort[Cohort==2007])
 ```
 
 We see that the bias has been removed thanks to the control variables.
@@ -290,7 +290,7 @@ We check the usual standard errors, which are clustered on unit based on `varnam
 ```{r echo=T, eval=T, message=FALSE}
 did = DiD(inputdata = simdata, varnames = varnames, min_event = -1, max_event=3)
 
-print(did$results_average[,1:4])
+print(did$results_average)
 
 ```
 
@@ -302,7 +302,7 @@ varnames$cluster_names = "cluster"
 
 did = DiD(inputdata = copy(simdata), varnames = varnames, min_event = -1, max_event=3)
 
-print(did$results_average[,1:4])
+print(did$results_average)
 
 ```
 

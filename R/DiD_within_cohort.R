@@ -235,6 +235,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
 #' @param control_group There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".
 #' @param base_event This is the base pre-period that is normalized to zero in the DiD estimation. Default is base_event=-1.
 #' @param return_data If true, this returns the treated and control differenced data. Default is FALSE.
+#' @param return_ATTs_only Return only the ATT estimates and sample sizes. Default is TRUE.
 #' @returns A single-row data.table() containing the estimates and various statistics such as sample size. If `return_data=TRUE`, it instead returns a list in which the `data_prepost` entry is the previously-mentioned single-row data.table(), and the other argument `data_prepost`  contains the constructed data that should be provided to OLS.
 #' @examples
 #' # simulate some data
@@ -272,7 +273,14 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
 #' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
 #'
 #' @export
-DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", return_data=FALSE){
-  DiDge_main(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, base_event=base_event, control_group = control_group, return_data=return_data)
+DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", return_data=FALSE, return_ATTs_only=TRUE){
+
+  results = DiDge_main(inputdata=inputdata, varnames=varnames, cohort_time=cohort_time, event_postperiod=event_postperiod, base_event=base_event, control_group = control_group, return_data=return_data)
+
+  if(return_ATTs_only){
+    return(results[,.SD,.SDcols=c("Cohort","EventTime","BaseEvent","CalendarTime","ATTge","ATTge_SE","Ncontrol","Ntreated")])
+  }
+
+  return(results)
 }
 

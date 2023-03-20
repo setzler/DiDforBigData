@@ -11,7 +11,8 @@ DiDge(
   event_postperiod,
   base_event = -1,
   control_group = "all",
-  return_data = FALSE
+  return_data = FALSE,
+  return_ATTs_only = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ DiDge(
 \item{control_group}{There are three possibilities: control_group="never-treated" uses the never-treated control group only; control_group="future-treated" uses those units that will receive treatment in the future as the control group; and control_group="all" uses both the never-treated and the future-treated in the control group. Default is control_group="all".}
 
 \item{return_data}{If true, this returns the treated and control differenced data. Default is FALSE.}
+
+\item{return_ATTs_only}{Return only the ATT estimates and sample sizes. Default is TRUE.}
 }
 \value{
 A single-row data.table() containing the estimates and various statistics such as sample size. If \code{return_data=TRUE}, it instead returns a list in which the \code{data_prepost} entry is the previously-mentioned single-row data.table(), and the other argument \code{data_prepost}  contains the constructed data that should be provided to OLS.

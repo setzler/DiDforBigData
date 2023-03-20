@@ -2,6 +2,4 @@
 
 export(DiD)
 export(DiDge)
-export(PlotDiD)
-export(PlotES)
 export(SimDiD)

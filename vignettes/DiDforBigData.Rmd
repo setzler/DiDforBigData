@@ -14,15 +14,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-There are only 5 functions in this package:
+There are only 3 functions in this package:
 
 1. `SimDiD()`: This function simulates data.
 2. `DiDge()`: This function estimates DiD for a single cohort and a single event time.
-3. `DiD()`: This function estimates DiD for all available cohorts and event times.
-4. `PlotDiD()`: Automatically produces pretty DiD estimate plots from the DiD() output.
-5. `PlotES()`: Automatically produces pretty Event Study plots from the DiD() output.
+3. `DiD()`: This function estimates DiD for all available cohorts and event times. 
 
-We now demonstrate the simplest application of the 5 functions.
+We now demonstrate the simplest application of the 3 functions.
 
 Detailed documentation for each of these function is available from the Reference tab above.
 
@@ -85,7 +83,7 @@ Note that it used -1 as the base year by default. This is easy to change.
 
 
 
-## 3. Estimate DiD for All Cohorts
+## 3. Estimate DiD for All Cohorts and Event Times
 
 Suppose we want to estimate the ATT at each event time from -3 to +5. We can do so as follows:
 
@@ -107,46 +105,18 @@ The other output from DiD() is results_cohort, which includes all combinations o
 print(did_all$results_cohort[EventTime==1 | EventTime==2])
 ```
 
-Note: the data ends in 2013, so event time 2 is not available for treatment cohort 2012.
+Note: the simulated data ends in 2013, so event time 2 is not available for treatment cohort 2012.
 
+To take an average across multiple event times, use the `Esets` argument. It accepts a list, in which each item is a vector of event times over which to average:
 
-## 4. Plot DiD Estimates
-
-First, we load a couple of graphing packages:
 
 ```{r echo=T, eval=T, message=FALSE}
-library(ggplot2) # main graphics package in R
-library(scales) # package that helps make prettier labels 
+did_all = DiD(inputdata = simdata, varnames = varnames, min_event = -3, max_event = 5, 
+              Esets = list(c(1,2), c(1,2,3)))
 ```
-
-Second, we provide the DiD plot for each g and e combination using plot_type="ge":
 
 ```{r echo=T, eval=T, message=FALSE}
-PlotDiD(DiD_results = did_all, plot_type="ge")
+print(did_all$results_Esets)
 ```
-
-Third, the same function provides the DiD by event time (average across cohorts) using option plot_type="e":
-
-```{r echo=T, eval=T, message=FALSE}
-PlotDiD(DiD_results = did_all, plot_type="e")
-```
-
-
-## 5. Plot Event Study
-
-For a given cohort, we can plot the levels in their original units:
-
-```{r echo=T, eval=T, message=FALSE}
-PlotES(DiD_results = did_all,plot_type="ge",cohort = 2010)
-```
-
-We can also make this plot by event time (average across cohorts):
-
-```{r echo=T, eval=T, message=FALSE}
-PlotES(DiD_results = did_all,plot_type="e")
-```
-
-Note: this plot automatically adjusts the levels in the theory-consistent way to account for changes in the pre-period composition of treated and control units across event times. This is necessary because cohort weights change across event times, which affects the composition of the levels.
-
 
 
