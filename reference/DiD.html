@@ -67,8 +67,8 @@
 <span>  base_event <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,</span>
 <span>  min_event <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_event <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  return_ATTs_only <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  Esets <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  return_ATTs_only <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  parallel_cores <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -99,12 +99,12 @@
 <dd><p>This is the maximum event time (e) to estimate. Default is NULL, in which case, no maximum is imposed.</p></dd>
 
 
-<dt>return_ATTs_only</dt>
-<dd><p>Return only the ATT estimates and sample sizes. Default is TRUE.</p></dd>
-
-
 <dt>Esets</dt>
 <dd><p>If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.</p></dd>
+
+
+<dt>return_ATTs_only</dt>
+<dd><p>Return only the ATT estimates and sample sizes. Default is TRUE.</p></dd>
 
 
 <dt>parallel_cores</dt>
