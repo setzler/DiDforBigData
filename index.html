@@ -144,7 +144,7 @@
 <p>To use the package after it is installed:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://setzler.github.io/DiDforBigData/">DiDforBigData</a></span><span class="op">)</span></span></code></pre></div>
-<p>Set up a variable list with the names of your variables:</p>
+<p>Before estimation, set up a variable list with the names of your variables:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">varnames</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">time_name</span> <span class="op">=</span> <span class="st">"year"</span></span>
@@ -155,14 +155,14 @@
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/DiDge.html">DiDge</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="va">yourdata</span>, varnames <span class="op">=</span> <span class="va">varnames</span>,</span>
 <span>             cohort_time <span class="op">=</span> <span class="fl">2010</span>, event_postperiod <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<p>A detailed manual explaining the various features available in <code>DiDge</code> is available <a href="https://setzler.github.io/DiDforBigData/reference/index.html">here</a> or by running this command:</p>
+<p>A detailed manual explaining the various features available in <code>DiDge</code> is available <a href="https://setzler.github.io/DiDforBigData/reference/index.html">here</a> or by running this command in R:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="op">?</span><span class="va">DiDge</span></span></code></pre></div>
-<p>To estimate DiD for a many cohorts and event times, use the <code>DiD</code> command. For example:</p>
+<p>To estimate DiD for many cohorts and event times, use the <code>DiD</code> command. For example:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/DiD.html">DiD</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="va">yourdata</span>, varnames <span class="op">=</span> <span class="va">varnames</span>,</span>
 <span>    min_event <span class="op">=</span> <span class="op">-</span><span class="fl">3</span>, max_event <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<p>A detailed manual explaining the various features available in <code>DiD</code> is available <a href="https://setzler.github.io/DiDforBigData/reference/index.html">here</a> or by running this command:</p>
+<p>A detailed manual explaining the various features available in <code>DiD</code> is available <a href="https://setzler.github.io/DiDforBigData/reference/index.html">here</a> or by running this command in R:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="op">?</span><span class="va">DiD</span></span></code></pre></div>
 <p>For more information, read the following articles:</p>
@@ -171,6 +171,7 @@
 <li><a href="https://setzler.github.io/DiDforBigData/reference/index.html">Function Documentation</a></li>
 <li><a href="https://setzler.github.io/DiDforBigData/articles/Examples.html">Detailed Examples</a></li>
 </ul>
+<p>Acknowledgements: Thanks to Mert Demirer and Kirill Borusyak for helpful comments.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
