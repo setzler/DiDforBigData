@@ -71,7 +71,8 @@ per sample size, and apply each estimator. Results are presented for the
 median across those 3 draws. Sample Size refers to the number of unique
 individuals. Since there are 10 simulated years of data, and the sample
 is balanced across years, the number of observations is 10 times the
-number of unique individuals.
+number of unique individuals. Replication code is available
+[here](https://github.com/setzler/DiDforBigData/raw/main/inst/).
 
 ### 3.1 Point estimates
 
@@ -82,20 +83,19 @@ intervals (using +/- 1.96\*SE) for the DiD estimate at event time +1
 verify that two-way fixed-effects OLS estimation would find an effect of
 about 5.5 at event time +1 when the sample is large.
 
-![](https://github.com/setzler/DiDforBigData/raw/main/vignettes/estimates_small.png)
+![](https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/estimates_small.png)
 
-A caveat: The Callaway and Sant’Anna (2021) estimators provide standard
-errors that correspond to *multiple-hypothesis testing* and will thus
-tend to be wider. My package provides the usual single-hypothesis
-testing, consistent with the standard errors usually reported on
-regression coefficients.
+A caveat: `did` provides standard errors that correspond to
+*multiple-hypothesis testing* and will thus tend to be wider than the
+single-hypothesis standard errors provided by `didimputation` and
+`DiDforBigData`.
 
 ### 3.2 Speed test
 
 **Small Samples:** Here is the run-time required to complete the DiD
 estimation using each package:
 
-![](https://github.com/setzler/DiDforBigData/raw/main/vignettes/speedtest_small.png)
+![](https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/speedtest_small.png)
 
 We see that, with 20,000 unique individuals, `didimpute` and
 `DIDmultiplegt` have become very slow. I could not get either approach
@@ -107,7 +107,7 @@ barely be seen in the plot.
 with 100,000 observations, we now restrict attention to `did` and
 `DiDforBigData`. We consider much larger samples:
 
-![](https://github.com/setzler/DiDforBigData/raw/main/vignettes/speedtest_large.png)
+![](https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/speedtest_large.png)
 
 Even with 1 million unique individuals (and 10 million observations), it
 is difficult to see `DiDforBigData` in the plot, as estimation requires
@@ -120,7 +120,7 @@ when working with a sample of one million individuals.
 **Small Samples:** Here is the memory used to complete the DiD
 estimation by each package:
 
-![](https://github.com/setzler/DiDforBigData/raw/main/vignettes/memorytest_small.png)
+![](https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/memorytest_small.png)
 
 We see that `DIDmultiplegt` uses much more memory than the other
 approaches. The other approaches all use relatively little memory at
@@ -128,7 +128,7 @@ these sample sizes.
 
 **Large Samples:**
 
-![](https://github.com/setzler/DiDforBigData/raw/main/vignettes/memorytest_large.png)
+![](https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/memorytest_large.png)
 
 When considering large samples, we see that `DiDforBigData` uses less
 than half of the memory used by `did`.
@@ -151,7 +151,7 @@ Set up a variable list with the names of your variables:
 
 ``` r
 varnames = list()
-varnames$time_name = "year" 
+varnames$time_name = "year"
 varnames$outcome_name = "Y"
 varnames$cohort_name = "cohort"
 varnames$id_name = "id"
@@ -161,7 +161,7 @@ To estimate DiD for a single cohort and event time, use the `DiDge`
 command. For example:
 
 ``` r
-DiDge(inputdata = yourdata, varnames = varnames, 
+DiDge(inputdata = yourdata, varnames = varnames,
              cohort_time = 2010, event_postperiod = 3)
 ```
 
@@ -178,7 +178,7 @@ To estimate DiD for a many cohorts and event times, use the `DiD`
 command. For example:
 
 ``` r
-DiD(inputdata = yourdata, varnames = varnames, 
+DiD(inputdata = yourdata, varnames = varnames,
     min_event = -3, max_event = 5)
 ```
 
