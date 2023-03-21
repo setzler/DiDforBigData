@@ -131,7 +131,7 @@ these sample sizes.
 ![](https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/memorytest_large.png)
 
 When considering large samples, we see that `DiDforBigData` uses less
-than half of the memory used by `did`.
+than a quarter of the memory used by `did`.
 
 ## 4. Using `DiDforBigData`
 

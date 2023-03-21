@@ -112,7 +112,7 @@ approaches all use relatively little memory at these sample sizes.
 ![](https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/memorytest_large.png)
 
 When considering large samples, we see that `DiDforBigData` uses less
-than half of the memory used by `did`.
+than a quarter of the memory used by `did`.
 
 
 ## 4. Using `DiDforBigData`
@@ -129,7 +129,7 @@ To use the package after it is installed:
 library(DiDforBigData)
 ```
 
-Set up a variable list with the names of your variables:
+Before estimation, set up a variable list with the names of your variables:
 
 ```{r echo=T, eval=FALSE, message=FALSE}
 varnames = list()
@@ -147,7 +147,7 @@ DiDge(inputdata = yourdata, varnames = varnames,
              cohort_time = 2010, event_postperiod = 3)
 ```
 
-A detailed manual explaining the various features available in `DiDge` is available [here](https://setzler.github.io/DiDforBigData/reference/index.html) or by running this command:
+A detailed manual explaining the various features available in `DiDge` is available [here](https://setzler.github.io/DiDforBigData/reference/index.html) or by running this command in R:
 
 ```{r echo=T, eval=FALSE, message=FALSE}
 ?DiDge
@@ -155,14 +155,14 @@ A detailed manual explaining the various features available in `DiDge` is availa
 
 
 
-To estimate DiD for a many cohorts and event times, use the `DiD` command. For example:
+To estimate DiD for many cohorts and event times, use the `DiD` command. For example:
 
 ```{r echo=T, eval=FALSE, message=FALSE}
 DiD(inputdata = yourdata, varnames = varnames,
     min_event = -3, max_event = 5)
 ```
 
-A detailed manual explaining the various features available in `DiD` is available [here](https://setzler.github.io/DiDforBigData/reference/index.html) or by running this command:
+A detailed manual explaining the various features available in `DiD` is available [here](https://setzler.github.io/DiDforBigData/reference/index.html) or by running this command in R:
 
 ```{r echo=T, eval=FALSE, message=FALSE}
 ?DiD
