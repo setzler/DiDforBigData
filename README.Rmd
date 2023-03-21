@@ -174,3 +174,5 @@ For more information, read the following articles:
 - [Get Started](https://setzler.github.io/DiDforBigData/articles/DiDforBigData.html)
 - [Function Documentation](https://setzler.github.io/DiDforBigData/reference/index.html)
 - [Detailed Examples](https://setzler.github.io/DiDforBigData/articles/Examples.html)
+
+Acknowledgements: Thanks to Mert Demirer and Kirill Borusyak for helpful comments.

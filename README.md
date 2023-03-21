@@ -147,7 +147,8 @@ To use the package after it is installed:
 library(DiDforBigData)
 ```
 
-Set up a variable list with the names of your variables:
+Before estimation, set up a variable list with the names of your
+variables:
 
 ``` r
 varnames = list()
@@ -168,14 +169,14 @@ DiDge(inputdata = yourdata, varnames = varnames,
 A detailed manual explaining the various features available in `DiDge`
 is available
 [here](https://setzler.github.io/DiDforBigData/reference/index.html) or
-by running this command:
+by running this command in R:
 
 ``` r
 ?DiDge
 ```
 
-To estimate DiD for a many cohorts and event times, use the `DiD`
-command. For example:
+To estimate DiD for many cohorts and event times, use the `DiD` command.
+For example:
 
 ``` r
 DiD(inputdata = yourdata, varnames = varnames,
@@ -185,7 +186,7 @@ DiD(inputdata = yourdata, varnames = varnames,
 A detailed manual explaining the various features available in `DiD` is
 available
 [here](https://setzler.github.io/DiDforBigData/reference/index.html) or
-by running this command:
+by running this command in R:
 
 ``` r
 ?DiD
@@ -199,3 +200,6 @@ For more information, read the following articles:
   Documentation](https://setzler.github.io/DiDforBigData/reference/index.html)
 - [Detailed
   Examples](https://setzler.github.io/DiDforBigData/articles/Examples.html)
+
+Acknowledgements: Thanks to Mert Demirer and Kirill Borusyak for helpful
+comments.
