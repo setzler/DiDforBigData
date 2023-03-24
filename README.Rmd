@@ -33,19 +33,19 @@ time-varying covariates, heteroskedasticity-robust standard errors, and
 
 To install the package from CRAN:
 
-```{r echo=T, eval=FALSE, message=FALSE}
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 install.packages("DiDforBigData")
 ```
 
 To install the package from Github:
 
-```{r echo=T, eval=FALSE, message=FALSE}
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 devtools::install_github("setzler/DiDforBigData")
 ```
 
 If feasible, it is recommended to also install these packages:
 
-```{r echo=T, eval=FALSE, message=FALSE}
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 install.packages("progress")
 install.packages("fixest")
 install.packages("parallel")
@@ -53,7 +53,7 @@ install.packages("parallel")
 
 To use the package after it is installed:
 
-```{r echo=T, eval=FALSE, message=FALSE}
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 library(DiDforBigData)
 ```
 
@@ -71,7 +71,7 @@ Details for each function are available from the [Function Documentation](https:
 
 Before estimation, set up a variable list with the names of your variables:
 
-```{r echo=T, eval=FALSE, message=FALSE}
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 varnames = list()
 varnames$time_name = "year"
 varnames$outcome_name = "Y"
@@ -82,14 +82,14 @@ varnames$id_name = "id"
 
 To estimate DiD for a single cohort and event time, use the `DiDge` command.  For example:
 
-```{r echo=T, eval=FALSE, message=FALSE}
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 DiDge(inputdata = yourdata, varnames = varnames,
              cohort_time = 2010, event_postperiod = 3)
 ```
 
 A detailed manual explaining the various features available in `DiDge` is available [here](https://setzler.github.io/DiDforBigData/reference/index.html) or by running this command in R:
 
-```{r echo=T, eval=FALSE, message=FALSE}
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 ?DiDge
 ```
 
@@ -97,14 +97,14 @@ A detailed manual explaining the various features available in `DiDge` is availa
 
 To estimate DiD for many cohorts and event times, use the `DiD` command. For example:
 
-```{r echo=T, eval=FALSE, message=FALSE}
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 DiD(inputdata = yourdata, varnames = varnames,
     min_event = -3, max_event = 5)
 ```
 
 A detailed manual explaining the various features available in `DiD` is available [here](https://setzler.github.io/DiDforBigData/reference/index.html) or by running this command in R:
 
-```{r echo=T, eval=FALSE, message=FALSE}
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 ?DiD
 ```
 

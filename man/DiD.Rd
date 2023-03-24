@@ -36,12 +36,14 @@ DiD(
 \item{parallel_cores}{Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.}
 }
 \value{
-A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
+A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g). If the Esets argument is specified, a third component called results_Esets will be included in the list of output.
 }
 \description{
 Estimate DiD for all possible cohorts and event time pairs (g,e), as well as the average across cohorts for each event time (e).
 }
 \examples{
+# ------ basic usage ------
+
 # simulate some data
 simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2)$simdata
 
@@ -61,18 +63,26 @@ DiD(simdata, varnames, base_event=-3, min_event=1, max_event=1)
 # check the pre-periods -4 through -2
 DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=-2)
 
+# ------ choosing a control group ------
+
 # use only the never-treated control group, estimate events -4 through 1
 DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=1)
 
 # use only the future treated control group, estimate events -4 through 1
 DiD(simdata, varnames, control_group = "future-treated", min_event=-4, max_event=1)
 
+# ------ average across event times ------
+
 # estimate average ATTe across sets of events
 DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
+
+# ------ parallelization ------
 
 # estimate average ATTe in parallel
 # not run:
 # DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)
+
+# ------ handling of missing values ------
 
 # simulate data with missing values, re-run estimation
 # not run:
@@ -101,8 +111,12 @@ DiD(simdata, varnames, min_event=1, max_event=2)
 # simdata = SimDiD(sample_size=2000,time_covars=TRUE,missingCohorts=2010)$simdata
 # DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 
+# ------ clustered standard errors ------
+
 # simulate data with clusters
 simdata = SimDiD(sample_size=2000,clusters=TRUE)$simdata
+
+# set up variable names
 varnames = list()
 varnames$time_name = "year"
 varnames$outcome_name = "Y"
@@ -111,7 +125,7 @@ varnames$id_name = "id"
 DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 
 # cluster SEs on the "cluster" variable
-# note: it always clusters on id_name, including when clustering on other variables
+# note: DiD() always clusters on id_name, including when clustering on other variables
 varnames$cluster_names = "cluster"
 DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 
