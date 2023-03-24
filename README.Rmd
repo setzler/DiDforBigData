@@ -18,7 +18,7 @@ non-staggered) treatment contexts. It supports controlling for
 time-varying covariates, heteroskedasticity-robust standard errors, and
 (single and multi-way) clustered standard errors. See [Roth, Sant’Anna,
 Bilinksi, and Poe
-(2022)](https://jonathandroth.github.io/assets/files/DiD_Review_Paper.pdf)
+(2022)](https://www.jonathandroth.com/assets/files/DiD_Review_Paper.pdf)
 for background on staggered DiD.
 
 ## 1. Why do we need a staggered DiD package for big data?
@@ -59,7 +59,7 @@ This section will compare `didimputation`, `did` (using the default option as we
 estimator. Results are presented for the median across those 3 draws.
 Sample Size refers to the number of unique individuals. Since there are
 10 simulated years of data, and the sample is balanced across years, the
-number of observations is 10 times the number of unique individuals. Replication code is available [here](https://github.com/setzler/DiDforBigData/raw/main/inst/).
+number of observations is 10 times the number of unique individuals. Replication code is available [here](https://github.com/setzler/DiDforBigData/tree/main/inst/).
 
 
 ### 3.1 Point estimates

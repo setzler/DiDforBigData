@@ -1,6 +1,8 @@
 
-Errorhandle.mclapply <- function (X, FUN, mc.cores=1, rbind_output=FALSE, print_errors = TRUE,
-                                  try_again_if_failure = TRUE, stop_if_failure = FALSE, show_progress = TRUE){
+Errorhandle.mclapply <- function (X, FUN, mc.cores=1, rbind_output=FALSE, print_errors = TRUE, try_again_if_failure = TRUE, stop_if_failure = FALSE, show_progress = TRUE){
+
+  check_val <- mmm <- NULL
+
   # define the group split
   suppressWarnings({
     define_groups = split(X, 1:(length(X)/mc.cores))
@@ -9,7 +11,7 @@ Errorhandle.mclapply <- function (X, FUN, mc.cores=1, rbind_output=FALSE, print_
   # define the progress bar
   if(show_progress){
     # print(sprintf("Beginning parallelization at time %s",proc.time()[3]))
-    pb <- progress_bar$new(
+    pb <- progress::progress_bar$new(
       format = "Progress [:bar] Completed tasks: :current/:total (:percent) Elapsed (:elapsed) ETA (:eta)",
       total = length(define_groups), clear = FALSE, width= 120 )
   }
@@ -70,3 +72,14 @@ Errorhandle.mclapply <- function (X, FUN, mc.cores=1, rbind_output=FALSE, print_
   }
   return(res_outer)
 }
+
+#' @importFrom stats arima.sim ecdf lm na.omit nobs rnorm runif var vcov as.formula
+#' @importFrom data.table .N .SD copy data.table rbindlist setDT setnames `:=`
+#' @importFrom sandwich vcovCL vcovHC
+NULL
+
+# truly ridiculous, variables in data.table objects are forced to be globals
+ATT <- ATTge <- ATTge_SE <- ATTge_SE_simple <- ATTge_simple <- BaseEvent <- CalendarTime<- Cohort <- Econtrol_SE <- Econtrol_post <- Econtrol_pre <- Econtrol_var <- Etreated_SE <- Etreated_post <- Etreated_pre <- Etreated_var <- EventTime <- Ncontrol <- Ncontrol_pre <- Ntreated <- Ntreated_event <- Ntreated_pre <- Preperiod <- X1 <- X2 <- Y <- available_control <- available_treated <- bin_counter <- bin_index <- bin_prob <- bin_shock <- change_to_NA <- cohort <- cohort_counter <- cohort_weights <- control_diff_var <- covariate_term <- event <- id <- individualFE <- individualFE_ecdf <- pred_Etreated_post <- shock <- treated <- treated_diff_var <- year <- yearFE <- check_fixest <- check_parallel <- check_progress <- NULL
+
+
+

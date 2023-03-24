@@ -83,25 +83,21 @@ simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, missingCohorts=2010)$simda
 DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
 
 # simulate data with time-varying covariates
-sim = SimDiD(sample_size=2000,time_covars=TRUE)
-simdata = sim$simdata
-
-# add the time-varying covariate names to the varnames list
-varnames$covariate_names = c("X1","X2")
+simdata = SimDiD(sample_size=2000,time_covars=TRUE)$simdata
 
 # run estimation that controls for time-varying covariates
+varnames$covariate_names = c("X1","X2")
 DiD(simdata, varnames, min_event=1, max_event=2)
 
-# run estimation that controls for time-varying covariates
-DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
-
 # simulate data with time-varying covariates and missing values, re-run estimation
-simdata = SimDiD(sample_size=2000,time_covars=TRUE,randomNA=TRUE)$simdata
-DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
+# not run:
+# simdata = SimDiD(sample_size=2000,time_covars=TRUE,randomNA=TRUE)$simdata
+# DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 
 # simulate data with time-varying covariates and missing cohort, re-run estimation
-simdata = SimDiD(sample_size=2000,time_covars=TRUE,missingCohorts=2010)$simdata
-DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
+# not run:
+# simdata = SimDiD(sample_size=2000,time_covars=TRUE,missingCohorts=2010)$simdata
+# DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 
 # simulate data with clusters
 simdata = SimDiD(sample_size=2000,clusters=TRUE)$simdata

@@ -14,7 +14,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   all_keep_vars = all_keep_vars[all_keep_vars != id_name]
 
   # check if fixest is available
-  check_fixest = require("fixest", quietly=TRUE, warn.conflicts = FALSE)
+  check_fixest = requireNamespace("fixest", quietly=TRUE, warn.conflicts = FALSE)
   if(!is.null(fixedeffect_names)){
     if(!check_fixest){
       stop("Since varnames$fixedeffect_names is non-missing, you must install the 'fixest' package, which estimates fixed-effects.")
@@ -165,7 +165,9 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
       OLSformula = paste0(OLSformula, " + ", paste0(paste0(covariate_names,"_diff"),collapse=" + "))
     }
     if(check_fixest){ # prefer feols() if installed
-      OLSlm = feols(as.formula(OLSformula),data=data_prepost)
+      the_func = fixest::feols
+      OLSlm = do.call("the_func", list(as.formula(OLSformula), data=as.name("data_prepost")))
+      # OLSlm = fixest::feols(as.formula(OLSformula),data=data_prepost)
     }
     if(!check_fixest){ # use lm() if feols() not installed
       OLSlm = lm(as.formula(OLSformula),data=data_prepost)
@@ -177,7 +179,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
       OLSformula = paste0(OLSformula, " + ", paste0(paste0(covariate_names,"_diff"),collapse=" + "))
     }
     OLSformula = paste0(OLSformula, " | ", paste0(fixedeffect_names, collapse=" + "))
-    OLSlm = feols(as.formula(OLSformula),data=data_prepost)
+    OLSlm = fixest::feols(as.formula(OLSformula),data=data_prepost)
   }
   newATT = as.numeric(OLSlm$coefficients["treated"])
 

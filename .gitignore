@@ -30,9 +30,6 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
-# pkgdown site
-docs/
-
 # translation temp files
 po/*~
 
@@ -306,5 +303,4 @@ TSWLatexianTemp*
 .DS_Store
 **/.DS_Store
 
-inst/doc
-docs
+inst/doc 

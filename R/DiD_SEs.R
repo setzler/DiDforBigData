@@ -24,7 +24,10 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames,base_event){
   fixedeffect_names = varnames$fixedeffect_names
 
   # check if fixest is available
-  check_fixest = require("fixest", quietly=TRUE, warn.conflicts = FALSE)
+  check_fixest <- requireNamespace("fixest")
+  if(length(check_fixest) == 0){
+    # for some reason, this magically fixes the problems with devtools::check when it can't find requireNamespace
+  }
   if(!is.null(fixedeffect_names)){
     if(!check_fixest){
       stop("Since varnames$fixedeffect_names is non-missing, you must install the 'fixest' package, which estimates fixed-effects.")
@@ -74,16 +77,17 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames,base_event){
     if(is.null(fixedeffect_names)){
       if(check_fixest){ # prefer feols() if installed
         OLSformula = paste0(OLSformula, " | Cohort")
-        OLSlm = feols(as.formula(OLSformula),data=data_event)
+        OLSlm = fixest::feols(as.formula(OLSformula),data=data_event)
       }
       if(!check_fixest){ # use lm() if feols() not installed
+        print("warning: fixest not found")
         OLSformula = paste0(OLSformula," + ",paste0(intercepts, collapse=" + "))
         OLSlm = lm(as.formula(OLSformula),data=data_event)
       }
     }
     if(!is.null(fixedeffect_names)){ # the case with fixed-effects
       OLSformula = paste0(OLSformula, " | Cohort + ", paste0(fixedeffect_names, collapse=" + "))
-      OLSlm = feols(as.formula(OLSformula),data=data_event)
+      OLSlm = fixest::feols(as.formula(OLSformula),data=data_event)
     }
     OLSmeans = as.numeric(OLSlm$coefficients[treateds])
 
@@ -154,7 +158,10 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
   fixedeffect_names = varnames$fixedeffect_names
 
   # check if fixest is available
-  check_fixest = require("fixest", quietly=TRUE, warn.conflicts = FALSE)
+  check_fixest <- requireNamespace("fixest")
+  if(length(check_fixest) == 0){
+    # for some reason, this magically fixes the problems with devtools::check when it can't find requireNamespace
+  }
   if(!is.null(fixedeffect_names)){
     if(!check_fixest){
       stop("Since varnames$fixedeffect_names is non-missing, you must install the 'fixest' package, which estimates fixed-effects.")
@@ -213,7 +220,7 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
   if(is.null(fixedeffect_names)){
     if(check_fixest){ # prefer feols() if installed
       OLSformula = paste0(OLSformula, " | Cohort")
-      OLSlm = feols(as.formula(OLSformula),data=data_event)
+      OLSlm = fixest::feols(as.formula(OLSformula),data=data_event)
     }
     if(!check_fixest){ # use lm() if feols() not installed
       OLSformula = paste0(OLSformula," + ",paste0(intercepts, collapse=" + "))
@@ -222,7 +229,7 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
   }
   if(!is.null(fixedeffect_names)){
     OLSformula = paste0(OLSformula, " | Cohort + ", paste0(fixedeffect_names, collapse=" + "))
-    OLSlm = feols(as.formula(OLSformula),data=data_event)
+    OLSlm = fixest::feols(as.formula(OLSformula),data=data_event)
   }
   OLSmeans = as.numeric(OLSlm$coefficients[treateds])
 
