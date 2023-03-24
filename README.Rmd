@@ -60,6 +60,15 @@ library(DiDforBigData)
 
 ## Basic Use
 
+There are only 3 functions in this package:
+
+1. `SimDiD()`: This function simulates data.
+2. `DiDge()`: This function estimates DiD for a single cohort and a single event time.
+3. `DiD()`: This function estimates DiD for all available cohorts and event times. 
+
+
+Details for each function are available from the [Function Documentation](https://setzler.github.io/DiDforBigData/reference/index.html).
+
 Before estimation, set up a variable list with the names of your variables:
 
 ```{r echo=T, eval=FALSE, message=FALSE}
