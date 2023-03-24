@@ -132,6 +132,7 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># estimate the ATT for all cohorts at event time 1 only</span></span></span>
 <span class="r-in"><span><span class="fu">DiD</span><span class="op">(</span><span class="va">simdata</span>, <span class="va">varnames</span>, min_event<span class="op">=</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required namespace: fixest</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $results_cohort</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Cohort EventTime BaseEvent CalendarTime    ATTge  ATTge_SE Ncontrol Ntreated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:   2007         1        -1         2008 2.080520 0.1113721      751      249</span>
@@ -562,13 +563,10 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># simulate data with time-varying covariates</span></span></span>
-<span class="r-in"><span><span class="va">sim</span> <span class="op">=</span> <span class="fu"><a href="SimDiD.html">SimDiD</a></span><span class="op">(</span>sample_size<span class="op">=</span><span class="fl">2000</span>,time_covars<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">simdata</span> <span class="op">=</span> <span class="va">sim</span><span class="op">$</span><span class="va">simdata</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># add the time-varying covariate names to the varnames list</span></span></span>
-<span class="r-in"><span><span class="va">varnames</span><span class="op">$</span><span class="va">covariate_names</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"X1"</span>,<span class="st">"X2"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">simdata</span> <span class="op">=</span> <span class="fu"><a href="SimDiD.html">SimDiD</a></span><span class="op">(</span>sample_size<span class="op">=</span><span class="fl">2000</span>,time_covars<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">simdata</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># run estimation that controls for time-varying covariates</span></span></span>
+<span class="r-in"><span><span class="va">varnames</span><span class="op">$</span><span class="va">covariate_names</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"X1"</span>,<span class="st">"X2"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">DiD</span><span class="op">(</span><span class="va">simdata</span>, <span class="va">varnames</span>, min_event<span class="op">=</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $results_cohort</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Cohort EventTime BaseEvent CalendarTime    ATTge   ATTge_SE Ncontrol</span>
@@ -590,95 +588,15 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:         2        -1 3.238482 0.06138515     2002      999</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># run estimation that controls for time-varying covariates</span></span></span>
-<span class="r-in"><span><span class="fu">DiD</span><span class="op">(</span><span class="va">simdata</span>, <span class="va">varnames</span>, min_event<span class="op">=</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">2</span>, Esets<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $results_cohort</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Cohort EventTime BaseEvent CalendarTime    ATTge   ATTge_SE Ncontrol</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:   2007         1        -1         2008 2.044473 0.07789969     1501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:   2007         2        -1         2009 2.977395 0.08075890     1501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:   2010         1        -1         2011 2.448898 0.07863435     1001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:   2010         2        -1         2012 3.499046 0.09328438      501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:   2012         1        -1         2013 2.964641 0.08855004      501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Ntreated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:      499</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:      499</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:      500</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:      500</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:      500</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $results_average</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    EventTime BaseEvent     ATTe    ATTe_SE Ncontrol Ntreated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:         1        -1 2.486299 0.04688827     3003     1499</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:         2        -1 3.238482 0.06138515     2002      999</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $results_Esets</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Eset ATT_Eset ATT_Eset_SE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:  1,2 2.735624  0.04369998</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># simulate data with time-varying covariates and missing values, re-run estimation</span></span></span>
-<span class="r-in"><span><span class="va">simdata</span> <span class="op">=</span> <span class="fu"><a href="SimDiD.html">SimDiD</a></span><span class="op">(</span>sample_size<span class="op">=</span><span class="fl">2000</span>,time_covars<span class="op">=</span><span class="cn">TRUE</span>,randomNA<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">simdata</span></span></span>
-<span class="r-in"><span><span class="fu">DiD</span><span class="op">(</span><span class="va">simdata</span>, <span class="va">varnames</span>, min_event<span class="op">=</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">2</span>, Esets<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>411 out of 4000 observations dropped due to missing values</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>395 out of 4000 observations dropped due to missing values</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>381 out of 4000 observations dropped due to missing values</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>373 out of 4000 observations dropped due to missing values</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>392 out of 4000 observations dropped due to missing values</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $results_cohort</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Cohort EventTime BaseEvent CalendarTime    ATTge   ATTge_SE Ncontrol</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:   2007         1        -1         2008 2.043935 0.08574607     1203</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:   2007         2        -1         2009 3.036998 0.09017440     1205</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:   2010         1        -1         2011 2.479587 0.08811958      814</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:   2010         2        -1         2012 3.505381 0.10380258      401</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:   2012         1        -1         2013 3.027854 0.09738600      412</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Ntreated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:      410</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:      419</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:      414</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:      423</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:      411</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $results_average</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    EventTime BaseEvent     ATTe    ATTe_SE Ncontrol Ntreated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:         1        -1 2.517417 0.05158759     2429     1235</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:         2        -1 3.272302 0.06864341     1606      842</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $results_Esets</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Eset ATT_Eset ATT_Eset_SE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:  1,2 2.777014   0.0480845</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="co"># not run:</span></span></span>
+<span class="r-in"><span><span class="co"># simdata = SimDiD(sample_size=2000,time_covars=TRUE,randomNA=TRUE)$simdata</span></span></span>
+<span class="r-in"><span><span class="co"># DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># simulate data with time-varying covariates and missing cohort, re-run estimation</span></span></span>
-<span class="r-in"><span><span class="va">simdata</span> <span class="op">=</span> <span class="fu"><a href="SimDiD.html">SimDiD</a></span><span class="op">(</span>sample_size<span class="op">=</span><span class="fl">2000</span>,time_covars<span class="op">=</span><span class="cn">TRUE</span>,missingCohorts<span class="op">=</span><span class="fl">2010</span><span class="op">)</span><span class="op">$</span><span class="va">simdata</span></span></span>
-<span class="r-in"><span><span class="fu">DiD</span><span class="op">(</span><span class="va">simdata</span>, <span class="va">varnames</span>, min_event<span class="op">=</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">2</span>, Esets<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>500 out of 4000 observations dropped due to missing values</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>500 out of 4000 observations dropped due to missing values</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The variable 'treated' has been removed because of collinearity (see $collin.var).</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>500 out of 4000 observations dropped due to missing values</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The variable 'treated' has been removed because of collinearity (see $collin.var).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $results_cohort</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Cohort EventTime BaseEvent CalendarTime    ATTge   ATTge_SE Ncontrol</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:   2007         1        -1         2008 2.044473 0.07789969     1501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:   2007         2        -1         2009 2.976880 0.08751168     1001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:   2010         1        -1         2011       NA         NA     1001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:   2010         2        -1         2012       NA         NA      501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:   2012         1        -1         2013 2.964641 0.08855004      501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Ntreated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:      499</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:      499</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:      500</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $results_average</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    EventTime BaseEvent     ATTe    ATTe_SE Ncontrol Ntreated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:         1        -1 2.505018 0.05835799     2002      999</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:         2        -1 2.976880 0.08751168     1001      499</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $results_Esets</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Eset ATT_Eset ATT_Eset_SE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:  1,2 2.685181   0.0555487</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="co"># not run:</span></span></span>
+<span class="r-in"><span><span class="co"># simdata = SimDiD(sample_size=2000,time_covars=TRUE,missingCohorts=2010)$simdata</span></span></span>
+<span class="r-in"><span><span class="co"># DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># simulate data with clusters</span></span></span>
 <span class="r-in"><span><span class="va">simdata</span> <span class="op">=</span> <span class="fu"><a href="SimDiD.html">SimDiD</a></span><span class="op">(</span>sample_size<span class="op">=</span><span class="fl">2000</span>,clusters<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">simdata</span></span></span>
