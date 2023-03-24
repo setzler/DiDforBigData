@@ -75,12 +75,14 @@ DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3
 # DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)
 
 # simulate data with missing values, re-run estimation
-simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, randomNA = TRUE)$simdata
-DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
+# not run:
+# simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, randomNA = TRUE)$simdata
+# DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
 
 # simulate data with missing cohort, re-run estimation
-simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, missingCohorts=2010)$simdata
-DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
+# not run:
+# simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, missingCohorts=2010)$simdata
+# DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
 
 # simulate data with time-varying covariates
 simdata = SimDiD(sample_size=2000,time_covars=TRUE)$simdata
