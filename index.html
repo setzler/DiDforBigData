@@ -44,6 +44,7 @@
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="articles/Background.html">Background</a>
     <a class="dropdown-item" href="articles/Examples.html">Examples</a>
   </div>
 </li>
@@ -72,102 +73,67 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="did-for-big-data-in-r">DiD for Big Data in R<a class="anchor" aria-label="anchor" href="#did-for-big-data-in-r"></a>
 </h1></div>
-<p>This R package provides a big-data-friendly and memory-efficient difference-in-differences (DiD) estimator for staggered (and non-staggered) treatment contexts. It supports controlling for time-varying covariates, heteroskedasticity-robust standard errors, and (single and multi-way) clustered standard errors. See <a href="https://www.jonathandroth.com/assets/files/DiD_Review_Paper.pdf" class="external-link">Roth, Sant’Anna, Bilinksi, and Poe (2022)</a> for background on staggered DiD.</p>
-<div class="section level2">
-<h2 id="id_1-why-do-we-need-a-staggered-did-package-for-big-data">1. Why do we need a staggered DiD package for big data?<a class="anchor" aria-label="anchor" href="#id_1-why-do-we-need-a-staggered-did-package-for-big-data"></a>
-</h2>
-<p>Recently, I noticed a pattern at seminars and conferences: presenters would acknowledge that they <em>should</em> use a staggered DiD estimator, but would say that doing so is <em>infeasible</em> in their context due to large sample size. To check, I wrote a simple panel data simulator with staggered treatment roll-out and heterogeneous treatment effects, simulated large samples, and applied these popular R packages for staggered DiD estimation:</p>
-<ul>
-<li>
-<code>didimputation</code> for implementing the approach of <a href="https://www.xavierjaravel.com/_files/ugd/bacd2d_ebf772e1b7ea4a178a060e6ebfcfa056.pdf" class="external-link">Borusyak, Jaravel, and Spiess (2022)</a>;</li>
-<li>
-<code>did</code> for implementing the approach of <a href="https://psantanna.com/files/Callaway_SantAnna_2020.pdf" class="external-link">Callaway &amp; Sant’Anna (2021)</a>; and</li>
-<li>
-<code>DIDmultiplegt</code> for implementing the approach of <a href="https://drive.google.com/file/d/1D93ltJUirR4zIqJZfSTwSLrA-6rSZpTJ/view" class="external-link">de Chaisemartin &amp; D’Haultfoeuille (2020)</a>.</li>
-</ul>
-<p>I found that only <code>did</code> could successfully estimate staggered DiD with 100,000 unique individuals, and it took a while. While many DiD applications consider only a small number of unique individuals (e.g. state-level analysis with 50 states), DiD designs at the household-level or firm-level using administrative data often involve millions of unique individuals.</p>
-</div>
-<div class="section level2">
-<h2 id="id_2-this-package">2. This package<a class="anchor" aria-label="anchor" href="#id_2-this-package"></a>
-</h2>
-<p>I wrote <code>DiDforBigData</code> to address 4 issues that arise in the context of large administrative datasets:</p>
+<p>This R package provides a big-data-friendly and memory-efficient difference-in-differences (DiD) estimator for staggered (and non-staggered) treatment contexts. It supports controlling for time-varying covariates, heteroskedasticity-robust standard errors, and (single and multi-way) clustered standard errors. It addresses 4 issues that arise in the context of large administrative datasets:</p>
 <ol style="list-style-type: decimal">
 <li>
-<strong>Speed:</strong> In less than 1 minute, <code>DiDforBigData</code> will provide estimation and inference for staggered DiD with millions of observations on a personal laptop. It is orders of magnitude faster than other available software if the sample size is large.</li>
+<strong>Speed:</strong> In less than 1 minute, <code>DiDforBigData</code> will provide estimation and inference for staggered DiD with millions of observations on a personal laptop. It is orders of magnitude faster than other available software if the sample size is large; see the demonstration <a href="https://setzler.github.io/DiDforBigData/articles/Background.html">here</a>.</li>
 <li>
-<strong>Memory:</strong> Administrative data is often stored on crowded servers with limited memory available for researchers to use. <code>DiDforBigData</code> helps by using much less memory than other software.</li>
+<strong>Memory:</strong> Administrative data is often stored on crowded servers with limited memory available for researchers to use. <code>DiDforBigData</code> helps by using much less memory than other software; see the demonstration <a href="https://setzler.github.io/DiDforBigData/articles/Background.html">here</a>.</li>
 <li>
 <strong>Dependencies:</strong> Administrative servers often do not have outside internet access, making it difficult to install dependencies. This package has only <em>two</em> dependencies, <code>data.table</code> for big data management and <code>sandwich</code> for robust standard error estimation, which are already installed with most R distributions. Optionally, it will use the <code>fixest</code> package to speed up the estimation if it is installed. If the <code>progress</code> package is installed, it will also provide a progress bar so you know how much longer the estimation will take.</li>
 <li>
 <strong>Parallelization:</strong> Administrative servers often have a large number of available processors, but each processor may be slow, so it is important to parallelize. <code>DiDforBigData</code> makes parallelization easy as long as the <code>parallel</code> package is installed.</li>
 </ol>
-</div>
 <div class="section level2">
-<h2 id="id_3-demonstration">3. Demonstration<a class="anchor" aria-label="anchor" href="#id_3-demonstration"></a>
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>This section will compare <code>didimputation</code>, <code>did</code> (using the default option as well as the <code>bstrap=F</code> option), <code>DIDmultiplegt</code> (with option <code>brep=40</code>), and <code>DiDforBigData</code> in R. I draw the simulated data 3 times per sample size, and apply each estimator. Results are presented for the median across those 3 draws. Sample Size refers to the number of unique individuals. Since there are 10 simulated years of data, and the sample is balanced across years, the number of observations is 10 times the number of unique individuals. Replication code is available <a href="https://github.com/setzler/DiDforBigData/tree/main/inst/" class="external-link">here</a>.</p>
-<div class="section level3">
-<h3 id="id_31-point-estimates">3.1 Point estimates<a class="anchor" aria-label="anchor" href="#id_31-point-estimates"></a>
-</h3>
-<p>I verify that all of the estimators provide similar point estimates and standard errors. Here, I show the point estimates and 95% confidence intervals (using +/- 1.96*SE) for the DiD estimate at event time +1 (averaging across cohorts). The true ATT is 4 at event time +1. I also verify that two-way fixed-effects OLS estimation would find an effect of about 5.5 at event time +1 when the sample is large.</p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/estimates_small.png"></p>
-<p>A caveat: <code>did</code> provides standard errors that correspond to <em>multiple-hypothesis testing</em> and will thus tend to be wider than the single-hypothesis standard errors provided by <code>didimputation</code> and <code>DiDforBigData</code>.</p>
-</div>
-<div class="section level3">
-<h3 id="id_32-speed-test">3.2 Speed test<a class="anchor" aria-label="anchor" href="#id_32-speed-test"></a>
-</h3>
-<p><strong>Small Samples:</strong> Here is the run-time required to complete the DiD estimation using each package:</p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/speedtest_small.png"></p>
-<p>We see that, with 20,000 unique individuals, <code>didimpute</code> and <code>DIDmultiplegt</code> have become very slow. I could not get either approach to run successfully with 100,000 unique individuals, as they both crash R. By contrast, <code>did</code> and <code>DiDforBigData</code> are so fast that they can barely be seen in the plot.</p>
-<p><strong>Large samples:</strong> Given the failure of <code>didimpute</code> and <code>DIDmultiplegt</code> with 100,000 observations, we now restrict attention to <code>did</code> and <code>DiDforBigData</code>. We consider much larger samples:</p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/speedtest_large.png"></p>
-<p>Even with 1 million unique individuals (and 10 million observations), it is difficult to see <code>DiDforBigData</code> in the plot, as estimation requires about half of a minute, versus nearly 1 hour for <code>did</code>. Thus, <code>DiDforBigData</code> is roughly <em>two orders of magnitude</em> faster than <code>did</code> when working with a sample of one million individuals.</p>
-</div>
-<div class="section level3">
-<h3 id="id_33-memory-test">3.3 Memory test<a class="anchor" aria-label="anchor" href="#id_33-memory-test"></a>
-</h3>
-<p><strong>Small Samples:</strong> Here is the memory used to complete the DiD estimation by each package:</p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/memorytest_small.png"></p>
-<p>We see that <code>DIDmultiplegt</code> uses much more memory than the other approaches. The other approaches all use relatively little memory at these sample sizes.</p>
-<p><strong>Large Samples:</strong></p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/memorytest_large.png"></p>
-<p>When considering large samples, we see that <code>DiDforBigData</code> uses less than a quarter of the memory used by <code>did</code>.</p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="id_4-using-didforbigdata">4. Using <code>DiDforBigData</code>
-<a class="anchor" aria-label="anchor" href="#id_4-using-didforbigdata"></a>
-</h2>
-<p>To install the package:</p>
+<p>To install the package from CRAN:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"setzler/DiDforBigData"</span><span class="op">)</span></span></code></pre></div>
-<p>To use the package after it is installed:</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"DiDforBigData"</span><span class="op">)</span></span></code></pre></div>
+<p>To install the package from Github:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://setzler.github.io/DiDforBigData/">DiDforBigData</a></span><span class="op">)</span></span></code></pre></div>
-<p>Before estimation, set up a variable list with the names of your variables:</p>
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"setzler/DiDforBigData"</span><span class="op">)</span></span></code></pre></div>
+<p>If feasible, it is recommended to also install these packages:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"progress"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fixest"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"parallel"</span><span class="op">)</span></span></code></pre></div>
+<p>To use the package after it is installed:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://setzler.github.io/DiDforBigData/">DiDforBigData</a></span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="basic-use">Basic Use<a class="anchor" aria-label="anchor" href="#basic-use"></a>
+</h2>
+<p>Before estimation, set up a variable list with the names of your variables:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">varnames</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">time_name</span> <span class="op">=</span> <span class="st">"year"</span></span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">outcome_name</span> <span class="op">=</span> <span class="st">"Y"</span></span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">cohort_name</span> <span class="op">=</span> <span class="st">"cohort"</span></span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">id_name</span> <span class="op">=</span> <span class="st">"id"</span></span></code></pre></div>
 <p>To estimate DiD for a single cohort and event time, use the <code>DiDge</code> command. For example:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/DiDge.html">DiDge</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="va">yourdata</span>, varnames <span class="op">=</span> <span class="va">varnames</span>,</span>
 <span>             cohort_time <span class="op">=</span> <span class="fl">2010</span>, event_postperiod <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <p>A detailed manual explaining the various features available in <code>DiDge</code> is available <a href="https://setzler.github.io/DiDforBigData/reference/index.html">here</a> or by running this command in R:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="op">?</span><span class="va">DiDge</span></span></code></pre></div>
 <p>To estimate DiD for many cohorts and event times, use the <code>DiD</code> command. For example:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/DiD.html">DiD</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="va">yourdata</span>, varnames <span class="op">=</span> <span class="va">varnames</span>,</span>
 <span>    min_event <span class="op">=</span> <span class="op">-</span><span class="fl">3</span>, max_event <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
 <p>A detailed manual explaining the various features available in <code>DiD</code> is available <a href="https://setzler.github.io/DiDforBigData/reference/index.html">here</a> or by running this command in R:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="op">?</span><span class="va">DiD</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="further-information">Further Information<a class="anchor" aria-label="anchor" href="#further-information"></a>
+</h2>
 <p>For more information, read the following articles:</p>
 <ul>
 <li><a href="https://setzler.github.io/DiDforBigData/articles/DiDforBigData.html">Get Started</a></li>
+<li><a href="https://setzler.github.io/DiDforBigData/articles/Background.html">Background and Demonstration</a></li>
 <li><a href="https://setzler.github.io/DiDforBigData/reference/index.html">Function Documentation</a></li>
 <li><a href="https://setzler.github.io/DiDforBigData/articles/Examples.html">Detailed Examples</a></li>
 </ul>
