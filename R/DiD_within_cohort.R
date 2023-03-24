@@ -165,9 +165,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
       OLSformula = paste0(OLSformula, " + ", paste0(paste0(covariate_names,"_diff"),collapse=" + "))
     }
     if(check_fixest){ # prefer feols() if installed
-      the_func = fixest::feols
-      OLSlm = do.call("the_func", list(as.formula(OLSformula), data=as.name("data_prepost")))
-      # OLSlm = fixest::feols(as.formula(OLSformula),data=data_prepost)
+      OLSlm = fixest::feols(as.formula(OLSformula),data=data_prepost)
     }
     if(!check_fixest){ # use lm() if feols() not installed
       OLSlm = lm(as.formula(OLSformula),data=data_prepost)
@@ -238,7 +236,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
 #' @param base_event This is the base pre-period that is normalized to zero in the DiD estimation. Default is base_event=-1.
 #' @param return_data If true, this returns the treated and control differenced data. Default is FALSE.
 #' @param return_ATTs_only Return only the ATT estimates and sample sizes. Default is TRUE.
-#' @returns A single-row data.table() containing the estimates and various statistics such as sample size. If `return_data=TRUE`, it instead returns a list in which the `data_prepost` entry is the previously-mentioned single-row data.table(), and the other argument `data_prepost`  contains the constructed data that should be provided to OLS.
+#' @return A single-row data.table() containing the estimates and various statistics such as sample size. If `return_data=TRUE`, it instead returns a list in which the `data_prepost` entry is the previously-mentioned single-row data.table(), and the other argument `data_prepost`  contains the constructed data that should be provided to OLS.
 #' @examples
 #' # simulate some data
 #' simdata = SimDiD(sample_size=200)$simdata

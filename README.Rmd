@@ -117,7 +117,13 @@ than a quarter of the memory used by `did`.
 
 ## 4. Using `DiDforBigData`
 
-To install the package:
+To install the package from CRAN:
+
+```{r echo=T, eval=FALSE, message=FALSE}
+install.packages("DiDforBigData")
+```
+
+To install the package from Github:
 
 ```{r echo=T, eval=FALSE, message=FALSE}
 devtools::install_github("setzler/DiDforBigData")

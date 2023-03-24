@@ -22,7 +22,7 @@
 #' @param markets Add 10 randomly assigned markets, with market-specific shocks that are systematically greater for markets that are treated earlier. Default is FALSE.
 #' @param randomNA If TRUE, randomly assign the outcome variable with missing values (NA) in some cases. Default is FALSE.
 #' @param missingCohorts If set to a particular cohort (or vector of cohorts), all of the outcomes for that cohort at event time -1 will be set to missing. Default is NULL.
-#' @returns A list with two data.tables.
+#' @return A list with two data.tables.
 #' The first data.table is simulated data with variables (id, year, cohort, Y), where Y is the outcome variable.
 #' The second data.table contains the true ATT values, both at the (event,cohort) level and by event averaging across cohorts.
 #' @examples

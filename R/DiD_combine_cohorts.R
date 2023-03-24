@@ -154,7 +154,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
 #' @param Esets If a list of sets of event times is provided, it will loop over those sets, computing the average ATT_e across event times e. Default is NULL.
 #' @param return_ATTs_only Return only the ATT estimates and sample sizes. Default is TRUE.
 #' @param parallel_cores Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.
-#' @returns A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
+#' @return A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).
 #' @examples
 #' # simulate some data
 #' simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2)$simdata
@@ -229,10 +229,12 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
 #'
 #' @export
 DiD <- function(inputdata, varnames, control_group = "all", base_event=-1, min_event=NULL, max_event=NULL, Esets=NULL, return_ATTs_only=TRUE, parallel_cores=1){
+  # case without averaging event sets
   if(is.null(Esets)){
     results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, base_event=base_event, min_event=min_event, max_event=max_event, return_data=FALSE, return_ATTs_only=return_ATTs_only, parallel_cores=parallel_cores)
     return(results)
   }
+  # case with averaging event sets
   if(!is.null(Esets)){
     results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, base_event=base_event, min_event=min_event, max_event=max_event, return_data=TRUE, parallel_cores=parallel_cores)
     data_cohort = results$data_cohort
@@ -245,10 +247,12 @@ DiD <- function(inputdata, varnames, control_group = "all", base_event=-1, min_e
     }
     results$results_Esets = results_Esets
     results$data_cohort = NULL
+
     if(return_ATTs_only){
       results$results_cohort=results$results_cohort[,.SD,.SDcols=c("Cohort", "EventTime", "BaseEvent", "CalendarTime", "ATTge", "ATTge_SE", "Ncontrol", "Ntreated")]
       results$results_average=results$results_average[,.SD,.SDcols=c("EventTime", "BaseEvent", "ATTe", "ATTe_SE", "Ncontrol", "Ntreated")]
     }
+
     return(results)
   }
 }
