@@ -44,6 +44,7 @@
 <li class="active nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/Background.html">Background</a>
     <a class="dropdown-item" href="../articles/Examples.html">Examples</a>
   </div>
 </li>
@@ -546,7 +547,7 @@ on <code>varnames$id_name</code> by default:</p>
 <code class="sourceCode R"><span></span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">cluster_names</span> <span class="op">=</span> <span class="st">"cluster"</span> </span>
 <span></span>
-<span><span class="va">did</span> <span class="op">=</span> <span class="fu"><a href="../reference/DiD.html">DiD</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/copy.html" class="external-link">copy</a></span><span class="op">(</span><span class="va">simdata</span><span class="op">)</span>, varnames <span class="op">=</span> <span class="va">varnames</span>, min_event <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">did</span> <span class="op">=</span> <span class="fu"><a href="../reference/DiD.html">DiD</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="fu">copy</span><span class="op">(</span><span class="va">simdata</span><span class="op">)</span>, varnames <span class="op">=</span> <span class="va">varnames</span>, min_event <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">did</span><span class="op">$</span><span class="va">results_average</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    EventTime BaseEvent     ATTe    ATTe_SE Ncontrol Ntreated</span></span>
