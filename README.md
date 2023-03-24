@@ -47,18 +47,19 @@ To install the package from Github:
 devtools::install_github("setzler/DiDforBigData")
 ```
 
-If feasible, it is recommended to also install these packages:
-
-``` r
-install.packages("progress")
-install.packages("fixest")
-install.packages("parallel")
-```
-
 To use the package after it is installed:
 
 ``` r
 library(DiDforBigData)
+```
+
+It is recommended to also make sure these optional packages have been
+installed:
+
+``` r
+library("progress")
+library("fixest")
+library("parallel")
 ```
 
 ## Basic Use
