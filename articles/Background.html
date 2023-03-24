@@ -84,10 +84,6 @@
 
     
     
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://setzler.github.io/DiDforBigData/">DiDforBigData</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Loading required package: data.table</span></span>
-<span><span class="co">#&gt; Loading required package: sandwich</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="why-do-we-need-a-staggered-did-package-for-big-data">1. Why do we need a staggered DiD package for big data?<a class="anchor" aria-label="anchor" href="#why-do-we-need-a-staggered-did-package-for-big-data"></a>
 </h2>
@@ -174,7 +170,7 @@ intervals (using +/- 1.96*SE) for the DiD estimate at event time +1
 (averaging across cohorts). The true ATT is 4 at event time +1. I also
 verify that two-way fixed-effects OLS estimation would find an effect of
 about 5.5 at event time +1 when the sample is large.</p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/estimates_small.png"></p>
+<p><img src="../reference/figures/estimates_small.png"></p>
 <p>A caveat: <code>did</code> provides standard errors that correspond
 to <em>multiple-hypothesis testing</em> and will thus tend to be wider
 than the single-hypothesis standard errors provided by
@@ -185,7 +181,7 @@ than the single-hypothesis standard errors provided by
 </h3>
 <p><strong>Small Samples:</strong> Here is the run-time required to
 complete the DiD estimation using each package:</p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/speedtest_small.png"></p>
+<p><img src="../reference/figures/speedtest_small.png"></p>
 <p>We see that, with 20,000 unique individuals, <code>didimpute</code>
 and <code>DIDmultiplegt</code> have become very slow. I could not get
 either approach to run successfully with 100,000 unique individuals, as
@@ -196,7 +192,7 @@ the plot.</p>
 <code>didimpute</code> and <code>DIDmultiplegt</code> with 100,000
 observations, we now restrict attention to <code>did</code> and
 <code>DiDforBigData</code>. We consider much larger samples:</p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/speedtest_large.png"></p>
+<p><img src="../reference/figures/speedtest_large.png"></p>
 <p>Even with 1 million unique individuals (and 10 million observations),
 it is difficult to see <code>DiDforBigData</code> in the plot, as
 estimation requires about half of a minute, versus nearly 1 hour for
@@ -209,12 +205,12 @@ a sample of one million individuals.</p>
 </h3>
 <p><strong>Small Samples:</strong> Here is the memory used to complete
 the DiD estimation by each package:</p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/memorytest_small.png"></p>
+<p><img src="../reference/figures/memorytest_small.png"></p>
 <p>We see that <code>DIDmultiplegt</code> uses much more memory than the
 other approaches. The other approaches all use relatively little memory
 at these sample sizes.</p>
 <p><strong>Large Samples:</strong></p>
-<p><img src="https://github.com/setzler/DiDforBigData/raw/main/inst/speed_test_plots/memorytest_large.png"></p>
+<p><img src="../reference/figures/memorytest_large.png"></p>
 <p>When considering large samples, we see that
 <code>DiDforBigData</code> uses less than a quarter of the memory used
 by <code>did</code>.</p>
