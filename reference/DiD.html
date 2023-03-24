@@ -116,12 +116,14 @@
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g).</p>
+<p>A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g). If the Esets argument is specified, a third component called results_Esets will be included in the list of output.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># simulate some data</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># ------ basic usage ------</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># simulate some data</span></span></span>
 <span class="r-in"><span><span class="va">simdata</span> <span class="op">=</span> <span class="fu"><a href="SimDiD.html">SimDiD</a></span><span class="op">(</span>sample_size<span class="op">=</span><span class="fl">1000</span>, ATTcohortdiff <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">$</span><span class="va">simdata</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># define the variable names as a list()</span></span></span>
@@ -188,6 +190,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:        -3        -1 0.02985423 0.06616998      753      749</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3:        -2        -1 0.11469454 0.07116391      753      749</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># ------ choosing a control group ------</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># use only the never-treated control group, estimate events -4 through 1</span></span></span>
 <span class="r-in"><span><span class="fu">DiD</span><span class="op">(</span><span class="va">simdata</span>, <span class="va">varnames</span>, control_group <span class="op">=</span> <span class="st">"never-treated"</span>, min_event<span class="op">=</span><span class="op">-</span><span class="fl">4</span>, max_event<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span></span>
@@ -281,6 +285,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6:         1        -1 3.02321230 0.08598933      750      499</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># ------ average across event times ------</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># estimate average ATTe across sets of events</span></span></span>
 <span class="r-in"><span><span class="fu">DiD</span><span class="op">(</span><span class="va">simdata</span>, <span class="va">varnames</span>, min_event<span class="op">=</span><span class="op">-</span><span class="fl">4</span>, max_event<span class="op">=</span><span class="fl">6</span>, Esets<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">4</span>,<span class="op">-</span><span class="fl">3</span>,<span class="op">-</span><span class="fl">2</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $results_cohort</span>
@@ -359,9 +365,13 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:    1,2,3 4.18897766  0.06019071</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># ------ parallelization ------</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># estimate average ATTe in parallel</span></span></span>
 <span class="r-in"><span><span class="co"># not run:</span></span></span>
 <span class="r-in"><span><span class="co"># DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># ------ handling of missing values ------</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># simulate data with missing values, re-run estimation</span></span></span>
 <span class="r-in"><span><span class="co"># not run:</span></span></span>
@@ -409,8 +419,12 @@
 <span class="r-in"><span><span class="co"># simdata = SimDiD(sample_size=2000,time_covars=TRUE,missingCohorts=2010)$simdata</span></span></span>
 <span class="r-in"><span><span class="co"># DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))</span></span></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># ------ clustered standard errors ------</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># simulate data with clusters</span></span></span>
 <span class="r-in"><span><span class="va">simdata</span> <span class="op">=</span> <span class="fu"><a href="SimDiD.html">SimDiD</a></span><span class="op">(</span>sample_size<span class="op">=</span><span class="fl">2000</span>,clusters<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">simdata</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># set up variable names</span></span></span>
 <span class="r-in"><span><span class="va">varnames</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">varnames</span><span class="op">$</span><span class="va">time_name</span> <span class="op">=</span> <span class="st">"year"</span></span></span>
 <span class="r-in"><span><span class="va">varnames</span><span class="op">$</span><span class="va">outcome_name</span> <span class="op">=</span> <span class="st">"Y"</span></span></span>
@@ -436,7 +450,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># cluster SEs on the "cluster" variable</span></span></span>
-<span class="r-in"><span><span class="co"># note: it always clusters on id_name, including when clustering on other variables</span></span></span>
+<span class="r-in"><span><span class="co"># note: DiD() always clusters on id_name, including when clustering on other variables</span></span></span>
 <span class="r-in"><span><span class="va">varnames</span><span class="op">$</span><span class="va">cluster_names</span> <span class="op">=</span> <span class="st">"cluster"</span></span></span>
 <span class="r-in"><span><span class="fu">DiD</span><span class="op">(</span><span class="va">simdata</span>, <span class="va">varnames</span>, min_event<span class="op">=</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">2</span>, Esets<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $results_cohort</span>
