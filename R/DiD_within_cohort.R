@@ -257,21 +257,6 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
 #' # use only the never-treated control group
 #' DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
 #'
-#' # use only the future-treated control group
-#' DiDge(simdata, varnames, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
-#'
-#' # simulate some data with covariates, add the covariates to the varnames, update the estimates
-#' sim = SimDiD(sample_size=200,time_covars=TRUE)
-#' varnames$covariate_names = c("X1","X2")
-#' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-#' varnames$covariate_names = NULL # we are done with this example
-#'
-#' # simulate some data with clusters, add the clusters to the varnames, update the estimates
-#' sim = SimDiD(sample_size=3000, clusters=TRUE)
-#' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-#' varnames$cluster_names = c("cluster") # now we cluster the standard errors:
-#' DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-#'
 #' @export
 DiDge <- function(inputdata, varnames, cohort_time, event_postperiod, base_event = -1, control_group = "all", return_data=FALSE, return_ATTs_only=TRUE){
 

@@ -76,41 +76,4 @@ where cohort_counter is the order of treated cohort (first, second, etc.).
 \examples{
 # simulate data with default options
 SimDiD()
-
-# change the random seed
-SimDiD(seed=123)
-
-# increase sample size
-SimDiD(sample_size=200)
-
-# increase the initial ATT for the first treated cohort
-SimDiD(ATTat0=2)
-
-# change cross-time and cross-cohort ATT variation
-# note: the formula is ATTat0 + EventTime*ATTgrowth
-SimDiD(ATTgrowth=2,ATTcohortdiff=3)
-
-# change the range of years considered and treatment cohorts
-SimDiD(minyear=1994, maxyear=1999, cohorts=c(1995,1996))
-
-# add two periods of anticipation prior to treatment. The effect will be 0.5*ATTat0.
-SimDiD(anticipation=2)
-
-# add covariates "X1" and "X2", which vary over time differentially by cohort.
-SimDiD(time_covars=TRUE)
-
-# add clusters called "cluster", which are time-invariant and subject to common shocks.
-# note: shocks are randomly assigned to clusters, so parallel trends is not violated.
-SimDiD(clusters=TRUE)
-
-# add clusters called "market", which are time-invariant and subject to common shocks.
-# note: earlier-treated markets tend to get better shocks, which violates parallel trends.
-SimDiD(markets=TRUE)
-
-# randomly set 10\% of outcomes to missing.
-SimDiD(randomNA=TRUE)
-
-# set cohort 2010 outcome to missing at event time -1.
-SimDiD(missingCohorts=2010)$simdata[cohort==2010 & year==2009]
-
 }

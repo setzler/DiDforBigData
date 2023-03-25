@@ -42,10 +42,8 @@ A list with two components: results_cohort is a data.table with the DiDge estima
 Estimate DiD for all possible cohorts and event time pairs (g,e), as well as the average across cohorts for each event time (e).
 }
 \examples{
-# ------ basic usage ------
-
 # simulate some data
-simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2)$simdata
+simdata = SimDiD(sample_size=200, ATTcohortdiff = 2)$simdata
 
 # define the variable names as a list()
 varnames = list()
@@ -56,17 +54,5 @@ varnames$id_name = "id"
 
 # estimate the ATT for all cohorts at event time 1 only
 DiD(simdata, varnames, min_event=1, max_event=1)
-
-# change the base period to -3
-DiD(simdata, varnames, base_event=-3, min_event=1, max_event=1)
-
-# check the pre-periods -4 through -2
-DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=-2)
-
-# use only the never-treated control group, estimate events -4 through 1
-DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=1)
-
-# estimate average ATTe across sets of events
-DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
 
 }

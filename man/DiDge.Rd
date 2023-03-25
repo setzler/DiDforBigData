@@ -58,19 +58,4 @@ DiDge(simdata, varnames, base_event=-3, cohort_time=2007, event_postperiod=1)
 # use only the never-treated control group
 DiDge(simdata, varnames, control_group = "never-treated", cohort_time=2007, event_postperiod=1)
 
-# use only the future-treated control group
-DiDge(simdata, varnames, control_group = "future-treated", cohort_time=2007, event_postperiod=1)
-
-# simulate some data with covariates, add the covariates to the varnames, update the estimates
-sim = SimDiD(sample_size=200,time_covars=TRUE)
-varnames$covariate_names = c("X1","X2")
-DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-varnames$covariate_names = NULL # we are done with this example
-
-# simulate some data with clusters, add the clusters to the varnames, update the estimates
-sim = SimDiD(sample_size=3000, clusters=TRUE)
-DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-varnames$cluster_names = c("cluster") # now we cluster the standard errors:
-DiDge(inputdata=copy(sim$simdata), varnames, cohort_time=2007, event_postperiod = 3)
-
 }

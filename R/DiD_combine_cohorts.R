@@ -157,7 +157,7 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
 #' @return A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g). If the Esets argument is specified, a third component called results_Esets will be included in the list of output.
 #' @examples
 #' # simulate some data
-#' simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2)$simdata
+#' simdata = SimDiD(sample_size=200, ATTcohortdiff = 2)$simdata
 #'
 #' # define the variable names as a list()
 #' varnames = list()
@@ -168,18 +168,6 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
 #'
 #' # estimate the ATT for all cohorts at event time 1 only
 #' DiD(simdata, varnames, min_event=1, max_event=1)
-#'
-#' # change the base period to -3
-#' DiD(simdata, varnames, base_event=-3, min_event=1, max_event=1)
-#'
-#' # check the pre-periods -4 through -2
-#' DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=-2)
-#'
-#' # use only the never-treated control group, estimate events -4 through 1
-#' DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=1)
-#'
-#' # estimate average ATTe across sets of events
-#' DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
 #'
 #' @export
 DiD <- function(inputdata, varnames, control_group = "all", base_event=-1, min_event=NULL, max_event=NULL, Esets=NULL, return_ATTs_only=TRUE, parallel_cores=1){
