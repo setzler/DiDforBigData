@@ -156,8 +156,6 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
 #' @param parallel_cores Number of cores to use in parallel processing. If greater than 1, it will try to run library(parallel), so the "parallel" package must be installed. Default is 1.
 #' @return A list with two components: results_cohort is a data.table with the DiDge estimates (by event e and cohort g), and results_average is a data.table with the DiDe estimates (by event e, average across cohorts g). If the Esets argument is specified, a third component called results_Esets will be included in the list of output.
 #' @examples
-#' # ------ basic usage ------
-#'
 #' # simulate some data
 #' simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2)$simdata
 #'
@@ -177,71 +175,11 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
 #' # check the pre-periods -4 through -2
 #' DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=-2)
 #'
-#'# ------ choosing a control group ------
-#'
 #' # use only the never-treated control group, estimate events -4 through 1
 #' DiD(simdata, varnames, control_group = "never-treated", min_event=-4, max_event=1)
 #'
-#' # use only the future treated control group, estimate events -4 through 1
-#' DiD(simdata, varnames, control_group = "future-treated", min_event=-4, max_event=1)
-#'
-#' # ------ average across event times ------
-#'
 #' # estimate average ATTe across sets of events
 #' DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
-#'
-#' # ------ parallelization ------
-#'
-#' # estimate average ATTe in parallel
-#' # not run:
-#' # DiD(simdata, varnames, min_event=-4, max_event=6, parallel_cores=4)
-#'
-#' # ------ handling of missing values ------
-#'
-#' # simulate data with missing values, re-run estimation
-#' # not run:
-#' # simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, randomNA = TRUE)$simdata
-#' # DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
-#'
-#' # simulate data with missing cohort, re-run estimation
-#' # not run:
-#' # simdata = SimDiD(sample_size=1000, ATTcohortdiff = 2, missingCohorts=2010)$simdata
-#' # DiD(simdata, varnames, min_event=-4, max_event=6, Esets=list(c(-4,-3,-2),c(1,2,3)))
-#'
-#' # simulate data with time-varying covariates
-#' simdata = SimDiD(sample_size=2000,time_covars=TRUE)$simdata
-#'
-#' # run estimation that controls for time-varying covariates
-#' varnames$covariate_names = c("X1","X2")
-#' DiD(simdata, varnames, min_event=1, max_event=2)
-#'
-#' # simulate data with time-varying covariates and missing values, re-run estimation
-#' # not run:
-#' # simdata = SimDiD(sample_size=2000,time_covars=TRUE,randomNA=TRUE)$simdata
-#' # DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
-#'
-#' # simulate data with time-varying covariates and missing cohort, re-run estimation
-#' # not run:
-#' # simdata = SimDiD(sample_size=2000,time_covars=TRUE,missingCohorts=2010)$simdata
-#' # DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
-#'
-#' # ------ clustered standard errors ------
-#'
-#' # simulate data with clusters
-#' simdata = SimDiD(sample_size=2000,clusters=TRUE)$simdata
-#'
-#' # set up variable names
-#' varnames = list()
-#' varnames$time_name = "year"
-#' varnames$outcome_name = "Y"
-#' varnames$cohort_name = "cohort"
-#' varnames$id_name = "id"
-#' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
-#'
-#' # cluster SEs on the "cluster" variable
-#' # note: DiD() always clusters on id_name, including when clustering on other variables
-#' varnames$cluster_names = "cluster"
-#' DiD(simdata, varnames, min_event=1, max_event=2, Esets=list(c(1,2)))
 #'
 #' @export
 DiD <- function(inputdata, varnames, control_group = "all", base_event=-1, min_event=NULL, max_event=NULL, Esets=NULL, return_ATTs_only=TRUE, parallel_cores=1){

@@ -3,7 +3,7 @@ Title: A Big Data Implementation of Difference-in-Differences Estimation with St
 Version: 1.0
 Authors@R: 
     person("Bradley", "Setzler", , "bradley.setzler@gmail.com", role = c("aut", "cre", "cph"))
-Description: Provides a big-data-friendly and memory-efficient difference-in-differences (DiD) estimator for staggered (and non-staggered) treatment contexts. 
+Description: Provides a big-data-friendly and memory-efficient difference-in-differences estimator for staggered (and non-staggered) treatment contexts. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
