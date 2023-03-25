@@ -1,4 +1,6 @@
-# DiDforBigData 1.0
+## DiDforBigData 1.0
+
+* Published to CRAN. `install.packages("DiDforBigData")` now works.
 
 ## DiDforBigData 0.3
 
