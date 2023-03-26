@@ -600,13 +600,9 @@ while your <code>DiD</code> estimation is executing in parallel.</p>
 <p>We run the estimation not in parallel:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">did</span> <span class="op">=</span> <span class="fu"><a href="../reference/DiD.html">DiD</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/copy.html" class="external-link">copy</a></span><span class="op">(</span><span class="va">simdata</span><span class="op">)</span>, varnames <span class="op">=</span> <span class="va">varnames</span>, min_event <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<p>We run the estimation in parallel with 4 processes:</p>
+<p>We run the estimation in parallel with 2 processes:</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">did</span> <span class="op">=</span> <span class="fu"><a href="../reference/DiD.html">DiD</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/copy.html" class="external-link">copy</a></span><span class="op">(</span><span class="va">simdata</span><span class="op">)</span>, varnames <span class="op">=</span> <span class="va">varnames</span>, min_event <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">3</span>, parallel_cores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
-<p>To automatically infer the number of cores available to use, you
-could try this:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">did</span> <span class="op">=</span> <span class="fu"><a href="../reference/DiD.html">DiD</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/copy.html" class="external-link">copy</a></span><span class="op">(</span><span class="va">simdata</span><span class="op">)</span>, varnames <span class="op">=</span> <span class="va">varnames</span>, min_event <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">3</span>, parallel_cores <span class="op">=</span> <span class="op">(</span><span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">did</span> <span class="op">=</span> <span class="fu"><a href="../reference/DiD.html">DiD</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/copy.html" class="external-link">copy</a></span><span class="op">(</span><span class="va">simdata</span><span class="op">)</span>, varnames <span class="op">=</span> <span class="va">varnames</span>, min_event <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">3</span>, parallel_cores <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -634,18 +630,18 @@ statistics, each of which has a different sample size.</p>
 <h4 id="example-5">Example<a class="anchor" aria-label="anchor" href="#example-5"></a>
 </h4>
 <p>We simulate some data:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sim</span> <span class="op">=</span> <span class="fu"><a href="../reference/SimDiD.html">SimDiD</a></span><span class="op">(</span>seed<span class="op">=</span><span class="fl">123</span>, sample_size <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="va">simdata</span> <span class="op">=</span> <span class="va">sim</span><span class="op">$</span><span class="va">simdata</span></span></code></pre></div>
 <p>We set up the <code>varnames</code> to prepare for estimation:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">varnames</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">time_name</span> <span class="op">=</span> <span class="st">"year"</span> </span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">outcome_name</span> <span class="op">=</span> <span class="st">"Y"</span></span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">cohort_name</span> <span class="op">=</span> <span class="st">"cohort"</span></span>
 <span><span class="va">varnames</span><span class="op">$</span><span class="va">id_name</span> <span class="op">=</span> <span class="st">"id"</span></span></code></pre></div>
 <p>We run the estimation with two event set averages:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">did</span> <span class="op">=</span> <span class="fu"><a href="../reference/DiD.html">DiD</a></span><span class="op">(</span>inputdata <span class="op">=</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/copy.html" class="external-link">copy</a></span><span class="op">(</span><span class="va">simdata</span><span class="op">)</span>, varnames <span class="op">=</span> <span class="va">varnames</span>, min_event <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, max_event<span class="op">=</span><span class="fl">3</span>, Esets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">did</span><span class="op">)</span></span>
