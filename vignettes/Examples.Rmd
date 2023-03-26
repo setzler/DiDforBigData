@@ -353,16 +353,10 @@ did = DiD(inputdata = copy(simdata), varnames = varnames, min_event = -1, max_ev
 ```
 
 
-We run the estimation in parallel with 4 processes:
+We run the estimation in parallel with 2 processes:
 
 ```{r echo=TRUE, eval=FALSE, message=FALSE}
-did = DiD(inputdata = copy(simdata), varnames = varnames, min_event = -1, max_event=3, parallel_cores = 4)
-```
-
-To automatically infer the number of cores available to use, you could try this:
-
-```{r echo=TRUE, eval=FALSE, message=FALSE}
-did = DiD(inputdata = copy(simdata), varnames = varnames, min_event = -1, max_event=3, parallel_cores = (parallel::detectCores() - 1))
+did = DiD(inputdata = copy(simdata), varnames = varnames, min_event = -1, max_event=3, parallel_cores = 2)
 ```
 
 
