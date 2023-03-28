@@ -63,7 +63,7 @@ deChaisemartin <- function(inputdata,varnames,dynamic=3,placebo=0,brep=40){
 }
 
 # Test each DiD estimator's speed and memory usage
-TestDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5), reps=3){
+TestDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5), reps=3, output_dir = "inst/speed_tests/"){
 
   # prepare variable names
   varnames = list()
@@ -181,7 +181,7 @@ TestDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5), re
     print(sprintf("sample %s done",nn))
   }
 
-  file = sprintf("inst/speed_tests/speed_test_%s.csv",estimator)
+  file = sprintf("%s/speed_test_%s.csv", output_dir, estimator)
   write.csv(all_speeds, file=file, row.names = FALSE)
 
   return(all_speeds)
@@ -189,25 +189,23 @@ TestDiD <- function(estimator = "DiDforBigData", sample_sizes=c(1e3,1e4,1e5), re
 }
 
 
-plot_results <- function(output_dir="docs/articles"){
+plot_results <- function(input_dir="inst/speed_tests", output_dir="docs/articles"){
   suppressMessages(library(ggplot2, warn.conflicts = F, quietly = T))
   suppressMessages(library(scales, warn.conflicts = F, quietly = T))
   suppressMessages(library(data.table, warn.conflicts = F, quietly = T))
 
   testresults = rbindlist(list(
-    setDT(read.csv(file="inst/speed_tests/speed_test_DiDforBigData.csv")),
-    setDT(read.csv(file="inst/speed_tests/speed_test_CSdr.csv")),
-    setDT(read.csv(file="inst/speed_tests/speed_test_CSbs.csv")),
-    setDT(read.csv(file="inst/speed_tests/speed_test_CH1.csv")),
-    setDT(read.csv(file="inst/speed_tests/speed_test_CH5.csv")),
-    setDT(read.csv(file="inst/speed_tests/speed_test_CH10.csv")),
-    setDT(read.csv(file="inst/speed_tests/speed_test_CH20.csv")),
-    setDT(read.csv(file="inst/speed_tests/speed_test_BJS.csv"))
-    # setDT(read.csv(file="inst/speed_test_CSreg.csv"))
+    setDT(read.csv(file=sprintf("%s/speed_test_DiDforBigData.csv", input_dir))),
+    setDT(read.csv(file=sprintf("%s/speed_test_CSdr.csv", input_dir))),
+    setDT(read.csv(file=sprintf("%s/speed_test_CSbs.csv", input_dir))),
+    setDT(read.csv(file=sprintf("%s/speed_test_CH1.csv", input_dir))),
+    setDT(read.csv(file=sprintf("%s/speed_test_CH5.csv", input_dir))),
+    setDT(read.csv(file=sprintf("%s/speed_test_CH10.csv", input_dir))),
+    setDT(read.csv(file=sprintf("%s/speed_test_CH20.csv", input_dir))),
+    setDT(read.csv(file=sprintf("%s/speed_test_BJS.csv", input_dir)))
   ))
   testresults = testresults[sample_size <= 2e4]
   testresults[method=="BJS", variable := "Borusyak Jaravel\n& Spiess\ndidimputation"]
-  # testresults[method=="CSreg", variable := "Callaway &\nSant'Anna\ndid using reg"]
   testresults[method=="CSdr", variable := "Callaway &\nSant'Anna\ndid"]
   testresults[method=="CSbs", variable := "Callaway &\nSant'Anna\ndid bstrap=F"]
   testresults[method=="CH", variable := "Chaisemartin &\nD'Haultfoeuille\nDIDmultiplegt"]
@@ -267,9 +265,9 @@ plot_results <- function(output_dir="docs/articles"){
 
 
   testresults = rbindlist(list(
-    setDT(read.csv(file="inst/speed_tests/speed_test_DiDforBigData.csv")),
-    setDT(read.csv(file="inst/speed_tests/speed_test_CSdr.csv")),
-    setDT(read.csv(file="inst/speed_tests/speed_test_CSbs.csv"))
+    setDT(read.csv(file=sprintf("%s/speed_test_DiDforBigData.csv", input_dir))),
+    setDT(read.csv(file=sprintf("%s/speed_test_CSdr.csv", input_dir))),
+    setDT(read.csv(file=sprintf("%s/speed_test_CSbs.csv", input_dir)))
   ))
   testresults = testresults[sample_size > 2e4]
   testresults[method=="CSreg", variable := "Callaway &\nSant'Anna\ndid using reg"]
@@ -299,14 +297,13 @@ plot_results <- function(output_dir="docs/articles"){
 }
 
 ## run one at a time:
-# speedtest = TestDiD(estimator = "DiDforBigData", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
-# speedtest = TestDiD(estimator = "CSdr", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
-# speedtest = TestDiD(estimator = "CSbs", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3)
-# speedtest = TestDiD(estimator = "BJS", sample_sizes=c(1e3,5e3,1e4,2e4), reps=3)
-# speedtest = TestDiD(estimator = "CH1", sample_sizes=c(1e3), reps=3)
-# speedtest = TestDiD(estimator = "CH5", sample_sizes=c(5e3), reps=3)
-# speedtest = TestDiD(estimator = "CH10", sample_sizes=c(1e4), reps=3)
-# speedtest = TestDiD(estimator = "CH20", sample_sizes=c(2e4), reps=3)
-# plot_results(output_dir="inst/speed_test_plots/") 
-
-# speedtest = TestDiD(estimator = "DiDforBigDataMils", sample_sizes=c(10e6), reps=3)
+# speedtest = TestDiD(estimator = "DiDforBigDataMils", sample_sizes=c(10e6), reps=3, input_dir=NULL, output_dir=NULL)
+# speedtest = TestDiD(estimator = "DiDforBigData", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3, input_dir=NULL, output_dir=NULL)
+# speedtest = TestDiD(estimator = "CSdr", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3, input_dir=NULL, output_dir=NULL)
+# speedtest = TestDiD(estimator = "CSbs", sample_sizes=c(1e3,5e3,1e4,2e4,5e4,1e5,5e5,1e6), reps=3, input_dir=NULL, output_dir=NULL)
+# speedtest = TestDiD(estimator = "BJS", sample_sizes=c(1e3,5e3,1e4,2e4), reps=3, input_dir=NULL, output_dir=NULL)
+# speedtest = TestDiD(estimator = "CH1", sample_sizes=c(1e3), reps=3, input_dir=NULL, output_dir=NULL)
+# speedtest = TestDiD(estimator = "CH5", sample_sizes=c(5e3), reps=3, input_dir=NULL, output_dir=NULL)
+# speedtest = TestDiD(estimator = "CH10", sample_sizes=c(1e4), reps=3, input_dir=NULL, output_dir=NULL)
+# speedtest = TestDiD(estimator = "CH20", sample_sizes=c(2e4), reps=3, input_dir=NULL, output_dir=NULL)
+# plot_results(input_dir=NULL, output_dir=NULL)
