@@ -128,6 +128,8 @@ For more information, read the following articles:
   Started](https://setzler.github.io/DiDforBigData/articles/DiDforBigData.html)
 - [Background and
   Demonstration](https://setzler.github.io/DiDforBigData/articles/Background.html)
+- [Theory and
+  Methods](https://setzler.github.io/DiDforBigData/articles/Theory.html)
 - [Function
   Documentation](https://setzler.github.io/DiDforBigData/reference/index.html)
 - [Detailed
