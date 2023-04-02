@@ -196,7 +196,9 @@ three steps:</p>
 definition:</p>
 <p><span class="math display">\[
 \text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+e}(\infty) |
-G_i = g] = \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] -
+G_i = g]
+\]</span> <span class="math display">\[
+= \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] -
 \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | G_i = g]
 \]</span></p>
 <p><strong>Step 2:</strong> Assume that Parallel Trends holds. Then, we
@@ -360,6 +362,9 @@ sample, we must cluster on <span class="math inline">\(i\)</span> when
 estimating <span class="math inline">\(\text{Var}(\bar\beta_e)\)</span>.
 Finally, the standard error corresponding to the null hypothesis of
 <span class="math inline">\(\text{ATT}_{e} = 0\)</span> is <span class="math inline">\(\sqrt{\text{Var}(\text{DiD}_e)}\)</span>.</p>
+<p>A similar approach is used to estimate <span class="math inline">\(\text{ATT}_{E}\)</span> across a set of event
+times <span class="math inline">\(E\)</span>, again using that it can be
+represented as a linear combination of OLS coefficients <span class="math inline">\(\beta_{g,e}\)</span> with appropriate weights.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
