@@ -93,7 +93,10 @@ We prove that $\text{DiD}_{g,e}$ identifies $\text{ATT}_{g,e}$ in three steps:
 **Step 1:** Add and subtract  $Y_{i,t+b}(\infty)$ from the ATT definition:
 
 $$
-\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+e}(\infty) | G_i = g] = \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | G_i = g]
+\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+e}(\infty) | G_i = g] 
+$$
+$$
+= \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | G_i = g]
 $$
 
 **Step 2:** Assume that Parallel Trends holds. Then, we can replace the conditioning set $G_i=g$ with the conditioning set $i \in C_{g,e}$ in the second term:
@@ -190,4 +193,4 @@ To do so, it completes the following steps:
 
 **Step 5.** To test the null hypothesis that $\text{ATT}_{e} = 0$, define $\bar\beta_e = (\beta_{g,e})_g$ and $\bar\omega_e = (\omega_{g,e})_g$. Note that $\text{DiD}_e = \bar\omega_e' \bar\beta_e$. Then, $\text{Var}(\text{DiD}_e) = \bar\omega_e' \text{Var}(\bar\beta_e) \bar\omega_e$, where $\text{Var}(\bar\beta_e)$ is the usual variance-covariance matrix of the OLS coefficients. Since the same unit $i$ appears on multiple rows of the sample, we must cluster on $i$ when estimating $\text{Var}(\bar\beta_e)$. Finally, the standard error corresponding to the null hypothesis of $\text{ATT}_{e} = 0$ is  $\sqrt{\text{Var}(\text{DiD}_e)}$.
 
-
+A similar approach is used to estimate $\text{ATT}_{E}$ across a set of event times $E$, again using that it can be represented as a linear combination of OLS coefficients $\beta_{g,e}$ with appropriate weights.
