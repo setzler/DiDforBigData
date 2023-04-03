@@ -1,6 +1,13 @@
 DiD for Big Data in R
 ================
 
+[![](http://cranlogs.r-pkg.org/badges/grand-total/DiDforBigData?color=blue)](https://cran.r-project.org/package=DiDforBigData)
+[![](https://www.r-pkg.org/badges/version/DiDforBigData?color=blue)](https://cran.r-project.org/package=DiDforBigData)
+[![CRAN
+checks](https://badges.cranchecks.info/summary/DiDforBigData.svg)](https://cran.r-project.org/web/checks/check_results_DiDforBigData.html)
+[![](https://img.shields.io/badge/devel%20version-1.0-blue.svg)](https://github.com/setzler/DiDforBigData)
+[![](https://img.shields.io/github/last-commit/setzler/DiDforBigData.svg)](https://github.com/setzler/DiDforBigData/commits/main)
+
 This R package provides a big-data-friendly and memory-efficient
 difference-in-differences (DiD) estimator for staggered (and
 non-staggered) treatment contexts. It supports controlling for
