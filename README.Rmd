@@ -63,19 +63,19 @@ library(DiDforBigData)
 It is recommended to also make sure these optional packages have been installed:
 
 ```{r echo = TRUE, eval = FALSE, message=FALSE}
-library("progress")
-library("fixest")
-library("parallel")
+library(progress)
+library(fixest)
+library(parallel)
 ```
 
 
-## Basic Use
+## Basic Usage
 
 There are only 3 functions in this package:
 
-1. `SimDiD()`: This function simulates data.
-2. `DiDge()`: This function estimates DiD for a single cohort and a single event time.
-3. `DiD()`: This function estimates DiD for all available cohorts and event times. 
+1. `DiDge()`: This function estimates DiD for a single cohort and a single event time.
+2. `DiD()`: This function estimates DiD for all available cohorts and event times. 
+3. `SimDiD()`: This function simulates data.
 
 
 Details for each function are available from the [Function Documentation](https://setzler.github.io/DiDforBigData/reference/index.html).

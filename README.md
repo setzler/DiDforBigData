@@ -5,7 +5,7 @@ DiD for Big Data in R
 [![](https://www.r-pkg.org/badges/version/DiDforBigData?color=blue)](https://cran.r-project.org/package=DiDforBigData)
 [![CRAN
 checks](https://badges.cranchecks.info/summary/DiDforBigData.svg)](https://cran.r-project.org/web/checks/check_results_DiDforBigData.html)
-[![](https://img.shields.io/badge/devel%20version-1.0-blue.svg)](https://github.com/setzler/DiDforBigData)
+[![](https://img.shields.io/badge/devel%20version-1.0.0.9000-blue.svg)](https://github.com/setzler/DiDforBigData)
 [![](https://img.shields.io/github/last-commit/setzler/DiDforBigData.svg)](https://github.com/setzler/DiDforBigData/commits/main)
 
 This R package provides a big-data-friendly and memory-efficient
@@ -64,20 +64,20 @@ It is recommended to also make sure these optional packages have been
 installed:
 
 ``` r
-library("progress")
-library("fixest")
-library("parallel")
+library(progress)
+library(fixest)
+library(parallel)
 ```
 
-## Basic Use
+## Basic Usage
 
 There are only 3 functions in this package:
 
-1.  `SimDiD()`: This function simulates data.
-2.  `DiDge()`: This function estimates DiD for a single cohort and a
+1.  `DiDge()`: This function estimates DiD for a single cohort and a
     single event time.
-3.  `DiD()`: This function estimates DiD for all available cohorts and
+2.  `DiD()`: This function estimates DiD for all available cohorts and
     event times.
+3.  `SimDiD()`: This function simulates data.
 
 Details for each function are available from the [Function
 Documentation](https://setzler.github.io/DiDforBigData/reference/index.html).

@@ -16,9 +16,9 @@ knitr::opts_chunk$set(
 
 There are only 3 functions in this package:
 
-1. `SimDiD()`: This function simulates data.
-2. `DiDge()`: This function estimates DiD for a single cohort and a single event time.
-3. `DiD()`: This function estimates DiD for all available cohorts and event times. 
+1. `DiDge()`: This function estimates DiD for a single cohort and a single event time.
+2. `DiD()`: This function estimates DiD for all available cohorts and event times. 
+3. `SimDiD()`: This function simulates data.
 
 We now demonstrate the simplest application of the 3 functions.
 
@@ -27,12 +27,30 @@ Detailed documentation for each of these function is available from the Referenc
 ## 0. Installation
 
 
-```{r echo=T, eval=FALSE, message=FALSE}
+To install the package from CRAN:
+
+```{r echo = TRUE, eval = FALSE, message=FALSE}
+install.packages("DiDforBigData")
+```
+
+To install the package from Github:
+
+```{r echo = TRUE, eval = FALSE, message=FALSE}
 devtools::install_github("setzler/DiDforBigData")
 ```
 
-```{r echo=T, eval=T, message=FALSE}
+To use the package after it is installed:
+
+```{r echo = TRUE, eval = TRUE, message=FALSE}
 library(DiDforBigData)
+```
+
+It is recommended to also make sure these optional packages have been installed:
+
+```{r echo = TRUE, eval = TRUE, message=FALSE}
+library(progress)
+library(fixest)
+library(parallel)
 ```
 
 
