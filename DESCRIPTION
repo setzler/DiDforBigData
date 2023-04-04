@@ -1,6 +1,6 @@
 Package: DiDforBigData
 Title: A Big Data Implementation of Difference-in-Differences Estimation with Staggered Treatment
-Version: 1.0
+Version: 1.0.0.9000
 Authors@R: 
     person("Bradley", "Setzler", , "bradley.setzler@gmail.com", role = c("aut", "cre", "cph"))
 Description: Provides a big-data-friendly and memory-efficient difference-in-differences estimator for staggered (and non-staggered) treatment contexts. 
