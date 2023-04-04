@@ -156,7 +156,7 @@ The OLS estimate of $\beta_{g,e}$ is equivalent to $\text{DiD}_{g,e}$. The stand
 `DiDforBigData` uses the `DiD(...)` command to estimate $\text{DiD}_{g,e}$ for all available cohorts $g$ across a range of possible event times $e$; `DiD(...)` is documented [here](https://setzler.github.io/DiDforBigData/reference/DiD.html).
 
 
-### 4.1 `DiD(...)` Estimates `DiDge(...)` Many Times in Parallel
+### 4.1 DiD Estimation for All Possible $(g,e)$ Combinations
 
 `DiD(...)` uses the `control_group` and `base_event` arguments the same way as `DiDge(...)`. 
 
@@ -177,7 +177,7 @@ In practice, `DiD(...)` completes the following steps:
 The OLS estimate of $\beta_{g,e}$ is equivalent to $\text{DiD}_{g,e}$. The standard error provided by OLS for $\beta_{g,e}$ is equivalent to the standard error from a two-sample test of equal means for the null hypothesis $$\mathbb{E}[\Delta Y_{i,g+e} | G_i = g] =  \mathbb{E}[\Delta Y_{i,g+e} | i \in C_{g,e}] $$ which is equivalent to testing that $\text{ATT}_{g,e}=0$. Note that $\text{ATT}_{g,e}=0$ is tested as a single hypothesis for each $(g,e)$ combination; no adjustment for multiple hypothesis testing is applied. 
 
 
-### 4.2 Using `DiD(...)` to Estimate $\text{ATT}_{e}$
+### 4.2 Estimate the Average ATT across Cohorts and Event Times
 
 Aside from estimating each $\text{ATT}_{g,e}$, `DiD(...)` also estimates $\text{ATT}_{e}$ for each $e$ included in the event times of interest.
 
