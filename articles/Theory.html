@@ -285,8 +285,7 @@ available cohorts <span class="math inline">\(g\)</span> across a range
 of possible event times <span class="math inline">\(e\)</span>;
 <code>DiD(...)</code> is documented <a href="https://setzler.github.io/DiDforBigData/reference/DiD.html">here</a>.</p>
 <div class="section level3">
-<h3 id="did----estimates-didge----many-times-in-parallel">4.1 <code>DiD(...)</code> Estimates <code>DiDge(...)</code> Many
-Times in Parallel<a class="anchor" aria-label="anchor" href="#did----estimates-didge----many-times-in-parallel"></a>
+<h3 id="did-estimation-for-all-possible-ge-combinations">4.1 DiD Estimation for All Possible <span class="math inline">\((g,e)\)</span> Combinations<a class="anchor" aria-label="anchor" href="#did-estimation-for-all-possible-ge-combinations"></a>
 </h3>
 <p><code>DiD(...)</code> uses the <code>control_group</code> and
 <code>base_event</code> arguments the same way as
@@ -325,7 +324,7 @@ combination; no adjustment for multiple hypothesis testing is
 applied.</p>
 </div>
 <div class="section level3">
-<h3 id="using-did----to-estimate-textatt_e">4.2 Using <code>DiD(...)</code> to Estimate <span class="math inline">\(\text{ATT}_{e}\)</span><a class="anchor" aria-label="anchor" href="#using-did----to-estimate-textatt_e"></a>
+<h3 id="estimate-the-average-att-across-cohorts-and-event-times">4.2 Estimate the Average ATT across Cohorts and Event Times<a class="anchor" aria-label="anchor" href="#estimate-the-average-att-across-cohorts-and-event-times"></a>
 </h3>
 <p>Aside from estimating each <span class="math inline">\(\text{ATT}_{g,e}\)</span>, <code>DiD(...)</code>
 also estimates <span class="math inline">\(\text{ATT}_{e}\)</span> for
