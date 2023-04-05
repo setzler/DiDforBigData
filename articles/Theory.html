@@ -99,11 +99,12 @@ unit.</li>
 <span class="math inline">\(t\)</span>: Time period.</li>
 <li>
 <span class="math inline">\(D_{i,t}\)</span>: Binary indicator for
-treatment.</li>
+treatment. We assume throughout that treatment is received permanently
+once it has been received for the first time. In other words, <span class="math inline">\(D_{i,t}=1 \implies D_{i,t+1}=1\)</span>.</li>
 <li>
 <span class="math inline">\(G_i\)</span>: Treatment cohort, i.e.,
-the time at which treatment is first received by <span class="math inline">\(i\)</span>. Note: If treatment is not received,
-<span class="math inline">\(G_i = \infty\)</span>.</li>
+the time at which treatment is first received by <span class="math inline">\(i\)</span>. That is, <span class="math inline">\(G_i = g \implies D_{i,t}=1, \forall t\geq
+g\)</span>. Note: If treatment is not received, <span class="math inline">\(G_i = \infty\)</span>.</li>
 <li>
 <span class="math inline">\(Y_{i,t}\)</span>: Observed outcome of
 interest.</li>
@@ -111,10 +112,6 @@ interest.</li>
 <span class="math inline">\(Y_{i,t}(g)\)</span>: Counterfactual
 outcome if treatment cohort were <span class="math inline">\(G_i=g\)</span>.</li>
 </ul>
-<p>We assume throughout that treatment is received permanently once it
-has been received for the first time. In other words, <span class="math inline">\(D_{i,t}=1 \implies D_{i,t+1}=1\)</span>.
-Equivalently, <span class="math inline">\(G_i = g \implies D_{i,t}=1,
-\forall t\geq g\)</span>.</p>
 </div>
 <div class="section level3">
 <h3 id="goal">1.2 Goal<a class="anchor" aria-label="anchor" href="#goal"></a>
@@ -124,7 +121,7 @@ Equivalently, <span class="math inline">\(G_i = g \implies D_{i,t}=1,
 <span class="math inline">\(e \equiv t-g\)</span>, which is defined
 by:</p>
 <p><span class="math display">\[
-\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+e}(\infty) |
+\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+e}(\infty) |
 G_i = g]
 \]</span></p>
 <p>We may also be interested in the average ATT across treated cohorts
@@ -147,7 +144,7 @@ times, e.g., <span class="math inline">\(E = \{1,2,3\}\)</span>.</p>
 units <span class="math inline">\(i\)</span> that belong to a control
 group.</p>
 <ul>
-<li>At a minimum, the control group must satisfy <span class="math inline">\(i \in C_{g,e} \implies G_i &gt; \min\{g,
+<li>At a minimum, the control group must satisfy <span class="math inline">\(i \in C_{g,e} \implies G_i &gt; \max\{g,
 g+e\}\)</span>. This says that the control group must belong to a later
 cohort than the treated group of interest, and the control group must
 not have been treated yet by the event time of interest.</li>
@@ -192,34 +189,34 @@ receive treatment.</p>
 <p>We prove that <span class="math inline">\(\text{DiD}_{g,e}\)</span>
 identifies <span class="math inline">\(\text{ATT}_{g,e}\)</span> in
 three steps:</p>
-<p><strong>Step 1:</strong> Add and subtract <span class="math inline">\(Y_{i,t+b}(\infty)\)</span> from the ATT
+<p><strong>Step 1:</strong> Add and subtract <span class="math inline">\(Y_{i,g+b}(\infty)\)</span> from the ATT
 definition:</p>
 <p><span class="math display">\[
-\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+e}(\infty) |
+\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+e}(\infty) |
 G_i = g]
 \]</span> <span class="math display">\[
-= \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] -
-\mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | G_i = g]
+= \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(\infty) | G_i = g] -
+\mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | G_i = g]
 \]</span></p>
 <p><strong>Step 2:</strong> Assume that Parallel Trends holds. Then, we
 can replace the conditioning set <span class="math inline">\(G_i=g\)</span> with the conditioning set <span class="math inline">\(i \in C_{g,e}\)</span> in the second term:</p>
 <p><span class="math display">\[
-\text{ATT}_{g,e} = \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i =
-g] - \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | G_i = g]
+\text{ATT}_{g,e} = \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(\infty) | G_i =
+g] - \mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | G_i = g]
 \]</span> <span class="math display">\[
-= \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] -
-\mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | i \in C_{g,e}]
+= \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(\infty) | G_i = g] -
+\mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | i \in C_{g,e}]
 \]</span></p>
 <p><strong>Step 3:</strong> Assume that No Anticipation holds. Then, we
-can replace <span class="math inline">\(Y_{i,t+b}(\infty)\)</span> with
-<span class="math inline">\(Y_{i,t+b}(g)\)</span> if the conditioning
+can replace <span class="math inline">\(Y_{i,g+b}(\infty)\)</span> with
+<span class="math inline">\(Y_{i,g+b}(g)\)</span> if the conditioning
 set is <span class="math inline">\(G_i = g\)</span>:</p>
 <p><span class="math display">\[
-\text{ATT}_{g,e} = \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i =
-g] - \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | i \in C_{g,e}]
+\text{ATT}_{g,e} = \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(\infty) | G_i =
+g] - \mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | i \in C_{g,e}]
 \]</span> <span class="math display">\[
-= \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(g) | G_i = g] -
-\mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | i \in C_{g,e}]
+= \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(g) | G_i = g] -
+\mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | i \in C_{g,e}]
 \]</span> where the final expression is <span class="math inline">\(\text{DiD}_{g,e}\)</span>.</p>
 <p>Thus, we have shown that <span class="math inline">\(\text{DiD}_{g,e}
 = \text{ATT}_{g,e}\)</span> if Parallel Trends and No Anticipation
@@ -235,7 +232,7 @@ is documented <a href="https://setzler.github.io/DiDforBigData/reference/DiDge.h
 <div class="section level3">
 <h3 id="automatic-control-group-selection">3.1 Automatic Control Group Selection<a class="anchor" aria-label="anchor" href="#automatic-control-group-selection"></a>
 </h3>
-<p><strong>All:</strong> The largest valid control group is <span class="math inline">\(C_{g,e} \equiv \{ i : G_i &gt; \min\{g,
+<p><strong>All:</strong> The largest valid control group is <span class="math inline">\(C_{g,e} \equiv \{ i : G_i &gt; \max\{g,
 g+e\}\}\)</span>. To use this control group, specify
 <code>control_group = "all"</code> in the <code>DiDge(...)</code>
 command. This option is selected by default.</p>
@@ -247,7 +244,7 @@ defined by <span class="math inline">\(C_{g,e} \equiv \{ i : G_i =
 <code>DiDge(...)</code> command.</p>
 <p><strong>Future-treated:</strong> The future-treated control group is
 defined by <span class="math inline">\(C_{g,e} \equiv \{ i : G_i &gt;
-\min\{g, g+e\} \text{ and } G_i &lt; \infty\}\)</span>. To use this
+\max\{g, g+e\} \text{ and } G_i &lt; \infty\}\)</span>. To use this
 control group, specify <code>control_group = "future-treated"</code> in
 the <code>DiDge(...)</code> command.</p>
 <p><strong>Base event time:</strong> The base event time can be
@@ -260,13 +257,15 @@ default.</p>
 </h3>
 <p>The <code><a href="../reference/DiDge.html">DiDge()</a></code> command performs the following sequence of
 steps:</p>
-<p><strong>Step 1.</strong> Drop any observations that do not satisfy
-<span class="math inline">\(G_i=g\)</span> or <span class="math inline">\(i \in C_{g,e}\)</span>.</p>
+<p><strong>Step 1.</strong> Define the <span class="math inline">\((g,e)\)</span>-specific sample of treated and
+control units, <span class="math inline">\(S_{g,e} \equiv \{G_i=g\} \cup
+\{i \in C_{g,e}\}\)</span>. Drop any observations that do not satisfy
+<span class="math inline">\(i \in S_{g,e}\)</span>.</p>
 <p><strong>Step 2.</strong> Construct the within-<span class="math inline">\(i\)</span> differences <span class="math inline">\(\Delta Y_{i,g+e} \equiv Y_{i,g+e} -
-Y_{i,g+b}\)</span> for each <span class="math inline">\(i\)</span> that
-remains in the sample.</p>
+Y_{i,g+b}\)</span> for each <span class="math inline">\(i \in
+S_{g,e}\)</span>.</p>
 <p><strong>Step 3.</strong> Estimate the simple linear regression <span class="math inline">\(\Delta Y_{i,g+e} = \alpha_{g,e} + \beta_{g,e}
-1\{G_i =g\} + \epsilon_{i,g+e}\)</span> by OLS.</p>
+1\{G_i =g\} + \epsilon_{i,g+e}\)</span> by OLS for <span class="math inline">\(i \in S_{g,e}\)</span>.</p>
 <p>The OLS estimate of <span class="math inline">\(\beta_{g,e}\)</span>
 is equivalent to <span class="math inline">\(\text{DiD}_{g,e}\)</span>.
 The standard error provided by OLS for <span class="math inline">\(\beta_{g,e}\)</span> is equivalent to the standard
@@ -303,14 +302,15 @@ user to restrict the minimum and maximum event times <span class="math inline">\
 corresponding control group <span class="math inline">\(C_{g,e}\)</span>
 the same way as <code>DiDge(...)</code>. Drop any <span class="math inline">\((g,e)\)</span> combination for which the control
 group is empty.</p>
-<p><strong>Step 3.</strong> Within the <span class="math inline">\((g,e)\)</span>-specific process, drop any
-observations that do not satisfy <span class="math inline">\(G_i=g\)</span> or <span class="math inline">\(i
-\in C_{g,e}\)</span>.</p>
-<p><strong>Step 4.</strong> Within the <span class="math inline">\((g,e)\)</span>-specific process, construct the
+<p><strong>Step 3.</strong> Within each <span class="math inline">\((g,e)\)</span>-specific process, define the <span class="math inline">\((g,e)\)</span>-specific sample of treated and
+control units, <span class="math inline">\(S_{g,e} \equiv \{G_i=g\} \cup
+\{i \in C_{g,e}\}\)</span>. Drop any observations that do not satisfy
+<span class="math inline">\(i \in S_{g,e}\)</span>.</p>
+<p><strong>Step 4.</strong> Within each <span class="math inline">\((g,e)\)</span>-specific process, construct the
 within-<span class="math inline">\(i\)</span> differences <span class="math inline">\(\Delta Y_{i,g+e} \equiv Y_{i,g+e} -
 Y_{i,g+b}\)</span> for each <span class="math inline">\(i\)</span> that
 remains in the sample.</p>
-<p><strong>Step 5.</strong> Within the <span class="math inline">\((g,e)\)</span>-specific process, estimate <span class="math inline">\(\Delta Y_{i,g+e} = \alpha_{g,e} + \beta_{g,e}
+<p><strong>Step 5.</strong> Within each <span class="math inline">\((g,e)\)</span>-specific process, estimate <span class="math inline">\(\Delta Y_{i,g+e} = \alpha_{g,e} + \beta_{g,e}
 1\{G_i =g\} + \epsilon_{i,g+e}\)</span> by OLS.</p>
 <p>The OLS estimate of <span class="math inline">\(\beta_{g,e}\)</span>
 is equivalent to <span class="math inline">\(\text{DiD}_{g,e}\)</span>.
@@ -330,7 +330,7 @@ applied.</p>
 also estimates <span class="math inline">\(\text{ATT}_{e}\)</span> for
 each <span class="math inline">\(e\)</span> included in the event times
 of interest.</p>
-<p>To do so, it completes the following steps:</p>
+<p>To do so, <code>DiD(...)</code> completes the following steps:</p>
 <p><strong>Step 1.</strong> At the end of the <span class="math inline">\((g,e)\)</span>-specific estimation in parallel
 described above, it returns the various <span class="math inline">\((g,e)\)</span>-specific samples of the form <span class="math inline">\(S_{g,e} \equiv \{G_i=g\} \cup \{i \in
 C_{g,e}\}\)</span>.</p>
@@ -351,16 +351,14 @@ Since each <span class="math inline">\(\beta_{g,e}\)</span> is an
 estimate of the corresponding <span class="math inline">\(\text{ATT}_{g,e}\)</span>, it follows that <span class="math inline">\(\text{DiD}_e\)</span> is an estimate of the
 weighted average <span class="math inline">\(\text{ATT}_{e} \equiv
 \sum_g \omega_{g,e} \text{ATT}_{g,e}\)</span>.</p>
-<p><strong>Step 5.</strong> To test the null hypothesis that <span class="math inline">\(\text{ATT}_{e} = 0\)</span>, define <span class="math inline">\(\bar\beta_e = (\beta_{g,e})_g\)</span> and <span class="math inline">\(\bar\omega_e = (\omega_{g,e})_g\)</span>. Note
+<p><strong>Step 5.</strong> To test the null hypothesis that <span class="math inline">\(\text{ATT}_{e} = 0\)</span>, it defines <span class="math inline">\(\bar\beta_e = (\beta_{g,e})_g\)</span> and <span class="math inline">\(\bar\omega_e = (\omega_{g,e})_g\)</span>. Note
 that <span class="math inline">\(\text{DiD}_e = \bar\omega_e'
-\bar\beta_e\)</span>. Then, <span class="math inline">\(\text{Var}(\text{DiD}_e) = \bar\omega_e'
+\bar\beta_e\)</span>. To get the standard error, for <span class="math inline">\(\text{DiD}_e\)</span>, it uses that <span class="math inline">\(\text{Var}(\text{DiD}_e) = \bar\omega_e'
 \text{Var}(\bar\beta_e) \bar\omega_e\)</span>, where <span class="math inline">\(\text{Var}(\bar\beta_e)\)</span> is the usual
-variance-covariance matrix of the OLS coefficients. Since the same unit
-<span class="math inline">\(i\)</span> appears on multiple rows of the
-sample, we must cluster on <span class="math inline">\(i\)</span> when
-estimating <span class="math inline">\(\text{Var}(\bar\beta_e)\)</span>.
-Finally, the standard error corresponding to the null hypothesis of
-<span class="math inline">\(\text{ATT}_{e} = 0\)</span> is <span class="math inline">\(\sqrt{\text{Var}(\text{DiD}_e)}\)</span>.</p>
+(heteroskedasticity-robust) variance-covariance matrix of the OLS
+coefficients. Since the same unit <span class="math inline">\(i\)</span>
+appears on multiple rows of the sample, we must cluster on <span class="math inline">\(i\)</span> when estimating <span class="math inline">\(\text{Var}(\bar\beta_e)\)</span>. Finally, the
+standard error corresponding to the null hypothesis of <span class="math inline">\(\text{ATT}_{e} = 0\)</span> is <span class="math inline">\(\sqrt{\text{Var}(\text{DiD}_e)}\)</span>.</p>
 <p>A similar approach is used to estimate <span class="math inline">\(\text{ATT}_{E}\)</span> across a set of event
 times <span class="math inline">\(E\)</span>, again using that it can be
 represented as a linear combination of OLS coefficients <span class="math inline">\(\beta_{g,e}\)</span> with appropriate weights.</p>
