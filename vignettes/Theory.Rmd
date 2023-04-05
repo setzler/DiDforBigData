@@ -177,9 +177,9 @@ In practice, `DiD(...)` completes the following steps:
 The OLS estimate of $\beta_{g,e}$ is equivalent to $\text{DiD}_{g,e}$. The standard error provided by OLS for $\beta_{g,e}$ is equivalent to the standard error from a two-sample test of equal means for the null hypothesis $$\mathbb{E}[\Delta Y_{i,g+e} | G_i = g] =  \mathbb{E}[\Delta Y_{i,g+e} | i \in C_{g,e}] $$ which is equivalent to testing that $\text{ATT}_{g,e}=0$. Note that $\text{ATT}_{g,e}=0$ is tested as a single hypothesis for each $(g,e)$ combination; no adjustment for multiple hypothesis testing is applied. 
 
 
-### 4.2 Estimate the Average ATT across Cohorts and Event Times
+### 4.2 Estimate the Average DiD across Cohorts and Event Times
 
-Aside from estimating each $\text{ATT}_{g,e}$, `DiD(...)` also estimates $\text{ATT}_{e}$ for each $e$ included in the event times of interest.
+Aside from estimating each $\text{DiD}_{g,e}$, `DiD(...)` also estimates $\text{DiD}_{e}$ for each $e$ included in the event times of interest.
 
 To do so, `DiD(...)` completes the following steps:
 
@@ -193,4 +193,4 @@ To do so, `DiD(...)` completes the following steps:
 
 **Step 5.** To test the null hypothesis that $\text{ATT}_{e} = 0$, it defines $\bar\beta_e = (\beta_{g,e})_g$ and $\bar\omega_e = (\omega_{g,e})_g$. Note that $\text{DiD}_e = \bar\omega_e' \bar\beta_e$. To get the standard error, for $\text{DiD}_e$, it uses that $\text{Var}(\text{DiD}_e) = \bar\omega_e' \text{Var}(\bar\beta_e) \bar\omega_e$, where $\text{Var}(\bar\beta_e)$ is the usual (heteroskedasticity-robust) variance-covariance matrix of the OLS coefficients. Since the same unit $i$ appears on multiple rows of the sample, we must cluster on $i$ when estimating $\text{Var}(\bar\beta_e)$. Finally, the standard error corresponding to the null hypothesis of $\text{ATT}_{e} = 0$ is  $\sqrt{\text{Var}(\text{DiD}_e)}$.
 
-A similar approach is used to estimate $\text{ATT}_{E}$ across a set of event times $E$, again using that it can be represented as a linear combination of OLS coefficients $\beta_{g,e}$ with appropriate weights.
+A similar approach is used to estimate $\text{DiD}_{E}$, the average $\text{DiD}_{e}$ across a set of event times $E$. It again uses that these average DiD parameters can be represented as a linear combination of OLS coefficients $\beta_{g,e}$ with appropriate weights to construct the standard error for $\text{ATT}_{E}$.
