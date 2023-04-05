@@ -249,13 +249,16 @@ We see that the bias has been removed thanks to the control variables.
 
 
 
+# 4. Controlling for Time-varying Fixed-effects
+
+### The `fixedeffect_names` entry
+
+Similar to time-varying covariates, we may be worried that units belong to discrete categories which are subject to shocks. For example, if different units $i$ belong to different regions, and some regions have higher treatment shares than others, then region-specific shocks may correlate with treatment and bias the DiD estimates. We can correct for time-specific shocks to regions by specifying `varnames$fixedeffect_names = c("region")`.
 
 
 
 
-
-
-# 4. Robust and Clustered Standard Errors
+# 5. Robust and Clustered Standard Errors
  
 ### The  `cluster_names` entry
 
@@ -318,7 +321,7 @@ print(did$results_average)
 
 
 
-# 5. Parallelization
+# 6. Parallelization
  
 ### The  `parallel_cores` argument
 
@@ -361,7 +364,7 @@ did = DiD(inputdata = copy(simdata), varnames = varnames, min_event = -1, max_ev
 
 
 
-# 6. Average across Event Times
+# 7. Average across Event Times
 
 ### The `Esets` argument
 
