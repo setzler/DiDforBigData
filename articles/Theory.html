@@ -324,10 +324,10 @@ combination; no adjustment for multiple hypothesis testing is
 applied.</p>
 </div>
 <div class="section level3">
-<h3 id="estimate-the-average-att-across-cohorts-and-event-times">4.2 Estimate the Average ATT across Cohorts and Event Times<a class="anchor" aria-label="anchor" href="#estimate-the-average-att-across-cohorts-and-event-times"></a>
+<h3 id="estimate-the-average-did-across-cohorts-and-event-times">4.2 Estimate the Average DiD across Cohorts and Event Times<a class="anchor" aria-label="anchor" href="#estimate-the-average-did-across-cohorts-and-event-times"></a>
 </h3>
-<p>Aside from estimating each <span class="math inline">\(\text{ATT}_{g,e}\)</span>, <code>DiD(...)</code>
-also estimates <span class="math inline">\(\text{ATT}_{e}\)</span> for
+<p>Aside from estimating each <span class="math inline">\(\text{DiD}_{g,e}\)</span>, <code>DiD(...)</code>
+also estimates <span class="math inline">\(\text{DiD}_{e}\)</span> for
 each <span class="math inline">\(e\)</span> included in the event times
 of interest.</p>
 <p>To do so, <code>DiD(...)</code> completes the following steps:</p>
@@ -359,9 +359,11 @@ that <span class="math inline">\(\text{DiD}_e = \bar\omega_e'
 coefficients. Since the same unit <span class="math inline">\(i\)</span>
 appears on multiple rows of the sample, we must cluster on <span class="math inline">\(i\)</span> when estimating <span class="math inline">\(\text{Var}(\bar\beta_e)\)</span>. Finally, the
 standard error corresponding to the null hypothesis of <span class="math inline">\(\text{ATT}_{e} = 0\)</span> is <span class="math inline">\(\sqrt{\text{Var}(\text{DiD}_e)}\)</span>.</p>
-<p>A similar approach is used to estimate <span class="math inline">\(\text{ATT}_{E}\)</span> across a set of event
-times <span class="math inline">\(E\)</span>, again using that it can be
-represented as a linear combination of OLS coefficients <span class="math inline">\(\beta_{g,e}\)</span> with appropriate weights.</p>
+<p>A similar approach is used to estimate <span class="math inline">\(\text{DiD}_{E}\)</span>, the average <span class="math inline">\(\text{DiD}_{e}\)</span> across a set of event
+times <span class="math inline">\(E\)</span>. It again uses that these
+average DiD parameters can be represented as a linear combination of OLS
+coefficients <span class="math inline">\(\beta_{g,e}\)</span> with
+appropriate weights to construct the standard error for <span class="math inline">\(\text{ATT}_{E}\)</span>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
