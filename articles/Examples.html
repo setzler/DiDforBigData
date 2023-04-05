@@ -468,7 +468,23 @@ variables.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="robust-and-clustered-standard-errors">4. Robust and Clustered Standard Errors<a class="anchor" aria-label="anchor" href="#robust-and-clustered-standard-errors"></a>
+<h2 id="controlling-for-time-varying-fixed-effects">4. Controlling for Time-varying Fixed-effects<a class="anchor" aria-label="anchor" href="#controlling-for-time-varying-fixed-effects"></a>
+</h2>
+<div class="section level4">
+<h4 id="the-fixedeffect_names-entry">The <code>fixedeffect_names</code> entry<a class="anchor" aria-label="anchor" href="#the-fixedeffect_names-entry"></a>
+</h4>
+<p>Similar to time-varying covariates, we may be worried that units
+belong to discrete categories which are subject to shocks. For example,
+if different units <span class="math inline">\(i\)</span> belong to
+different regions, and some regions have higher treatment shares than
+others, then region-specific shocks may correlate with treatment and
+bias the DiD estimates. We can correct for time-specific shocks to
+regions by specifying
+<code>varnames$fixedeffect_names = c("region")</code>.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="robust-and-clustered-standard-errors">5. Robust and Clustered Standard Errors<a class="anchor" aria-label="anchor" href="#robust-and-clustered-standard-errors"></a>
 </h2>
 <div class="section level4">
 <h4 id="the-cluster_names-entry">The <code>cluster_names</code> entry<a class="anchor" aria-label="anchor" href="#the-cluster_names-entry"></a>
@@ -564,7 +580,7 @@ on <code>varnames$id_name</code> by default:</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="parallelization">5. Parallelization<a class="anchor" aria-label="anchor" href="#parallelization"></a>
+<h2 id="parallelization">6. Parallelization<a class="anchor" aria-label="anchor" href="#parallelization"></a>
 </h2>
 <div class="section level4">
 <h4 id="the-parallel_cores-argument">The <code>parallel_cores</code> argument<a class="anchor" aria-label="anchor" href="#the-parallel_cores-argument"></a>
@@ -607,7 +623,7 @@ while your <code>DiD</code> estimation is executing in parallel.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="average-across-event-times">6. Average across Event Times<a class="anchor" aria-label="anchor" href="#average-across-event-times"></a>
+<h2 id="average-across-event-times">7. Average across Event Times<a class="anchor" aria-label="anchor" href="#average-across-event-times"></a>
 </h2>
 <div class="section level4">
 <h4 id="the-esets-argument">The <code>Esets</code> argument<a class="anchor" aria-label="anchor" href="#the-esets-argument"></a>
