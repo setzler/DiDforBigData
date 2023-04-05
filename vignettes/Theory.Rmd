@@ -24,19 +24,19 @@ knitr::opts_chunk$set(
 
 - $i$: Index for individual unit.
 - $t$: Time period.
-- $D_{i,t}$: Binary indicator for treatment.
-- $G_i$: Treatment cohort, i.e., the time at which treatment is first received by $i$. Note: If treatment is not received, $G_i = \infty$.
+- $D_{i,t}$: Binary indicator for treatment. We assume throughout that treatment is received permanently once it has been received for the first time. In other words, $D_{i,t}=1 \implies D_{i,t+1}=1$.
+- $G_i$: Treatment cohort, i.e., the time at which treatment is first received by $i$.  That is, $G_i = g \implies D_{i,t}=1, \forall t\geq g$. Note: If treatment is not received, $G_i = \infty$.
 - $Y_{i,t}$: Observed outcome of interest.
 - $Y_{i,t}(g)$: Counterfactual outcome if treatment cohort were $G_i=g$.
 
-We assume throughout that treatment is received permanently once it has been received for the first time. In other words, $D_{i,t}=1 \implies D_{i,t+1}=1$. Equivalently, $G_i = g \implies D_{i,t}=1, \forall t\geq g$.
+
 
 ### 1.2 Goal
 
 Our goal is to identify the average treatment effect on the treated (ATT), for cohort $g$ at event time $e \equiv t-g$, which is defined by:
 
 $$
-\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+e}(\infty) | G_i = g]
+\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+e}(\infty) | G_i = g]
 $$
 
 We may also be interested in the average ATT across treated cohorts for a given event time:
@@ -55,7 +55,7 @@ where $E$ is a set of event times, e.g., $E = \{1,2,3\}$.
 
 **Control group:** For the treated cohort $G_i = g$, let $C_{g,e}$ denote the corresponding set of units $i$ that belong to a control group. 
 
- - At a minimum, the control group must satisfy $i \in C_{g,e} \implies G_i > \min\{g, g+e\}$. This says that the control group must belong to a later cohort than the treated group of interest, and the control group must not have been treated yet by the event time of interest. 
+ - At a minimum, the control group must satisfy $i \in C_{g,e} \implies G_i > \max\{g, g+e\}$. This says that the control group must belong to a later cohort than the treated group of interest, and the control group must not have been treated yet by the event time of interest. 
 
 **Base event time:** We consider a reference event time from before treatment $b$, which satisfies $b<0$.
 
@@ -90,31 +90,31 @@ This says that, at base event time $b$, the observed outcome for the treated coh
 
 We prove that $\text{DiD}_{g,e}$ identifies $\text{ATT}_{g,e}$ in three steps:
 
-**Step 1:** Add and subtract  $Y_{i,t+b}(\infty)$ from the ATT definition:
+**Step 1:** Add and subtract  $Y_{i,g+b}(\infty)$ from the ATT definition:
 
 $$
-\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+e}(\infty) | G_i = g] 
+\text{ATT}_{g,e} \equiv \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+e}(\infty) | G_i = g] 
 $$
 $$
-= \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | G_i = g]
+= \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | G_i = g]
 $$
 
 **Step 2:** Assume that Parallel Trends holds. Then, we can replace the conditioning set $G_i=g$ with the conditioning set $i \in C_{g,e}$ in the second term:
 
 $$
-\text{ATT}_{g,e} = \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | G_i = g] 
+\text{ATT}_{g,e} = \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | G_i = g] 
 $$
 $$
-= \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | i \in C_{g,e}]
+= \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | i \in C_{g,e}]
 $$
 
-**Step 3:** Assume that No Anticipation holds. Then, we can replace $Y_{i,t+b}(\infty)$ with $Y_{i,t+b}(g)$ if the conditioning set is $G_i = g$:
+**Step 3:** Assume that No Anticipation holds. Then, we can replace $Y_{i,g+b}(\infty)$ with $Y_{i,g+b}(g)$ if the conditioning set is $G_i = g$:
 
 $$
-\text{ATT}_{g,e} = \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | i \in C_{g,e}]
+\text{ATT}_{g,e} = \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(\infty) | G_i = g] - \mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | i \in C_{g,e}]
 $$
 $$
- = \mathbb{E}[Y_{i,t+e}(g) - Y_{i,t+b}(g) | G_i = g] - \mathbb{E}[Y_{i,t+e}(\infty) - Y_{i,t+b}(\infty) | i \in C_{g,e}]
+ = \mathbb{E}[Y_{i,g+e}(g) - Y_{i,g+b}(g) | G_i = g] - \mathbb{E}[Y_{i,g+e}(\infty) - Y_{i,g+b}(\infty) | i \in C_{g,e}]
 $$
 where the final expression is $\text{DiD}_{g,e}$. 
 
@@ -127,13 +127,13 @@ $\text{DiD}_{g,e}$ is estimated in `DiDforBigData` by the `DiDge(...)` command, 
 
 ### 3.1 Automatic Control Group Selection
 
-**All:** The largest valid control group is $C_{g,e} \equiv \{ i : G_i > \min\{g, g+e\}\}$. To use this control group, specify  `control_group = "all"` in the  `DiDge(...)` command. This option is selected by default.
+**All:** The largest valid control group is $C_{g,e} \equiv \{ i : G_i > \max\{g, g+e\}\}$. To use this control group, specify  `control_group = "all"` in the  `DiDge(...)` command. This option is selected by default.
 
 Two alternatives can be specified.
 
 **Never-treated:** The never-treated control group is defined by $C_{g,e} \equiv \{ i : G_i = \infty \}$. To use this control group, specify `control_group = "never-treated"` in the  `DiDge(...)` command.
 
-**Future-treated:** The future-treated control group is defined by $C_{g,e} \equiv \{ i : G_i > \min\{g, g+e\} \text{ and } G_i < \infty\}$. To use this control group, specify `control_group = "future-treated"` in the  `DiDge(...)` command.
+**Future-treated:** The future-treated control group is defined by $C_{g,e} \equiv \{ i : G_i > \max\{g, g+e\} \text{ and } G_i < \infty\}$. To use this control group, specify `control_group = "future-treated"` in the  `DiDge(...)` command.
 
 **Base event time:** The base event time can be specified using the `base_event` argument in `DiDge(...)`, where `base_event = -1` by default.
 
@@ -141,11 +141,11 @@ Two alternatives can be specified.
 
 The `DiDge()` command performs the following sequence of steps:
 
-**Step 1.** Drop any observations that do not satisfy $G_i=g$ or $i \in C_{g,e}$.
+**Step 1.** Define the $(g,e)$-specific sample of treated and control units, $S_{g,e} \equiv \{G_i=g\} \cup \{i \in C_{g,e}\}$. Drop any observations that do not satisfy $i \in S_{g,e}$.
 
-**Step 2.** Construct the within-$i$ differences $\Delta Y_{i,g+e} \equiv Y_{i,g+e} - Y_{i,g+b}$ for each $i$ that remains in the sample.
+**Step 2.** Construct the within-$i$ differences $\Delta Y_{i,g+e} \equiv Y_{i,g+e} - Y_{i,g+b}$ for each  $i \in S_{g,e}$.
 
-**Step 3.** Estimate the simple linear regression $\Delta Y_{i,g+e} = \alpha_{g,e} + \beta_{g,e} 1\{G_i =g\} + \epsilon_{i,g+e}$ by OLS. 
+**Step 3.** Estimate the simple linear regression $\Delta Y_{i,g+e} = \alpha_{g,e} + \beta_{g,e} 1\{G_i =g\} + \epsilon_{i,g+e}$ by OLS for  $i \in S_{g,e}$. 
 
 The OLS estimate of $\beta_{g,e}$ is equivalent to $\text{DiD}_{g,e}$. The standard error provided by OLS for $\beta_{g,e}$ is equivalent to the standard error from a two-sample test of equal means for the null hypothesis $$\mathbb{E}[\Delta Y_{i,g+e} | G_i = g] =  \mathbb{E}[\Delta Y_{i,g+e} | i \in C_{g,e}] $$ which is equivalent to testing that $\text{ATT}_{g,e}=0$.
 
@@ -168,11 +168,11 @@ In practice, `DiD(...)` completes the following steps:
 
 **Step 2.** In parallel, for each $(g,e)$ combination, construct the corresponding control group $C_{g,e}$ the same way as `DiDge(...)`. Drop any $(g,e)$ combination for which the control group is empty.
 
-**Step 3.** Within the $(g,e)$-specific process, drop any observations that do not satisfy $G_i=g$ or $i \in C_{g,e}$.
+**Step 3.** Within each $(g,e)$-specific process, define the $(g,e)$-specific sample of treated and control units, $S_{g,e} \equiv \{G_i=g\} \cup \{i \in C_{g,e}\}$. Drop any observations that do not satisfy $i \in S_{g,e}$.
 
-**Step 4.** Within the $(g,e)$-specific process, construct the within-$i$ differences $\Delta Y_{i,g+e} \equiv Y_{i,g+e} - Y_{i,g+b}$ for each $i$ that remains in the sample.
+**Step 4.** Within each $(g,e)$-specific process, construct the within-$i$ differences $\Delta Y_{i,g+e} \equiv Y_{i,g+e} - Y_{i,g+b}$ for each $i$ that remains in the sample.
 
-**Step 5.** Within the $(g,e)$-specific process, estimate $\Delta Y_{i,g+e} = \alpha_{g,e} + \beta_{g,e} 1\{G_i =g\} + \epsilon_{i,g+e}$ by OLS. 
+**Step 5.** Within each $(g,e)$-specific process, estimate $\Delta Y_{i,g+e} = \alpha_{g,e} + \beta_{g,e} 1\{G_i =g\} + \epsilon_{i,g+e}$ by OLS. 
 
 The OLS estimate of $\beta_{g,e}$ is equivalent to $\text{DiD}_{g,e}$. The standard error provided by OLS for $\beta_{g,e}$ is equivalent to the standard error from a two-sample test of equal means for the null hypothesis $$\mathbb{E}[\Delta Y_{i,g+e} | G_i = g] =  \mathbb{E}[\Delta Y_{i,g+e} | i \in C_{g,e}] $$ which is equivalent to testing that $\text{ATT}_{g,e}=0$. Note that $\text{ATT}_{g,e}=0$ is tested as a single hypothesis for each $(g,e)$ combination; no adjustment for multiple hypothesis testing is applied. 
 
@@ -181,7 +181,7 @@ The OLS estimate of $\beta_{g,e}$ is equivalent to $\text{DiD}_{g,e}$. The stand
 
 Aside from estimating each $\text{ATT}_{g,e}$, `DiD(...)` also estimates $\text{ATT}_{e}$ for each $e$ included in the event times of interest.
 
-To do so, it completes the following steps:
+To do so, `DiD(...)` completes the following steps:
 
 **Step 1.** At the end of the $(g,e)$-specific estimation in parallel described above, it returns the various $(g,e)$-specific samples of the form $S_{g,e} \equiv \{G_i=g\} \cup \{i \in C_{g,e}\}$. 
 
@@ -191,6 +191,6 @@ To do so, it completes the following steps:
 
 **Step 4.** It constructs $\text{DiD}_e = \sum_g \omega_{g,e} \beta_{g,e}$, where $\omega_{g,e} \equiv \frac{\sum_i 1\{G_i=g\}}{\sum_i 1\{G_i < \infty\}}$. Since each $\beta_{g,e}$ is an estimate of the corresponding $\text{ATT}_{g,e}$, it follows that $\text{DiD}_e$ is an estimate of the weighted average $\text{ATT}_{e} \equiv \sum_g \omega_{g,e} \text{ATT}_{g,e}$.
 
-**Step 5.** To test the null hypothesis that $\text{ATT}_{e} = 0$, define $\bar\beta_e = (\beta_{g,e})_g$ and $\bar\omega_e = (\omega_{g,e})_g$. Note that $\text{DiD}_e = \bar\omega_e' \bar\beta_e$. Then, $\text{Var}(\text{DiD}_e) = \bar\omega_e' \text{Var}(\bar\beta_e) \bar\omega_e$, where $\text{Var}(\bar\beta_e)$ is the usual variance-covariance matrix of the OLS coefficients. Since the same unit $i$ appears on multiple rows of the sample, we must cluster on $i$ when estimating $\text{Var}(\bar\beta_e)$. Finally, the standard error corresponding to the null hypothesis of $\text{ATT}_{e} = 0$ is  $\sqrt{\text{Var}(\text{DiD}_e)}$.
+**Step 5.** To test the null hypothesis that $\text{ATT}_{e} = 0$, it defines $\bar\beta_e = (\beta_{g,e})_g$ and $\bar\omega_e = (\omega_{g,e})_g$. Note that $\text{DiD}_e = \bar\omega_e' \bar\beta_e$. To get the standard error, for $\text{DiD}_e$, it uses that $\text{Var}(\text{DiD}_e) = \bar\omega_e' \text{Var}(\bar\beta_e) \bar\omega_e$, where $\text{Var}(\bar\beta_e)$ is the usual (heteroskedasticity-robust) variance-covariance matrix of the OLS coefficients. Since the same unit $i$ appears on multiple rows of the sample, we must cluster on $i$ when estimating $\text{Var}(\bar\beta_e)$. Finally, the standard error corresponding to the null hypothesis of $\text{ATT}_{e} = 0$ is  $\sqrt{\text{Var}(\text{DiD}_e)}$.
 
 A similar approach is used to estimate $\text{ATT}_{E}$ across a set of event times $E$, again using that it can be represented as a linear combination of OLS coefficients $\beta_{g,e}$ with appropriate weights.
