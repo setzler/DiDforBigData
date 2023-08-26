@@ -170,6 +170,10 @@ time variable (e.g. <code>year</code>), the cohort at which treatment
 begins (e.g. <code>cohort</code>), and the outcome variable
 (e.g. <code>Y</code>). No other variables are required. These variables
 can have any names you prefer.</p>
+<p>The never-treated cohort should be coded as infinity
+(<code>cohort = Inf</code>). If the cohort value is missing
+(<code>cohort = NA</code>), then the cohort will be automatically
+re-coded as infinity.</p>
 <p>Before going to the estimation, we need to prepare a list of the
 variable names:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
