@@ -22,6 +22,10 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   }
 
   # prepare time periods
+  if(inputdata[,sum(is.na(get(cohort_name)))] > 0){
+    warning(sprintf("Missing values of varnames$cohort_name have been re-coded as Inf in the inputdata."))
+    inputdata[is.na(get(cohort_name)), (cohort_name) := Inf ]
+  }
   pre_time = cohort_time + base_event
   post_time = cohort_time + event_postperiod
   time_set = sort(inputdata[get(cohort_name) == cohort_time, unique(get(time_name))])

@@ -305,3 +305,5 @@ TSWLatexianTemp*
 
 docs/
 inst/doc
+/doc/
+/Meta/

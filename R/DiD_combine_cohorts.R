@@ -171,6 +171,11 @@ DiDe <- function(inputdata, varnames, control_group = "all", base_event=-1, min_
 #'
 #' @export
 DiD <- function(inputdata, varnames, control_group = "all", base_event=-1, min_event=NULL, max_event=NULL, Esets=NULL, return_ATTs_only=TRUE, parallel_cores=1){
+  # deal with missing cohorts
+  if(inputdata[,sum(is.na(get(varnames$cohort_name)))] > 0){
+    warning(sprintf("Missing values of varnames$cohort_name have been re-coded as Inf in the inputdata."))
+    inputdata[is.na(get(varnames$cohort_name)), (varnames$cohort_name) := Inf ]
+  }
   # case without averaging event sets
   if(is.null(Esets)){
     results = DiDe(inputdata=inputdata, varnames=varnames, control_group=control_group, base_event=base_event, min_event=min_event, max_event=max_event, return_data=FALSE, return_ATTs_only=return_ATTs_only, parallel_cores=parallel_cores)

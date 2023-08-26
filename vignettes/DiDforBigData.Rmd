@@ -71,6 +71,8 @@ print(simdata)
 
 Your real data needs to have this "long" format, i.e., there need to be variables for the individual identifier (e.g. `id`), the time variable (e.g. `year`), the cohort at which treatment begins (e.g. `cohort`), and the outcome variable (e.g. `Y`). No other variables are required. These variables can have any names you prefer.
 
+The never-treated cohort should be coded as infinity (`cohort = Inf`). If the cohort value is missing (`cohort = NA`), then the cohort will be automatically re-coded as infinity.
+
 Before going to the estimation, we need to prepare a list of the variable names:
 
 ```{r echo=T, eval=T, message=FALSE}
