@@ -9,9 +9,10 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   covariate_names = varnames$covariate_names
   cluster_names = varnames$cluster_names
   fixedeffect_names = varnames$fixedeffect_names
+  weight_name = varnames$weight_name
   keep_vars = c(outcome_name,covariate_names)
-  all_keep_vars = c(outcome_name,covariate_names,cluster_names,fixedeffect_names)
-  all_keep_vars = all_keep_vars[all_keep_vars != id_name]
+  base_event_vars = c(outcome_name,covariate_names,cluster_names,fixedeffect_names,weight_name)
+  base_event_vars = base_event_vars[base_event_vars != id_name]
 
   # check if fixest is available
   check_fixest = requireNamespace("fixest", quietly=TRUE, warn.conflicts = FALSE)
@@ -38,7 +39,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
 
   # restrict to pre and post time periods of interest, then restrict to observations present in both time periods
   inputdata = inputdata[get(time_name)==pre_time | get(time_name)==post_time]
-  inputdata = inputdata[,.SD,.SDcols=c(id_name, time_name, cohort_name, all_keep_vars)]
+  inputdata = inputdata[,.SD,.SDcols=c(id_name, time_name, cohort_name, base_event_vars)]
   nn0 = nrow(inputdata)
   inputdata = na.omit(inputdata) # remove any rows with missing values
   nn1 = nrow(inputdata)
@@ -51,7 +52,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
 
   # define treated data and get means
   treated_data_prepost = merge(
-    inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,all_keep_vars)],
+    inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,base_event_vars)],
     inputdata[(get(cohort_name) == cohort_time) & (get(time_name) == post_time), .SD, .SDcols=c(id_name,keep_vars)],
     by=c(id_name)
   )
@@ -65,21 +66,21 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   control_data_prepost = NULL
   if(control_group == "all"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,all_keep_vars)],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,base_event_vars)],
       inputdata[(get(cohort_name) > max(post_time,cohort_time)) & (get(time_name) == post_time), .SD, .SDcols=c(id_name,keep_vars)],
       by=c(id_name)
     )
   }
   if(control_group == "never-treated"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.infinite(get(cohort_name)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,all_keep_vars)],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.infinite(get(cohort_name)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,base_event_vars)],
       inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.infinite(get(cohort_name)) & (get(time_name) == post_time), .SD, .SDcols=c(id_name,keep_vars)],
       by=c(id_name)
     )
   }
   if(control_group == "future-treated"){
     control_data_prepost = merge(
-      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.finite(get(cohort_name)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,all_keep_vars)],
+      inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.finite(get(cohort_name)) & (get(time_name) == pre_time), .SD, .SDcols=c(id_name,base_event_vars)],
       inputdata[(get(cohort_name) > max(post_time,cohort_time)) & is.finite(get(cohort_name)) & (get(time_name) == post_time), .SD, .SDcols=c(id_name,keep_vars)],
       by=c(id_name)
     )
@@ -136,7 +137,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   for(ii in keep_vars){
     data_prepost[, (paste0(ii,"_diff")) := get(paste0(ii,"_post")) - get(paste0(ii,"_pre"))]
   }
-  data_prepost = data_prepost[,.SD,.SDcols=c(id_name,"treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names)]
+  data_prepost = data_prepost[,.SD,.SDcols=c(id_name,"treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names,weight_name)]
 
 
   # the case in which ATT is mechanically 0
@@ -155,7 +156,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
     if(return_data){
       data_prepost[, Cohort := cohort_time]
       data_prepost[, EventTime := event_postperiod]
-      export_vars = c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names)
+      export_vars = c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names,weight_name)
       data_prepost = data_prepost[,.SD,.SDcols=export_vars]
       return(list(results=results,data_prepost=data_prepost))
     }
@@ -163,16 +164,20 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
 
   # execute the regression
   OLSlm = NULL
+  wgt = NULL
+  if(!is.null(weight_name)){
+    wgt = data_prepost[,get(weight_name)]
+  }
   if(is.null(fixedeffect_names)){
     OLSformula = paste0(paste0(outcome_name,"_diff"), paste0(" ~ treated"))
     if(!is.null(covariate_names)){ # reg formula, with covariates
       OLSformula = paste0(OLSformula, " + ", paste0(paste0(covariate_names,"_diff"),collapse=" + "))
     }
     if(check_fixest){ # prefer feols() if installed
-      OLSlm = fixest::feols(as.formula(OLSformula),data=data_prepost)
+      OLSlm = fixest::feols(as.formula(OLSformula),data=data_prepost,weights=wgt)
     }
     if(!check_fixest){ # use lm() if feols() not installed
-      OLSlm = lm(as.formula(OLSformula),data=data_prepost)
+      OLSlm = lm(as.formula(OLSformula),data=data_prepost,weights=wgt)
     }
   }
   if(!is.null(fixedeffect_names)){ # fixed effects
@@ -181,7 +186,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
       OLSformula = paste0(OLSformula, " + ", paste0(paste0(covariate_names,"_diff"),collapse=" + "))
     }
     OLSformula = paste0(OLSformula, " | ", paste0(fixedeffect_names, collapse=" + "))
-    OLSlm = fixest::feols(as.formula(OLSformula),data=data_prepost)
+    OLSlm = fixest::feols(as.formula(OLSformula),data=data_prepost,weights=wgt)
   }
   newATT = as.numeric(OLSlm$coefficients["treated"])
 
@@ -198,18 +203,18 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
       data_prepost <<- copy(data_prepost) # due to a well-known scoping bug in R's base lm.predict that no one will fix despite years of requests, this redundancy is necessary!
       CLformula = as.formula(paste0(" ~ ", paste0(cluster_names, collapse=" + ")))
       if(!check_fixest){
-        OLSvcov = vcovCL(OLSlm, cluster = CLformula, type = "HC1")
+        OLSvcov = vcovCL(OLSlm, cluster = CLformula, type = "HC1") # note: we verified that this inherits weights
       }
       if(check_fixest){
-        OLSvcov = vcov(OLSlm, cluster = cluster_names, type = "HC1")
+        OLSvcov = vcov(OLSlm, cluster = cluster_names, type = "HC1") # note: we verified that this inherits weights
       }
     }
     if(is.null(cluster_names)){
       if(!check_fixest){
-        OLSvcov = vcovHC(OLSlm, type = "HC1")
+        OLSvcov = vcovHC(OLSlm, type = "HC1") # note: we verified that this inherits weights
       }
       if(check_fixest){
-        OLSvcov = vcov(OLSlm, vcov="hetero")
+        OLSvcov = vcov(OLSlm, vcov="hetero") # note: we verified that this inherits weights
       }
     }
     OLSvcov = OLSvcov["treated", "treated"]
@@ -223,7 +228,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
   if(return_data){
     data_prepost[, Cohort := cohort_time]
     data_prepost[, EventTime := event_postperiod]
-    export_vars = unique(c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names))
+    export_vars = unique(c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names,weight_name))
     data_prepost = data_prepost[,.SD,.SDcols=export_vars]
     return(list(results=results,data_prepost=data_prepost))
   }

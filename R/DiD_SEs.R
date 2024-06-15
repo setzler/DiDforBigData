@@ -22,6 +22,7 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames,base_event){
     covariate_names = paste0(varnames$covariate_names,"_diff")
   }
   fixedeffect_names = varnames$fixedeffect_names
+  weight_name = varnames$weight_name
 
   # check if fixest is available
   check_fixest <- requireNamespace("fixest")
@@ -59,7 +60,12 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames,base_event){
       }
       treateds = c(treateds, sprintf("treated_%s",cc_name))
       data_event[, (sprintf("treated_%s",cc_name)) := as.numeric((treated==1)*(Cohort==cc))]
-      treated_weights = c(treated_weights, data_event[, sum(get(sprintf("treated_%s",cc_name))) ] )
+      if(is.null(weight_name)){
+        treated_weights = c(treated_weights, data_event[, sum(get(sprintf("treated_%s",cc_name))) ] )
+      }
+      if(!is.null(weight_name)){
+        treated_weights = c(treated_weights, data_event[(treated==1) & (Cohort==cc), sum(get(weight_name)) ] )
+      }
       if(!is.null(covariate_names)){
         for(vv in covariate_names){
           covariates = c(covariates, sprintf("%s_%s",vv,cc_name))
@@ -70,6 +76,10 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames,base_event){
 
     # regression
     OLSlm = NULL
+    wgt = NULL
+    if(!is.null(weight_name)){
+      wgt = data_event[,get(weight_name)]
+    }
     OLSformula = paste0(outcome_name," ~ -1 + ", paste0(treateds, collapse=" + "))
     if(!is.null(covariate_names)){
       OLSformula = paste0(OLSformula, " + ", paste0(covariates, collapse=" + "))
@@ -77,17 +87,17 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames,base_event){
     if(is.null(fixedeffect_names)){
       if(check_fixest){ # prefer feols() if installed
         OLSformula = paste0(OLSformula, " | Cohort")
-        OLSlm = fixest::feols(as.formula(OLSformula),data=data_event)
+        OLSlm = fixest::feols(as.formula(OLSformula),data=data_event,weights=wgt)
       }
       if(!check_fixest){ # use lm() if feols() not installed
         print("warning: fixest not found")
         OLSformula = paste0(OLSformula," + ",paste0(intercepts, collapse=" + "))
-        OLSlm = lm(as.formula(OLSformula),data=data_event)
+        OLSlm = lm(as.formula(OLSformula),data=data_event,weights=wgt)
       }
     }
     if(!is.null(fixedeffect_names)){ # the case with fixed-effects
       OLSformula = paste0(OLSformula, " | Cohort + ", paste0(fixedeffect_names, collapse=" + "))
-      OLSlm = fixest::feols(as.formula(OLSformula),data=data_event)
+      OLSlm = fixest::feols(as.formula(OLSformula),data=data_event,weights=wgt)
     }
     OLSmeans = as.numeric(OLSlm$coefficients[treateds])
 
@@ -156,6 +166,7 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
     covariate_names = paste0(varnames$covariate_names,"_diff")
   }
   fixedeffect_names = varnames$fixedeffect_names
+  weight_name = varnames$weight_name
 
   # check if fixest is available
   check_fixest <- requireNamespace("fixest")
@@ -201,7 +212,13 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
     }
     treateds = c(treateds, sprintf("treated_%s_%s",cc_name,ee_name))
     data_event[, (sprintf("treated_%s_%s",cc_name,ee_name)) := (treated==1)*(Cohort==cc)*(EventTime==ee)]
-    treated_weights = c(treated_weights, data_event[, sum(get(sprintf("treated_%s_%s",cc_name,ee_name))) ] )
+
+    if(is.null(weight_name)){
+      treated_weights = c(treated_weights, data_event[, sum(get(sprintf("treated_%s_%s",cc_name,ee_name))) ] )
+    }
+    if(!is.null(weight_name)){
+      treated_weights = c(treated_weights, data_event[(treated==1) & (Cohort==cc) & (EventTime==ee), sum(get(weight_name)) ] )
+    }
     if(!is.null(covariate_names)){
       for(vv in covariate_names){
         covariates = c(covariates, sprintf("%s_%s_%s",vv,cc_name,ee_name))
@@ -212,6 +229,10 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
 
   # regression
   OLSlm = NULL
+  wgt = NULL
+  if(!is.null(weight_name)){
+    wgt = data_event[,get(weight_name)]
+  }
   OLSformula = paste0(outcome_name," ~ -1 + ", paste0(treateds, collapse=" + "))
   if(!is.null(covariate_names)){
     OLSformula = paste0(OLSformula, " + ", paste0(covariates, collapse=" + "))
@@ -220,16 +241,16 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
   if(is.null(fixedeffect_names)){
     if(check_fixest){ # prefer feols() if installed
       OLSformula = paste0(OLSformula, " | Cohort")
-      OLSlm = fixest::feols(as.formula(OLSformula),data=data_event)
+      OLSlm = fixest::feols(as.formula(OLSformula),data=data_event,weights=wgt)
     }
     if(!check_fixest){ # use lm() if feols() not installed
       OLSformula = paste0(OLSformula," + ",paste0(intercepts, collapse=" + "))
-      OLSlm = lm(as.formula(OLSformula),data=data_event)
+      OLSlm = lm(as.formula(OLSformula),data=data_event,weights=wgt)
     }
   }
   if(!is.null(fixedeffect_names)){
     OLSformula = paste0(OLSformula, " | Cohort + ", paste0(fixedeffect_names, collapse=" + "))
-    OLSlm = fixest::feols(as.formula(OLSformula),data=data_event)
+    OLSlm = fixest::feols(as.formula(OLSformula),data=data_event,weights=wgt)
   }
   OLSmeans = as.numeric(OLSlm$coefficients[treateds])
 
