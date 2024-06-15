@@ -155,7 +155,7 @@ DiDge_main <- function(inputdata, varnames, cohort_time, event_postperiod, base_
     if(return_data){
       data_prepost[, Cohort := cohort_time]
       data_prepost[, EventTime := event_postperiod]
-      export_vars = c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names)
+      export_vars = c(id_name,"Cohort","EventTime","treated",paste0(keep_vars,"_diff"),cluster_names,fixedeffect_names)
       data_prepost = data_prepost[,.SD,.SDcols=export_vars]
       return(list(results=results,data_prepost=data_prepost))
     }
