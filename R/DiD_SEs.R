@@ -54,7 +54,7 @@ DiD_getSEs_EventTime <- function(data_cohort,varnames,base_event){
       if(cc<0){
         cc_name = paste0("neg",abs(cc))
       }
-      if(check_fixest){
+      if(!check_fixest){
         intercepts = c(intercepts, sprintf("intercept_%s",cc_name))
         data_event[, (sprintf("intercept_%s",cc_name)) := as.numeric((Cohort==cc))]
       }
@@ -195,36 +195,46 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
   treateds = c()
   covariates = c()
   treated_weights = c()
-  for(rowiter in 1:numce){
-    cc = cohortevents[rowiter][,cohort]
-    ee = cohortevents[rowiter][,event]
-    cc_name = copy(cc)
-    if(cc<0){
-      cc_name = paste0("neg",abs(cc))
-    }
-    ee_name = copy(ee)
-    if(ee<0){
-      ee_name = paste0("neg",abs(ee))
-    }
-    if(check_fixest){
-      intercepts = c(intercepts, sprintf("intercept_%s_%s",cc_name,ee_name))
-      data_event[, (sprintf("intercept_%s_%s",cc_name,ee_name)) := (Cohort==cc)*(EventTime==ee)]
-    }
-    treateds = c(treateds, sprintf("treated_%s_%s",cc_name,ee_name))
-    data_event[, (sprintf("treated_%s_%s",cc_name,ee_name)) := (treated==1)*(Cohort==cc)*(EventTime==ee)]
-
-    if(is.null(weight_name)){
-      treated_weights = c(treated_weights, data_event[, sum(get(sprintf("treated_%s_%s",cc_name,ee_name))) ] )
-    }
-    if(!is.null(weight_name)){
-      treated_weights = c(treated_weights, data_event[(treated==1) & (Cohort==cc) & (EventTime==ee), sum(get(weight_name)) ] )
-    }
-    if(!is.null(covariate_names)){
-      for(vv in covariate_names){
-        covariates = c(covariates, sprintf("%s_%s_%s",vv,cc_name,ee_name))
-        data_event[, (sprintf("%s_%s_%s",vv,cc_name,ee_name)) := (Cohort==cc)*(EventTime==ee)*get(vv)]
+  num_events = cohortevents[,length(unique(event))]
+  for(ee in cohortevents[,unique(event)]){
+    this_cohorts = cohortevents[event == ee, unique(cohort)]
+    this_weights = c()
+    for(cc in this_cohorts){
+      # create named versions
+      cc_name = copy(cc)
+      if(cc<0){
+        cc_name = paste0("neg",abs(cc))
+      }
+      ee_name = copy(ee)
+      if(ee<0){
+        ee_name = paste0("neg",abs(ee))
+      }
+      # create intercept and treated and covariate interactions
+      if(!check_fixest){
+        intercepts = c(intercepts, sprintf("intercept_%s_%s",cc_name,ee_name))
+        data_event[, (sprintf("intercept_%s_%s",cc_name,ee_name)) := (Cohort==cc)*(EventTime==ee)]
+      }
+      treateds = c(treateds, sprintf("treated_%s_%s",cc_name,ee_name))
+      data_event[, (sprintf("treated_%s_%s",cc_name,ee_name)) := (treated==1)*(Cohort==cc)*(EventTime==ee)]
+      if(!is.null(covariate_names)){
+        for(vv in covariate_names){
+          covariates = c(covariates, sprintf("%s_%s_%s",vv,cc_name,ee_name))
+          data_event[, (sprintf("%s_%s_%s",vv,cc_name,ee_name)) := (Cohort==cc)*(EventTime==ee)*get(vv)]
+        }
+      }
+      # create weights, which need to sum to 1 within each event time
+      if(is.null(weight_name)){
+        this_weights = c(this_weights, data_event[, sum(get(sprintf("treated_%s_%s",cc_name,ee_name))) ] )
+      }
+      if(!is.null(weight_name)){
+        this_weights = c(this_weights, data_event[(treated==1) & (Cohort==cc) & (EventTime==ee), sum(get(weight_name)) ] )
       }
     }
+    this_weights = this_weights/sum(this_weights)
+    treated_weights = c(treated_weights, this_weights*(1/num_events))
+  }
+  if(check_fixest){
+    data_event[, Cohort_by_EventTime := .GRP, list(Cohort, EventTime)]
   }
 
   # regression
@@ -240,7 +250,7 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
 
   if(is.null(fixedeffect_names)){
     if(check_fixest){ # prefer feols() if installed
-      OLSformula = paste0(OLSformula, " | Cohort")
+      OLSformula = paste0(OLSformula, " | Cohort_by_EventTime")
       OLSlm = fixest::feols(as.formula(OLSformula),data=data_event,weights=wgt)
     }
     if(!check_fixest){ # use lm() if feols() not installed
@@ -249,7 +259,7 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
     }
   }
   if(!is.null(fixedeffect_names)){
-    OLSformula = paste0(OLSformula, " | Cohort + ", paste0(fixedeffect_names, collapse=" + "))
+    OLSformula = paste0(OLSformula, " | Cohort_by_EventTime + ", paste0(fixedeffect_names, collapse=" + "))
     OLSlm = fixest::feols(as.formula(OLSformula),data=data_event,weights=wgt)
   }
   OLSmeans = as.numeric(OLSlm$coefficients[treateds])
@@ -277,7 +287,7 @@ DiD_getSEs_multipleEventTimes <- function(data_cohort,varnames,Eset,min_event,ma
 
   # standard errors
   OLSvcov = OLSvcov[treateds, treateds]
-  treated_weights = treated_weights/sum(treated_weights)
+  # treated_weights = treated_weights/sum(treated_weights)
   ATT_Eset = as.numeric(t(treated_weights) %*% OLSmeans)
   ATT_Eset_SE = sqrt(as.numeric((t(treated_weights) %*% OLSvcov) %*% treated_weights))
   return(data.table(Eset = paste0(Eset,collapse=","), ATT_Eset=ATT_Eset, ATT_Eset_SE=ATT_Eset_SE))
